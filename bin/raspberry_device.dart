@@ -1,5 +1,15 @@
-import 'package:raspberry_device/raspberry_device.dart' as raspberry_device;
+import 'package:args/command_runner.dart';
+import 'package:raspberry_device/runner.dart';
+import 'dart:io' as io;
 
-void main(List<String> arguments) {
-  print('Hello world: ${raspberry_device.calculate()}!');
+Future<void> main(List<String> arguments) async {
+  late int exitCode;
+  try {
+    exitCode = await Runner().run(arguments) ?? 0;
+  } on UsageException catch (e) {
+    print(e);
+    exitCode = 1;
+  }
+
+  io.exitCode = exitCode;
 }
