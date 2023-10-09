@@ -7,5 +7,6 @@ class Runner extends CommandRunner<int> {
           'raspberry_device',
           'A command-line tool to add your rasp',
         ) {
+          addCommand(ListCommand());
   }
 }
