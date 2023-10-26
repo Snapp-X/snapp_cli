@@ -2,12 +2,16 @@
 
 import 'dart:io' as io;
 
+import 'package:flutter_tools/src/base/logger.dart';
+import 'package:flutter_tools/src/base/platform.dart';
+import 'package:flutter_tools/src/base/terminal.dart';
+import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
+import 'package:flutter_tools/src/artifacts.dart';
+import 'package:flutter_tools/src/build_info.dart';
 import 'package:file/file.dart';
 import 'package:file/local.dart';
-import 'package:flutter_tools/src/base/platform.dart';
 import 'package:flutter_tools/src/base/user_messages.dart';
 import 'package:flutter_tools/src/cache.dart';
-import 'package:flutter_tools/src/context_runner.dart';
 import 'package:flutter_tools/src/globals.dart' as globals;
 import 'package:package_config/package_config.dart';
 import 'package:path/path.dart' as path;
@@ -24,15 +28,18 @@ class FlutterSdkManager {
   bool get isInitialized => Cache.flutterRoot != null;
 
   /// get the flutter sdk file system
-  FileSystem get flutterSdkFileSystem {
-    if (!isInitialized) {
-      throw Exception(
-        'Flutter SDK is not initialized: use initialize() method first',
+  FileSystem get flutterSdkFileSystem => _provider(globals.localFileSystem);
+  CustomDevicesConfig get customDeviceConfig =>
+      _provider(globals.customDevicesConfig);
+  Terminal get terminal => _provider(globals.terminal);
+  Platform get platform => _provider(globals.platform);
+  Logger get logger => _provider(globals.logger);
+  String get icuDataPath => _provider(
+        globals.artifacts!.getArtifactPath(
+          Artifact.icuData,
+          mode: BuildMode.debug,
+        ),
       );
-    }
-
-    return globals.localFileSystem;
-  }
 
   /// initialize the flutter sdk
   Future<void> initialize() async {
@@ -55,24 +62,29 @@ class FlutterSdkManager {
   }
 
   Future<bool> isCustomDevicesConfigAvailable() async {
-    return runInContext<bool>(() {
-      try {
-        final customDevicesConfig = globals.customDevicesConfig;
+    try {
+      final customDevicesConfig = globals.customDevicesConfig;
 
-        final io.File configFile =
-            flutterSdkFileSystem.file(customDevicesConfig.configPath);
+      final io.File configFile =
+          flutterSdkFileSystem.file(customDevicesConfig.configPath);
 
-        if (configFile.existsSync()) {
-          return true;
-        }
-
-        return false;
-
-      } catch (e) {
-
-        return false;
+      if (configFile.existsSync()) {
+        return true;
       }
-    });
+
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  T _provider<T>(T value) {
+    if (!isInitialized) {
+      throw Exception(
+        'Flutter SDK is not initialized: use initialize() method first',
+      );
+    }
+    return value;
   }
 
   /// get the flutter sdk path

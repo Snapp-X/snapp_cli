@@ -15,6 +15,7 @@ dependencies:
   package_config: ^2.1.0
   process_run: ^0.13.1
   file: ^6.1.4
+  async: ^2.11.0
 
 
 dev_dependencies:
