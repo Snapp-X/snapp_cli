@@ -2,7 +2,7 @@ import 'dart:io' as io;
 
 import 'package:args/command_runner.dart';
 import 'package:flutter_tools/src/context_runner.dart';
-import 'package:raspberry_device/raspberry_device.dart';
+import 'package:snapp_debugger/snapp_debugger.dart';
 
 Future<void> main(List<String> arguments) async {
   late int exitCode;

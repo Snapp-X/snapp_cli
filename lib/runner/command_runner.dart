@@ -1,7 +1,7 @@
 import 'package:args/command_runner.dart';
-import 'package:raspberry_device/commands/list_command.dart';
-import 'package:raspberry_device/commands/add_command.dart';
-import 'package:raspberry_device/utils/flutter_sdk.dart';
+import 'package:snapp_debugger/commands/list_command.dart';
+import 'package:snapp_debugger/commands/add_command.dart';
+import 'package:snapp_debugger/utils/flutter_sdk.dart';
 
 class SnappDebuggerCommandRunner extends CommandRunner<int> {
   SnappDebuggerCommandRunner({required this.flutterSdkManager})

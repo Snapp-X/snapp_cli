@@ -1,7 +1,7 @@
 // ignore_for_file: implementation_imports
 
-import 'package:raspberry_device/commands/base_command.dart';
-import 'package:raspberry_device/utils/flutter_sdk.dart';
+import 'package:snapp_debugger/commands/base_command.dart';
+import 'package:snapp_debugger/utils/flutter_sdk.dart';
 import 'package:process_run/process_run.dart' as process_run;
 
 /// List all custom devices added to the Flutter SDK with custom-devices command

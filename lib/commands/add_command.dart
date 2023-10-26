@@ -9,9 +9,9 @@ import 'package:flutter_tools/src/base/platform.dart';
 import 'package:flutter_tools/src/base/terminal.dart';
 import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
-import 'package:raspberry_device/commands/base_command.dart';
-import 'package:raspberry_device/host_runner/host_runner_platform.dart';
-import 'package:raspberry_device/utils/flutter_sdk.dart';
+import 'package:snapp_debugger/commands/base_command.dart';
+import 'package:snapp_debugger/host_runner/host_runner_platform.dart';
+import 'package:snapp_debugger/utils/flutter_sdk.dart';
 
 /// Add a new raspberry device to the Flutter SDK custom devices
 class AddCommand extends BaseCommand {
