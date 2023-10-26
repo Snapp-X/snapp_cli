@@ -10,6 +10,7 @@ import 'package:flutter_tools/src/base/terminal.dart';
 import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
 import 'package:raspberry_device/commands/base_command.dart';
+import 'package:raspberry_device/host_runner/host_runner_platform.dart';
 import 'package:raspberry_device/utils/flutter_sdk.dart';
 
 /// Add a new raspberry device to the Flutter SDK custom devices
@@ -26,6 +27,7 @@ class AddCommand extends BaseCommand {
 
   static final RegExp _hostnameRegex = RegExp(
       r'^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$');
+
   static final RegExp _runnerPathRegex = RegExp(r'^(.+)\/([^\/]+)$');
 
   final FlutterSdkManager flutterSdkManager;
@@ -36,20 +38,27 @@ class AddCommand extends BaseCommand {
   final Logger logger;
 
   late StreamQueue<String> inputs;
+
   @override
   final name = 'add';
 
   @override
-  final description = 'add a raspberry to custom devices';
+  final description = 'add a new device to custom devices';
 
   @override
   Future<int> run() async {
-    await flutterSdkManager.initialize();
-
     final isConfigAvailable =
         await flutterSdkManager.isCustomDevicesConfigAvailable();
 
     if (isConfigAvailable) {
+      /// create a HostPlatform instance based on the current platform
+      /// with the help of this class we can make the commands platform specific
+      /// for example, the ping command is different on windows and linux
+      ///
+      /// only supports windows, linux and macos
+      ///
+      final hostPlatform = HostRunnerPlatform.build(_platform);
+
       // Listen to the keystrokes stream as late as possible, since it's a
       // single-subscription stream apparently.
       // Also, _terminal.keystrokes can be closed unexpectedly, which will result
@@ -69,9 +78,15 @@ class AddCommand extends BaseCommand {
 
       inputs = StreamQueue<String>(nonClosingKeystrokes.stream);
 
+      /// path to the icu data file on the host machine
       final hostIcuDataPath = flutterSdkManager.icuDataPath;
+
+      /// path to the build artifacts on the remote machine
       const hostBuildClonePath = 'snapp_embedded';
+
+      /// path to the icu data file on the remote machine
       const hostIcuDataClone = '$hostBuildClonePath/engine';
+
       final String id = (await askForString(
         'id',
         description:
@@ -125,10 +140,10 @@ class AddCommand extends BaseCommand {
       final String remoteRunnerCommand = (await askForString(
         'flutter executable path',
         description:
-            'We need the exact path of your flutter executable script on the remote device. '
-            'We will use this path to run flutter commands on the remote device like "flutter build linux --debug".'
-            'Example: /home/pi/sdk/flutter/bin/flutter'
-            '*NOTE: if you added flutter to one of directories in \$PATH variables, you can just enter "flutter" here.',
+            'We need the exact path of your flutter command line tools on the remote device. \n'
+            'We will use this path to run flutter commands on the remote device like "flutter build linux --debug".\n'
+            'Example: /home/pi/sdk/flutter/bin/flutter\n'
+            '*NOTE: if you added flutter to one of directories in \$PATH variables, you can just enter "flutter" here.\n',
         example: r'/home/pi/sdk/flutter/bin/flutter',
         validator: (String s) async => _isValidPath(s),
       ))!;
@@ -160,125 +175,123 @@ class AddCommand extends BaseCommand {
           ipv6 ? '[${loopbackIp.address}]' : loopbackIp.address;
 
       CustomDeviceConfig config = CustomDeviceConfig(
-          id: id,
-          label: label,
-          sdkNameAndVersion: sdkNameAndVersion,
-          enabled: enabled,
+        id: id,
+        label: label,
+        sdkNameAndVersion: sdkNameAndVersion,
+        enabled: enabled,
 
-          // host-platform specific, filled out later
-          pingCommand: const <String>[],
-          postBuildCommand: const <String>[],
+        // host-platform specific, filled out later
+        pingCommand:
+            hostPlatform.pingCommand(ipv6: ipv6, pingTarget: targetStr),
+        pingSuccessRegex: hostPlatform.pingSuccessRegex,
+        postBuildCommand: const <String>[],
 
-          // just install to /tmp/${appName} by default
-          installCommand: <String>[
-            "powershell",
-            "-c",
-            sshCommand(
-              ipv6: ipv6,
-              sshTarget: sshTarget,
-              command: 'mkdir -p /tmp/\${appName}/$hostIcuDataClone',
-            ),
-            scpCommand(
+        // just install to /tmp/${appName} by default
+        installCommand: <String>[
+          // returns the command runner for the current platform
+          // for example:
+          // on windows it returns "powershell -c"
+          // on linux and macOS it returns "bash -c"
+          ...hostPlatform.terminalCommandRunner,
+
+          // create the necessary directories in the remote machine
+          hostPlatform
+              .sshCommand(
                 ipv6: ipv6,
-                source: '.\\*',
-                dest: '$sshTarget:/tmp/\${appName}'),
-            scpCommand(
-              ipv6: ipv6,
-              source: r'${localPath}',
-              dest: '$sshTarget:/tmp/\${appName}/$hostBuildClonePath',
-            ),
-            scpCommand(
-              ipv6: ipv6,
-              source: hostIcuDataPath,
-              dest: '$sshTarget:/tmp/\${appName}/$hostIcuDataClone',
-              lastCommand: true,
-            ),
-          ],
-          uninstallCommand: <String>[
-            'ssh',
-            '-o',
-            'BatchMode=yes',
-            if (ipv6) '-6',
-            sshTarget,
-            r'rm -rf "/tmp/${appName}"',
-          ],
-          runDebugCommand: <String>[
-            'ssh',
-            '-o',
-            'BatchMode=yes',
-            if (ipv6) '-6',
-            sshTarget,
+                sshTarget: sshTarget,
+                command: 'mkdir -p /tmp/\${appName}/$hostIcuDataClone',
+              )
+              .asString,
+
+          // copy the current project files from host to the remote
+          hostPlatform
+              .scpCommand(
+                ipv6: ipv6,
+                source: '${hostPlatform.currentSourcePath}*',
+                dest: '$sshTarget:/tmp/\${appName}',
+              )
+              .asString,
+
+          // copy the build artifacts from host to the remote
+          hostPlatform
+              .scpCommand(
+                ipv6: ipv6,
+                source: r'${localPath}',
+                dest: '$sshTarget:/tmp/\${appName}/$hostBuildClonePath',
+              )
+              .asString,
+
+          // copy the icu data file from host to the remote
+          hostPlatform
+              .scpCommand(
+                ipv6: ipv6,
+                source: hostIcuDataPath,
+                dest: '$sshTarget:/tmp/\${appName}/$hostIcuDataClone',
+                lastCommand: true,
+              )
+              .asString,
+        ],
+        // just uninstall app by removing the /tmp/${appName} directory on the remote
+        uninstallCommand: hostPlatform.sshCommand(
+          ipv6: ipv6,
+          sshTarget: sshTarget,
+          command: r'rm -rf "/tmp/${appName}"',
+          lastCommand: true,
+        ),
+
+        // run the app on the remote
+        runDebugCommand: hostPlatform.sshMultiCommand(
+          ipv6: ipv6,
+          sshTarget: sshTarget,
+          commands: <String>[
             'cd /tmp/\${appName} ;',
             '$remoteRunnerCommand linux --debug ;',
+            // remove remote build artifacts
             'rm -rf "/tmp/\${appName}/build/flutter_assets/*" ;',
             'rm -rf "/tmp/\${appName}/build/linux/arm64/debug/bundle/data/flutter_assets/*" ;',
             'rm -rf "/tmp/\${appName}/build/linux/arm64/debug/bundle/data/icudtl.dat" ;',
+            // and replace them by host build artifacts
             'cp /tmp/\${appName}/$hostBuildClonePath/flutter_assets/*  /tmp/\${appName}/build/flutter_assets ;',
             'cp /tmp/\${appName}/$hostBuildClonePath/flutter_assets/*  /tmp/\${appName}/build/linux/arm64/debug/bundle/data/flutter_assets ;',
             'cp /tmp/\${appName}/$hostIcuDataClone/icudtl.dat  /tmp/\${appName}/build/linux/arm64/debug/bundle/data ;',
+            // finally run the app
             r'DISPLAY=:0 /tmp/\${appName}/build/linux/arm64/debug/bundle/\${appName} ;'
           ],
-          forwardPortCommand: usePortForwarding
-              ? <String>[
-                  'ssh',
-                  '-o',
-                  'BatchMode=yes',
-                  '-o',
-                  'ExitOnForwardFailure=yes',
-                  if (ipv6) '-6',
-                  '-L',
-                  '$formattedLoopbackIp:\${hostPort}:$formattedLoopbackIp:\${devicePort}',
-                  sshTarget,
-                  "echo 'Port forwarding success'; read",
-                ]
-              : null,
-          forwardPortSuccessRegex:
-              usePortForwarding ? RegExp('Port forwarding success') : null,
-          screenshotCommand: screenshotCommand.isNotEmpty
-              ? <String>[
-                  'ssh',
-                  '-o',
-                  'BatchMode=yes',
-                  if (ipv6) '-6',
-                  sshTarget,
-                  screenshotCommand,
-                ]
-              : null);
+        ),
 
-      if (_platform.isWindows) {
-        config = config.copyWith(
-            pingCommand: <String>[
-              'ping',
-              if (ipv6) '-6',
-              '-n',
-              '1',
-              '-w',
-              '500',
-              targetStr,
-            ],
-            explicitPingSuccessRegex: true,
-            pingSuccessRegex: RegExp(r'[<=]\d+ms'));
-      } else if (_platform.isLinux || _platform.isMacOS) {
-        config = config.copyWith(
-          pingCommand: <String>[
-            'ping',
-            if (ipv6) '-6',
-            '-c',
-            '1',
-            '-w',
-            '1',
-            targetStr,
-          ],
-          explicitPingSuccessRegex: true,
-        );
-      } else {
-        throw UnsupportedError('Unsupported operating system');
-      }
+        forwardPortCommand: usePortForwarding
+            ? <String>[
+                'ssh',
+                '-o',
+                'BatchMode=yes',
+                '-o',
+                'ExitOnForwardFailure=yes',
+                if (ipv6) '-6',
+                '-L',
+                '$formattedLoopbackIp:\${hostPort}:$formattedLoopbackIp:\${devicePort}',
+                sshTarget,
+                "echo 'Port forwarding success'; read",
+              ]
+            : null,
+        forwardPortSuccessRegex:
+            usePortForwarding ? RegExp('Port forwarding success') : null,
+        screenshotCommand: screenshotCommand.isNotEmpty
+            ? <String>[
+                'ssh',
+                '-o',
+                'BatchMode=yes',
+                if (ipv6) '-6',
+                sshTarget,
+                screenshotCommand,
+              ]
+            : null,
+      );
 
       unawaited(keystrokesSubscription.cancel());
       unawaited(nonClosingKeystrokes.close());
 
       _customDevicesConfig.add(config);
+
       logger.printStatus(
         'Successfully added custom device to config file at "${_customDevicesConfig.configPath}".',
       );
@@ -287,22 +300,6 @@ class AddCommand extends BaseCommand {
 
     return 1;
   }
-
-  String scpCommand({
-    required bool ipv6,
-    required String source,
-    required String dest,
-    bool lastCommand = false,
-  }) =>
-      'scp -r -o BatchMode=yes ${ipv6 ? '-6' : ''} $source $dest ${lastCommand ? '' : ';'}';
-
-  String sshCommand({
-    required bool ipv6,
-    required String sshTarget,
-    required String command,
-    bool lastCommand = false,
-  }) =>
-      'ssh -o BatchMode=yes ${ipv6 ? '-6' : ''} $sshTarget $command ${lastCommand ? '' : ';'}';
 
   bool _isValidHostname(String s) => _hostnameRegex.hasMatch(s);
 
@@ -329,7 +326,7 @@ class AddCommand extends BaseCommand {
       msg += ' ($exampleOrDefault)';
     }
 
-    logger.printStatus(msg);
+    logger.printStatus('\n$msg');
     while (true) {
       if (!await inputs.hasNext) {
         return null;
@@ -352,7 +349,7 @@ class AddCommand extends BaseCommand {
     bool defaultsTo = true,
   }) async {
     final String defaultsToStr = defaultsTo ? '[Y/n]' : '[y/N]';
-    logger.printStatus('$description $defaultsToStr (empty for default)');
+    logger.printStatus('\n $description $defaultsToStr (empty for default)');
     while (true) {
       final String input = await inputs.next;
 
