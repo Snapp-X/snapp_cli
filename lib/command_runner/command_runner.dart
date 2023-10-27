@@ -8,8 +8,8 @@ import 'package:snapp_debugger/utils/flutter_sdk.dart';
 class SnappDebuggerCommandRunner extends CommandRunner<int> {
   SnappDebuggerCommandRunner({required this.flutterSdkManager})
       : super(
-          'raspberry_device',
-          'A command-line tool to add your rasp',
+          'snapp_debugger',
+          'A command-line tool to manage custom devices for flutter',
         ) {
     addCommand(ListCommand(flutterSdkManager: flutterSdkManager));
     addCommand(
