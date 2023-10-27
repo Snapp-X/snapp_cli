@@ -3,27 +3,15 @@
 import 'dart:async';
 
 import 'package:flutter_tools/src/base/common.dart';
-import 'package:flutter_tools/src/base/logger.dart';
-import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
-import 'package:flutter_tools/src/runner/flutter_command_runner.dart';
+import 'package:snapp_debugger/command_runner/command_runner.dart';
 import 'package:snapp_debugger/commands/base_command.dart';
 
 /// Add a new raspberry device to the Flutter SDK custom devices
-class DeleteCommand extends BaseCommand {
+class DeleteCommand extends BaseDebuggerCommand {
   DeleteCommand({
-    required CustomDevicesConfig customDevicesConfig,
-    required Logger logger,
-  })  : _customDevicesConfig = customDevicesConfig,
-        _logger = logger {
-    argParser.addOption(
-      FlutterGlobalOptions.kDeviceIdOption,
-      abbr: 'd',
-      help: 'Target device id or name (prefixes allowed).',
-    );
-  }
-
-  final CustomDevicesConfig _customDevicesConfig;
-  final Logger _logger;
+    required super.customDevicesConfig,
+    required super.logger,
+  });
 
   @override
   final String description = 'Delete a custom device from the Flutter SDK';
@@ -33,23 +21,20 @@ class DeleteCommand extends BaseCommand {
 
   @override
   FutureOr<int>? run() {
-    if (argResults!.options.isEmpty) {
+    if (wasProvided(deviceIdOption)) {
       usageException('Delete command requires a device id');
     }
 
-    final deviceId = argResults![FlutterGlobalOptions.kDeviceIdOption];
-    if (deviceId == Null || deviceId is! String) {
-      usageException('Delete command requires a device id');
-    }
+    final deviceId = stringArg(deviceIdOption)!;
 
-    if (!_customDevicesConfig.contains(deviceId)) {
+    if (!customDevicesConfig.contains(deviceId)) {
       throwToolExit(
-          'Couldn\'t find device with id "$deviceId" in config at "${_customDevicesConfig.configPath}"');
+          'Couldn\'t find device with id "$deviceId" in config at "${customDevicesConfig.configPath}"');
     }
 
-    _customDevicesConfig.remove(deviceId);
-    _logger.printStatus(
-        'Successfully removed device with id "$deviceId" from config at "${_customDevicesConfig.configPath}"');
+    customDevicesConfig.remove(deviceId);
+    logger.printStatus(
+        'Successfully removed device with id "$deviceId" from config at "${customDevicesConfig.configPath}"');
 
     return 0;
   }

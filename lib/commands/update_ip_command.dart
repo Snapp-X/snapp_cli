@@ -4,35 +4,26 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:collection/collection.dart';
+import 'package:snapp_debugger/command_runner/command_runner.dart';
 import 'package:snapp_debugger/commands/base_command.dart';
 import 'package:flutter_tools/src/base/io.dart';
 
 import 'package:flutter_tools/src/base/common.dart';
-import 'package:flutter_tools/src/base/logger.dart';
-import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
-import 'package:flutter_tools/src/runner/flutter_command_runner.dart';
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
 
-class UpdateIpCommand extends BaseCommand {
+const _ipOption = 'ip';
+
+class UpdateIpCommand extends BaseDebuggerCommand {
   UpdateIpCommand({
-    required CustomDevicesConfig customDevicesConfig,
-    required Logger logger,
-  })  : _customDevicesConfig = customDevicesConfig,
-        _logger = logger {
+    required super.customDevicesConfig,
+    required super.logger,
+  }) {
     argParser.addOption(
-      FlutterGlobalOptions.kDeviceIdOption,
-      abbr: 'd',
-      help: 'Target device id or name (prefixes allowed).',
-    );
-    argParser.addOption(
-      'ip',
+      _ipOption,
       abbr: 'i',
       help: 'The IP address of the remote device',
     );
   }
-
-  final CustomDevicesConfig _customDevicesConfig;
-  final Logger _logger;
 
   @override
   String get description => 'Update the IP address of the remote device';
@@ -42,19 +33,21 @@ class UpdateIpCommand extends BaseCommand {
 
   @override
   FutureOr<int>? run() {
-    if (argResults!.options.isEmpty) {
-      usageException('Update IP command requires a device id');
+    if (argResults!.options.length < 2) {
+      missingRequiredOption();
     }
 
-    final deviceId = argResults![FlutterGlobalOptions.kDeviceIdOption];
-    if (deviceId == Null || deviceId is! String) {
-      usageException('Update IP command requires a device id');
+    if (wasProvided(deviceIdOption)) {
+      missingRequiredOption();
     }
 
-    final ip = argResults!['ip'];
-    if (ip == Null || ip is! String) {
-      usageException('Update IP command requires an IP address');
+    final deviceId = stringArg(deviceIdOption)!;
+
+    if (wasProvided(_ipOption)) {
+      missingRequiredOption();
     }
+
+    final ip = stringArg(_ipOption)!;
 
     final isIpValid = InternetAddress.tryParse(ip) != null;
 
@@ -62,9 +55,9 @@ class UpdateIpCommand extends BaseCommand {
       usageException('Ip address passed to this command is not valid');
     }
 
-    if (!_customDevicesConfig.contains(deviceId)) {
+    if (!customDevicesConfig.contains(deviceId)) {
       throwToolExit(
-          'Couldn\'t find device with id "$deviceId" in config at "${_customDevicesConfig.configPath}"');
+          'Couldn\'t find device with id "$deviceId" in config at "${customDevicesConfig.configPath}"');
     }
 
     _changeIp(deviceId, ip);
@@ -72,8 +65,20 @@ class UpdateIpCommand extends BaseCommand {
     return 0;
   }
 
+  void missingRequiredOption() {
+    usageException(
+      '''
+Update IP command requires a device id and an IP address
+You can run this command like this:
+
+${runner!.executableName} $name -d <device-id> -i <ip-address>
+
+''',
+    );
+  }
+
   void _changeIp(String deviceId, String newIp) {
-    final currentDeviceConfig = _customDevicesConfig.devices
+    final currentDeviceConfig = customDevicesConfig.devices
         .firstWhere((element) => element.id == deviceId);
 
     final oldIp = _findOldIpInPingCommand(currentDeviceConfig.pingCommand);
@@ -81,7 +86,7 @@ class UpdateIpCommand extends BaseCommand {
     if (oldIp == null) {
       throwToolExit(
         '''
-Couldn't find device old IP in pingCommand for the device with id "$deviceId" in config at "${_customDevicesConfig.configPath}"
+Couldn't find device old IP in pingCommand for the device with id "$deviceId" in config at "${customDevicesConfig.configPath}"
 This could be because of a malformed ping command
 Or Maybe you entered a host name instead of IpAddress in add command
         ''',
@@ -90,19 +95,18 @@ Or Maybe you entered a host name instead of IpAddress in add command
 
     final newDeviceConfig = _replaceNewIp(currentDeviceConfig, oldIp, newIp);
 
-    final newDeviceRemoved =
-        _customDevicesConfig.remove(currentDeviceConfig.id);
+    final newDeviceRemoved = customDevicesConfig.remove(currentDeviceConfig.id);
 
     if (!newDeviceRemoved) {
       throwToolExit(
-        'Something went wrong in removing old device process. Device id: "$deviceId" in config at "${_customDevicesConfig.configPath}"',
+        'Something went wrong in removing old device process. Device id: "$deviceId" in config at "${customDevicesConfig.configPath}"',
       );
     }
 
-    _customDevicesConfig.add(newDeviceConfig);
+    customDevicesConfig.add(newDeviceConfig);
 
-    _logger.printStatus(
-      'IP address of device with id "$deviceId" successfully changed from "$oldIp" to "$newIp" in config at "${_customDevicesConfig.configPath}"',
+    logger.printStatus(
+      'IP address of device with id "$deviceId" successfully changed from "$oldIp" to "$newIp" in config at "${customDevicesConfig.configPath}"',
     );
   }
 

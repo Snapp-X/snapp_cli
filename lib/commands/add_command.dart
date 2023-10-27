@@ -4,10 +4,8 @@ import 'dart:async';
 import 'package:async/async.dart';
 
 import 'package:flutter_tools/src/base/io.dart';
-import 'package:flutter_tools/src/base/logger.dart';
 import 'package:flutter_tools/src/base/platform.dart';
 import 'package:flutter_tools/src/base/terminal.dart';
-import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
 import 'package:snapp_debugger/commands/base_command.dart';
 import 'package:snapp_debugger/host_runner/host_runner_platform.dart';
@@ -15,23 +13,20 @@ import 'package:snapp_debugger/utils/common.dart';
 import 'package:snapp_debugger/utils/flutter_sdk.dart';
 
 /// Add a new raspberry device to the Flutter SDK custom devices
-class AddCommand extends BaseCommand {
+class AddCommand extends BaseDebuggerCommand {
   AddCommand({
     required this.flutterSdkManager,
-    required CustomDevicesConfig customDevicesConfig,
+    required super.customDevicesConfig,
+    required super.logger,
     required Terminal terminal,
     required Platform platform,
-    required this.logger,
-  })  : _customDevicesConfig = customDevicesConfig,
-        _terminal = terminal,
+  })  : _terminal = terminal,
         _platform = platform;
 
   final FlutterSdkManager flutterSdkManager;
 
-  final CustomDevicesConfig _customDevicesConfig;
   final Terminal _terminal;
   final Platform _platform;
-  final Logger logger;
 
   late StreamQueue<String> inputs;
 
@@ -281,10 +276,10 @@ class AddCommand extends BaseCommand {
     unawaited(keystrokesSubscription.cancel());
     unawaited(nonClosingKeystrokes.close());
 
-    _customDevicesConfig.add(config);
+    customDevicesConfig.add(config);
 
     logger.printStatus(
-      'Successfully added custom device to config file at "${_customDevicesConfig.configPath}".',
+      'Successfully added custom device to config file at "${customDevicesConfig.configPath}".',
     );
     return 0;
   }
