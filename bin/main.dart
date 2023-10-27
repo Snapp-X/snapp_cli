@@ -14,9 +14,12 @@ Future<void> main(List<String> arguments) async {
     /// Initialize the Flutter SDK
     await sdkManager.initialize();
 
-    // TODO: check custom devices is enabled or not ? checkFeatureEnabled
-
     exitCode = await runInContext(() async {
+      if (!sdkManager.areCustomDevicesEnabled) {
+        throwToolExit('Custom devices feature must be enabled. '
+            'Enable using `flutter config --enable-custom-devices`.');
+      }
+
       return await SnappDebuggerCommandRunner(
             flutterSdkManager: sdkManager,
           ).run(arguments) ??

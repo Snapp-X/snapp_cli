@@ -8,6 +8,7 @@ import 'package:flutter_tools/src/base/terminal.dart';
 import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
 import 'package:flutter_tools/src/artifacts.dart';
 import 'package:flutter_tools/src/build_info.dart';
+import 'package:flutter_tools/src/features.dart';
 import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:flutter_tools/src/base/user_messages.dart';
@@ -41,6 +42,9 @@ class FlutterSdkManager {
         ),
       );
 
+  bool get areCustomDevicesEnabled =>
+      _provider(featureFlags.areCustomDevicesEnabled);
+
   /// initialize the flutter sdk
   Future<void> initialize() async {
     if (isInitialized) return;
@@ -54,23 +58,6 @@ class FlutterSdkManager {
       fileSystem: flutterDirectory,
       userMessages: UserMessages(),
     );
-  }
-
-  Future<bool> isCustomDevicesConfigAvailable() async {
-    try {
-      final customDevicesConfig = globals.customDevicesConfig;
-
-      final io.File configFile =
-          flutterSdkFileSystem.file(customDevicesConfig.configPath);
-
-      if (configFile.existsSync()) {
-        return true;
-      }
-
-      return false;
-    } catch (e) {
-      return false;
-    }
   }
 
   T _provider<T>(T value) {
