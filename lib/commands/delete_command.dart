@@ -4,19 +4,15 @@ import 'dart:async';
 
 import 'package:flutter_tools/src/base/common.dart';
 import 'package:flutter_tools/src/base/logger.dart';
-import 'package:flutter_tools/src/base/platform.dart';
 import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
 import 'package:flutter_tools/src/runner/flutter_command_runner.dart';
 import 'package:snapp_debugger/commands/base_command.dart';
-import 'package:snapp_debugger/utils/flutter_sdk.dart';
 
 /// Add a new raspberry device to the Flutter SDK custom devices
 class DeleteCommand extends BaseCommand {
   DeleteCommand({
-    required FlutterSdkManager flutterSdkManager,
     required CustomDevicesConfig customDevicesConfig,
     required Logger logger,
-    required Platform platform,
   })  : _customDevicesConfig = customDevicesConfig,
         _logger = logger {
     argParser.addOption(

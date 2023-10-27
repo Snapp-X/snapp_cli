@@ -11,6 +11,7 @@ import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
 import 'package:snapp_debugger/commands/base_command.dart';
 import 'package:snapp_debugger/host_runner/host_runner_platform.dart';
+import 'package:snapp_debugger/utils/common.dart';
 import 'package:snapp_debugger/utils/flutter_sdk.dart';
 
 /// Add a new raspberry device to the Flutter SDK custom devices
@@ -24,11 +25,6 @@ class AddCommand extends BaseCommand {
   })  : _customDevicesConfig = customDevicesConfig,
         _terminal = terminal,
         _platform = platform;
-
-  static final RegExp _hostnameRegex = RegExp(
-      r'^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$');
-
-  static final RegExp _runnerPathRegex = RegExp(r'^(.+)\/([^\/]+)$');
 
   final FlutterSdkManager flutterSdkManager;
 
@@ -301,9 +297,9 @@ class AddCommand extends BaseCommand {
     return 1;
   }
 
-  bool _isValidHostname(String s) => _hostnameRegex.hasMatch(s);
+  bool _isValidHostname(String s) => hostnameRegex.hasMatch(s);
 
-  bool _isValidPath(String s) => _runnerPathRegex.hasMatch(s);
+  bool _isValidPath(String s) => pathRegex.hasMatch(s);
 
   bool _isValidIpAddr(String s) => InternetAddress.tryParse(s) != null;
 

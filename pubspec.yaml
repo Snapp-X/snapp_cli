@@ -16,7 +16,7 @@ dependencies:
   process_run: ^0.13.1
   file: ^6.1.4
   async: ^2.11.0
-
+  collection: ^1.18.0
 
 dev_dependencies:
   lints: ^2.0.0

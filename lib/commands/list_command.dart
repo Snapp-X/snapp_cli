@@ -15,19 +15,12 @@ class ListCommand extends BaseCommand {
   final name = 'list';
 
   @override
-  final description = 'List all raspberries';
+  final description = 'List all custom devices added to the Flutter SDK';
 
   @override
   Future<int> run() async {
-    final isConfigAvailable =
-        await flutterSdkManager.isCustomDevicesConfigAvailable();
+    final result = await process_run.run('flutter custom-devices list');
 
-    if (isConfigAvailable) {
-      final result = await process_run.run('flutter custom-devices list');
-
-      return result.first.exitCode;
-    }
-
-    return 0;
+    return result.first.exitCode;
   }
 }
