@@ -2,6 +2,7 @@ import 'dart:io' as io;
 
 import 'package:args/command_runner.dart';
 import 'package:flutter_tools/src/context_runner.dart';
+import 'package:flutter_tools/src/base/common.dart';
 import 'package:snapp_debugger/snapp_debugger.dart';
 
 Future<void> main(List<String> arguments) async {
@@ -24,8 +25,12 @@ Future<void> main(List<String> arguments) async {
   } on UsageException catch (e) {
     print(e);
     exitCode = 1;
-  } catch (e, st) {
-    print('Error: $e\n$st');
+  } on ToolExit catch (e) {
+    print('Error: ${e.message}');
+
+    exitCode = e.exitCode ?? 1;
+  } catch (e, _) {
+    print('$e\n');
     exitCode = 1;
   }
 

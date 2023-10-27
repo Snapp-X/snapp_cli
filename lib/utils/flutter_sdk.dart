@@ -43,10 +43,7 @@ class FlutterSdkManager {
 
   /// initialize the flutter sdk
   Future<void> initialize() async {
-    if (isInitialized) {
-      print('flutter is located at: ${Cache.flutterRoot}');
-      return;
-    }
+    if (isInitialized) return;
 
     final flutterRoot = await _getFlutterRootDirectory();
 
@@ -57,8 +54,6 @@ class FlutterSdkManager {
       fileSystem: flutterDirectory,
       userMessages: UserMessages(),
     );
-
-    print('flutter is located at: ${Cache.flutterRoot}');
   }
 
   Future<bool> isCustomDevicesConfigAvailable() async {
