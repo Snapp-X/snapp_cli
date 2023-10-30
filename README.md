@@ -32,7 +32,7 @@ flutter config --enable-custom-devices
 - **Know the Path to Flutter on Remote Device:** You should know the exact path to the Flutter installation on your remote device. You can find the path using the following command on the remote device:
 
 ``` bash
-where flutter
+which flutter
 ```
 Ensure that you've met these preconditions to use snapp_debugger effectively with custom devices and remote debugging.
 
