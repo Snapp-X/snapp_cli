@@ -173,50 +173,50 @@ class AddCommand extends BaseDebuggerCommand {
       postBuildCommand: const <String>[],
 
       // just install to /tmp/${appName} by default
-      installCommand: <String>[
-        // returns the command runner for the current platform
-        // for example:
-        // on windows it returns "powershell -c"
-        // on linux and macOS it returns "bash -c"
-        ...hostPlatform.terminalCommandRunner,
+      // returns the command runner for the current platform
+      // for example:
+      // on windows it returns "powershell -c"
+      // on linux and macOS it returns "bash -c"
+      installCommand: hostPlatform.commandRunner(
+        <String>[
+          // create the necessary directories in the remote machine
+          hostPlatform
+              .sshCommand(
+                ipv6: ipv6,
+                sshTarget: sshTarget,
+                command: 'mkdir -p /tmp/\${appName}/$hostIcuDataClone',
+              )
+              .asString,
 
-        // create the necessary directories in the remote machine
-        hostPlatform
-            .sshCommand(
-              ipv6: ipv6,
-              sshTarget: sshTarget,
-              command: 'mkdir -p /tmp/\${appName}/$hostIcuDataClone',
-            )
-            .asString,
+          // copy the current project files from host to the remote
+          hostPlatform
+              .scpCommand(
+                ipv6: ipv6,
+                source: '${hostPlatform.currentSourcePath}*',
+                dest: '$sshTarget:/tmp/\${appName}',
+              )
+              .asString,
 
-        // copy the current project files from host to the remote
-        hostPlatform
-            .scpCommand(
-              ipv6: ipv6,
-              source: '${hostPlatform.currentSourcePath}*',
-              dest: '$sshTarget:/tmp/\${appName}',
-            )
-            .asString,
+          // copy the build artifacts from host to the remote
+          hostPlatform
+              .scpCommand(
+                ipv6: ipv6,
+                source: r'${localPath}',
+                dest: '$sshTarget:/tmp/\${appName}/$hostBuildClonePath',
+              )
+              .asString,
 
-        // copy the build artifacts from host to the remote
-        hostPlatform
-            .scpCommand(
-              ipv6: ipv6,
-              source: r'${localPath}',
-              dest: '$sshTarget:/tmp/\${appName}/$hostBuildClonePath',
-            )
-            .asString,
-
-        // copy the icu data file from host to the remote
-        hostPlatform
-            .scpCommand(
-              ipv6: ipv6,
-              source: hostIcuDataPath,
-              dest: '$sshTarget:/tmp/\${appName}/$hostIcuDataClone',
-              lastCommand: true,
-            )
-            .asString,
-      ],
+          // copy the icu data file from host to the remote
+          hostPlatform
+              .scpCommand(
+                ipv6: ipv6,
+                source: hostIcuDataPath,
+                dest: '$sshTarget:/tmp/\${appName}/$hostIcuDataClone',
+                lastCommand: true,
+              )
+              .asString,
+        ],
+      ),
       // just uninstall app by removing the /tmp/${appName} directory on the remote
       uninstallCommand: hostPlatform.sshCommand(
         ipv6: ipv6,
@@ -231,7 +231,7 @@ class AddCommand extends BaseDebuggerCommand {
         sshTarget: sshTarget,
         commands: <String>[
           'cd /tmp/\${appName} ;',
-          '$remoteRunnerCommand linux --debug ;',
+          '$remoteRunnerCommand build linux --debug ;',
           // remove remote build artifacts
           'rm -rf "/tmp/\${appName}/build/flutter_assets/*" ;',
           'rm -rf "/tmp/\${appName}/build/linux/arm64/debug/bundle/data/flutter_assets/*" ;',

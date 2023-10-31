@@ -25,6 +25,8 @@ abstract class HostRunnerPlatform {
 
   String get currentSourcePath;
 
+  List<String> commandRunner(List<String> commands);
+
   List<String> scpCommand({
     required bool ipv6,
     required String source,
@@ -88,6 +90,14 @@ class WindowsHostRunnerPlatform extends HostRunnerPlatform {
   String get currentSourcePath => '.\\';
 
   @override
+  List<String> commandRunner(List<String> commands) {
+    return <String>[
+      ...terminalCommandRunner,
+      ...commands,
+    ];
+  }
+
+  @override
   List<String> pingCommand({required bool ipv6, required String pingTarget}) =>
       <String>[
         'ping',
@@ -111,6 +121,14 @@ class UnixHostRunnerPlatform extends HostRunnerPlatform {
 
   @override
   String get currentSourcePath => './';
+
+  @override
+  List<String> commandRunner(List<String> commands) {
+    return <String>[
+      ...terminalCommandRunner,
+      commands.join(' '),
+    ];
+  }
 
   @override
   List<String> pingCommand({required bool ipv6, required String pingTarget}) =>
