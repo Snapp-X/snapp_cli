@@ -31,7 +31,7 @@ Future<void> main(List<String> arguments) async {
     print(e);
     exitCode = 1;
   } on ToolExit catch (e) {
-    print('Error: ${e.message}');
+    print('Tool Error: ${e.message}');
 
     exitCode = e.exitCode ?? 1;
   } catch (e, _) {

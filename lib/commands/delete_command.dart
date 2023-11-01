@@ -21,11 +21,11 @@ class DeleteCommand extends BaseDebuggerCommand {
 
   @override
   FutureOr<int>? run() {
-    if (wasProvided(deviceIdOption)) {
-      usageException('Delete command requires a device id');
+    if (!globalResults!.wasParsed(deviceIdOption)) {
+      missingRequiredOption();
     }
 
-    final deviceId = stringArg(deviceIdOption)!;
+    final deviceId = globalResults!.stringArg(deviceIdOption)!;
 
     if (!customDevicesConfig.contains(deviceId)) {
       throwToolExit(
@@ -37,5 +37,17 @@ class DeleteCommand extends BaseDebuggerCommand {
         'Successfully removed device with id "$deviceId" from config at "${customDevicesConfig.configPath}"');
 
     return 0;
+  }
+
+  void missingRequiredOption() {
+    usageException(
+      '''
+Delete command requires a device id
+You can run this command like this:
+
+${runner!.executableName} $name -d <device-id>
+
+''',
+    );
   }
 }

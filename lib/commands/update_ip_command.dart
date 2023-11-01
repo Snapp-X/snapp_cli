@@ -33,21 +33,17 @@ class UpdateIpCommand extends BaseDebuggerCommand {
 
   @override
   FutureOr<int>? run() {
-    if (argResults!.options.length < 2) {
+    if (!globalResults!.wasParsed(deviceIdOption)) {
       missingRequiredOption();
     }
 
-    if (wasProvided(deviceIdOption)) {
+    final deviceId = globalResults!.stringArg(deviceIdOption)!;
+
+    if (!argResults!.wasParsed(_ipOption)) {
       missingRequiredOption();
     }
 
-    final deviceId = stringArg(deviceIdOption)!;
-
-    if (wasProvided(_ipOption)) {
-      missingRequiredOption();
-    }
-
-    final ip = stringArg(_ipOption)!;
+    final ip = argResults!.stringArg(_ipOption)!;
 
     final isIpValid = InternetAddress.tryParse(ip) != null;
 
