@@ -129,7 +129,7 @@ class AddCommand extends BaseDebuggerCommand {
       description:
           'We need the exact path of your flutter command line tools on the remote device. \n'
           'We will use this path to run flutter commands on the remote device like "flutter build linux --debug".\n'
-          'Example: /home/pi/sdk/flutter/bin/flutter\n'
+          'You can use which command to find it in your remote machine: "which flutter"'
           '*NOTE: if you added flutter to one of directories in \$PATH variables, you can just enter "flutter" here.\n',
       example: r'/home/pi/sdk/flutter/bin/flutter',
       validator: (String s) async => _isValidPath(s),

@@ -137,8 +137,8 @@ class UnixHostRunnerPlatform extends HostRunnerPlatform {
         if (ipv6) '-6',
         '-c',
         '1',
-        '-w',
-        '1',
+        '-W',
+        '400',
         pingTarget,
       ];
 }
