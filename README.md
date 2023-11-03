@@ -1,3 +1,24 @@
+<p align="center">
+    <a href="https://www.snappembedded.io/"><img src="https://img.shields.io/badge/made_by-snapp_embedded-blue" alt="Snapp Embedded"></a>
+    <br>
+    <a href="https://pub.dev/packages/snapp_debugger"><img src="https://badgen.net/pub/flutter-platform/snapp_debugger" alt="Platforms"></a>
+    <br>
+    <a href="https://pub.dev/packages/snapp_debugger"><img src="https://img.shields.io/pub/v/snapp_debugger?logo=dart&logoColor=white" alt="Pub Version"></a>
+    <a href="https://pub.dev/packages/snapp_debugger"><img src="https://badgen.net/pub/points/snapp_debugger" alt="Pub points"></a>
+    <a href="https://pub.dev/packages/snapp_debugger"><img src="https://badgen.net/pub/likes/snapp_debugger" alt="Pub Likes"></a>
+    <a href="https://pub.dev/packages/snapp_debugger"><img src="https://badgen.net/pub/popularity/snapp_debugger" alt="Pub popularity"></a>
+    <br>    
+    <a href="https://github.com/Snapp-Embedded/snapp_debugger/pulls"><img src="https://img.shields.io/github/issues-pr/Snapp-Embedded/snapp_debugger" alt="Repo PRs"></a>
+    <a href="https://github.com/Snapp-Embedded/snapp_debugger/issues?q=is%3Aissue+is%3Aopen"><img src="https://img.shields.io/github/issues/Snapp-Embedded/snapp_debugger" alt="Repo issues"></a>
+    <a href="https://github.com/Snapp-Embedded/snapp_debugger"><img src="https://img.shields.io/github/stars/Snapp-Embedded/snapp_debugger?style=social" alt="Repo stars"></a>
+    <a href="https://github.com/Snapp-Embedded/snapp_debugger/graphs/contributors"><img src="https://badgen.net/github/contributors/Snapp-Embedded/snapp_debugger" alt="Contributors"></a>
+    <a href="https://github.com/Snapp-Embedded/snapp_debugger/blob/main/LICENSE"><img src="https://badgen.net/github/license/Snapp-Embedded/snapp_debugger" alt="License"></a>
+    <br>       
+    <a href="https://app.codecov.io/gh/Snapp-Embedded/snapp_debugger"><img src="https://img.shields.io/codecov/c/github/Snapp-Embedded/snapp_debugger?logo=codecov&logoColor=white" alt="Coverage Status"></a>
+</p>
+
+
+
 ## snapp\_debugger
 
 `snapp_debugger` is a Dart command-line tool designed to simplify the process of adding custom devices to the Flutter SDK. With this tool, you can configure and run your Flutter apps on non-standard or remote devices, such as a Raspberry Pi, while maintaining essential Flutter features like hot reload and hot restart.
