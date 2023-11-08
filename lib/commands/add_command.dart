@@ -12,6 +12,9 @@ import 'package:snapp_debugger/utils/common.dart';
 import 'package:snapp_debugger/utils/flutter_sdk.dart';
 
 /// Add a new raspberry device to the Flutter SDK custom devices
+///
+///
+// TODO: add get platform for example: x64 or arm64
 class AddCommand extends BaseDebuggerCommand {
   AddCommand({
     required this.flutterSdkManager,
@@ -55,12 +58,15 @@ class AddCommand extends BaseDebuggerCommand {
       prompt:
           'Please enter the id you want to device to have. Must contain only alphanumeric or underscore characters. (example: pi)',
       validator: (s) {
-        if (RegExp(r'^\w+$').hasMatch(s)) {
-          return true;
+        if (!RegExp(r'^\w+$').hasMatch(s.trim())) {
+          throw ValidationError('Invalid input. Please try again.');
+        } else if (_isDuplicatedDeviceId(s.trim())) {
+          throw ValidationError('Device with this id already exists.');
         }
-        throw ValidationError('Invalid input. Please try again.');
+
+        return true;
       },
-    ).interact();
+    ).interact().trim();
 
     printSpaces();
 
@@ -87,8 +93,6 @@ class AddCommand extends BaseDebuggerCommand {
         throw ValidationError('Invalid IP-address. Please try again.');
       },
     ).interact();
-
-    // TODO: add get platform for example x64 or arm64
 
     final InternetAddress? targetIp = InternetAddress.tryParse(targetStr);
     final bool useIp = targetIp != null;
@@ -247,5 +251,9 @@ class AddCommand extends BaseDebuggerCommand {
     for (int i = 0; i < n; i++) {
       logger.printStatus(' ');
     }
+  }
+
+  bool _isDuplicatedDeviceId(String s) {
+    return customDevicesConfig.devices.any((element) => element.id == s);
   }
 }
