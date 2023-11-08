@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:flutter_tools/src/base/common.dart';
+import 'package:interact/interact.dart';
 import 'package:snapp_debugger/command_runner/command_runner.dart';
 import 'package:snapp_debugger/commands/base_command.dart';
 
@@ -21,12 +22,20 @@ class DeleteCommand extends BaseDebuggerCommand {
 
   @override
   FutureOr<int>? run() {
-    if (!globalResults!.wasParsed(deviceIdOption)) {
-      missingRequiredOption();
+    /// check if the user has provided a device id with the -d option
+    if (globalResults!.wasParsed(deviceIdOption)) {
+      final deviceId = globalResults!.stringArg(deviceIdOption)!;
+
+      return _deleteDeviceWithId(deviceId);
     }
 
-    final deviceId = globalResults!.stringArg(deviceIdOption)!;
+    /// if the user didn't provide a device id, then we will show an interactive
+    /// prompt to select a device to delete
+    return _interactiveDeleteDevice();
+  }
 
+  /// Delete device with id [deviceId] from the Flutter SDK
+  int _deleteDeviceWithId(String deviceId) {
     if (!customDevicesConfig.contains(deviceId)) {
       throwToolExit(
           'Couldn\'t find device with id "$deviceId" in config at "${customDevicesConfig.configPath}"');
@@ -37,6 +46,38 @@ class DeleteCommand extends BaseDebuggerCommand {
         'Successfully removed device with id "$deviceId" from config at "${customDevicesConfig.configPath}"');
 
     return 0;
+  }
+
+  int _interactiveDeleteDevice() {
+    if (customDevicesConfig.devices.isEmpty) {
+      throwToolExit(
+        '''
+No devices found in config at "${customDevicesConfig.configPath}"
+
+Before you can delete a device, you need to add one first.
+''',
+      );
+    }
+
+    final devices = {
+      for (var e in customDevicesConfig.devices) '${e.id}-${e.label}': e.id
+    };
+
+    final selectedDevice = Select(
+      prompt: 'Select a device to delete',
+      options: devices.keys.toList(),
+    ).interact();
+
+    final deviceKey = devices.keys.elementAt(selectedDevice);
+
+    final deviceId = devices[deviceKey];
+
+    if (deviceId == null) {
+      throwToolExit(
+          'Couldn\'t find device with id "$deviceId" in config at "${customDevicesConfig.configPath}"');
+    }
+
+    return _deleteDeviceWithId(deviceId);
   }
 
   void missingRequiredOption() {
