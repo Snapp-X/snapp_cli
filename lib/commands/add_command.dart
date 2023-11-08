@@ -1,12 +1,11 @@
 // ignore_for_file: implementation_imports
 
 import 'dart:async';
-import 'package:async/async.dart';
 
 import 'package:flutter_tools/src/base/io.dart';
 import 'package:flutter_tools/src/base/platform.dart';
-import 'package:flutter_tools/src/base/terminal.dart';
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
+import 'package:interact/interact.dart';
 import 'package:snapp_debugger/commands/base_command.dart';
 import 'package:snapp_debugger/host_runner/host_runner_platform.dart';
 import 'package:snapp_debugger/utils/common.dart';
@@ -18,17 +17,12 @@ class AddCommand extends BaseDebuggerCommand {
     required this.flutterSdkManager,
     required super.customDevicesConfig,
     required super.logger,
-    required Terminal terminal,
     required Platform platform,
-  })  : _terminal = terminal,
-        _platform = platform;
+  }) : _platform = platform;
 
   final FlutterSdkManager flutterSdkManager;
 
-  final Terminal _terminal;
   final Platform _platform;
-
-  late StreamQueue<String> inputs;
 
   @override
   final name = 'add';
@@ -46,25 +40,6 @@ class AddCommand extends BaseDebuggerCommand {
     ///
     final hostPlatform = HostRunnerPlatform.build(_platform);
 
-    // Listen to the keystrokes stream as late as possible, since it's a
-    // single-subscription stream apparently.
-    // Also, _terminal.keystrokes can be closed unexpectedly, which will result
-    // in StreamQueue.next throwing a StateError when make the StreamQueue listen
-    // to that directly.
-    // This caused errors when using Ctrl+C to terminate while the
-    // custom-devices add command is waiting for user input.
-    // So instead, we add the keystrokes stream events to a new single-subscription
-    // stream and listen to that instead.
-    final StreamController<String> nonClosingKeystrokes =
-        StreamController<String>();
-
-    final StreamSubscription<String> keystrokesSubscription = _terminal
-        .keystrokes
-        .listen((String s) => nonClosingKeystrokes.add(s.trim()),
-            cancelOnError: true);
-
-    inputs = StreamQueue<String>(nonClosingKeystrokes.stream);
-
     /// path to the icu data file on the host machine
     final hostIcuDataPath = flutterSdkManager.icuDataPath;
 
@@ -74,41 +49,46 @@ class AddCommand extends BaseDebuggerCommand {
     /// path to the icu data file on the remote machine
     const hostIcuDataClone = '$hostBuildClonePath/engine';
 
-    final String id = (await askForString(
-      'id',
-      description:
-          'Please enter the id you want to device to have. Must contain only '
-          'alphanumeric or underscore characters.',
-      example: 'pi',
-      validator: (String s) async => RegExp(r'^\w+$').hasMatch(s),
-    ))!;
+    printSpaces();
 
-    final String label = (await askForString(
-      'label',
-      description:
-          'Please enter the label of the device, which is a slightly more verbose '
-          'name for the device.',
-      example: 'Raspberry Pi',
-    ))!;
+    final String id = Input(
+      prompt:
+          'Please enter the id you want to device to have. Must contain only alphanumeric or underscore characters. (example: pi)',
+      validator: (s) {
+        if (RegExp(r'^\w+$').hasMatch(s)) {
+          return true;
+        }
+        throw ValidationError('Invalid input. Please try again.');
+      },
+    ).interact();
 
-    final String sdkNameAndVersion = (await askForString(
-      'SDK name and version',
-      example: 'Raspberry Pi 4 Model B+',
-    ))!;
+    printSpaces();
 
-    final bool enabled = await askForBool(
-      'enabled',
-      description: 'Should the device be enabled?',
-    );
+    final String label = Input(
+      prompt:
+          'Please enter the label of the device, which is a slightly more verbose name for the device. (example: Raspberry Pi Model 4B)',
+      validator: (s) {
+        if (s.trim().isNotEmpty) {
+          return true;
+        }
+        throw ValidationError('Input is empty. Please try again.');
+      },
+    ).interact();
+
+    printSpaces();
+
+    final String targetStr = Input(
+      prompt:
+          'Please enter the IP-address of the device. (example: 192.168.1.101)',
+      validator: (s) {
+        if (_isValidIpAddr(s)) {
+          return true;
+        }
+        throw ValidationError('Invalid IP-address. Please try again.');
+      },
+    ).interact();
 
     // TODO: add get platform for example x64 or arm64
-
-    final String targetStr = (await askForString('target',
-        description:
-            'Please enter the hostname or IPv4/v6 address of the device.',
-        example: 'raspberrypi',
-        validator: (String s) async =>
-            _isValidHostname(s) || _isValidIpAddr(s)))!;
 
     final InternetAddress? targetIp = InternetAddress.tryParse(targetStr);
     final bool useIp = targetIp != null;
@@ -116,42 +96,30 @@ class AddCommand extends BaseDebuggerCommand {
     final InternetAddress loopbackIp =
         ipv6 ? InternetAddress.loopbackIPv6 : InternetAddress.loopbackIPv4;
 
-    final String username = (await askForString(
-      'username',
-      description:
-          'Please enter the username used for ssh-ing into the remote device.',
-      example: 'pi',
-      defaultsTo: 'no username',
-    ))!;
+    printSpaces();
 
-    final String remoteRunnerCommand = (await askForString(
-      'flutter executable path',
-      description:
-          'We need the exact path of your flutter command line tools on the remote device. \n'
-          'We will use this path to run flutter commands on the remote device like "flutter build linux --debug".\n'
+    final String username = Input(
+      prompt:
+          'Please enter the username used for ssh-ing into the remote device. (example: pi)',
+      defaultValue: 'no username',
+    ).interact();
+
+    printSpaces();
+
+    final String remoteRunnerCommand = Input(
+      prompt:
+          'We need the exact path of your flutter command line tools on the remote device. '
+          'We will use this path to run flutter commands on the remote device like "flutter build linux --debug".'
           'You can use which command to find it in your remote machine: "which flutter"'
-          '*NOTE: if you added flutter to one of directories in \$PATH variables, you can just enter "flutter" here.\n',
-      example: r'/home/pi/sdk/flutter/bin/flutter',
-      validator: (String s) async => _isValidPath(s),
-    ))!;
-
-    final bool usePortForwarding = await askForBool(
-      'use port forwarding',
-      description: 'Should the device use port forwarding? '
-          'Using port forwarding is the default because it works in all cases, however if your '
-          'remote device has a static IP address and you have a way of '
-          'specifying the "--vm-service-host=<ip>" engine option, you might prefer '
-          'not using port forwarding.',
-    );
-
-    final String screenshotCommand = (await askForString(
-      'screenshot command',
-      description:
-          'Enter the command executed on the remote device for taking a screenshot.',
-      example:
-          r"fbgrab /tmp/screenshot.png && cat /tmp/screenshot.png | base64 | tr -d ' \n\t'",
-      defaultsTo: 'no screenshotting support',
-    ))!;
+          '*NOTE: if you added flutter to one of directories in \$PATH variables, you can just enter "flutter" here.'
+          'example: /home/pi/sdk/flutter/bin/flutter',
+      validator: (s) {
+        if (_isValidPath(s)) {
+          return true;
+        }
+        throw ValidationError('Invalid Path to flutter. Please try again.');
+      },
+    ).interact();
 
     // SSH expects IPv6 addresses to use the bracket syntax like URIs do too,
     // but the IPv6 the user enters is a raw IPv6 address, so we need to wrap it.
@@ -164,8 +132,8 @@ class AddCommand extends BaseDebuggerCommand {
     CustomDeviceConfig config = CustomDeviceConfig(
       id: id,
       label: label,
-      sdkNameAndVersion: sdkNameAndVersion,
-      enabled: enabled,
+      sdkNameAndVersion: label,
+      enabled: true,
 
       // host-platform specific, filled out later
       pingCommand: hostPlatform.pingCommand(ipv6: ipv6, pingTarget: targetStr),
@@ -244,37 +212,21 @@ class AddCommand extends BaseDebuggerCommand {
           r'DISPLAY=:0 /tmp/\${appName}/build/linux/arm64/debug/bundle/\${appName} ;'
         ],
       ),
-
-      forwardPortCommand: usePortForwarding
-          ? <String>[
-              'ssh',
-              '-o',
-              'BatchMode=yes',
-              '-o',
-              'ExitOnForwardFailure=yes',
-              if (ipv6) '-6',
-              '-L',
-              '$formattedLoopbackIp:\${hostPort}:$formattedLoopbackIp:\${devicePort}',
-              sshTarget,
-              "echo 'Port forwarding success'; read",
-            ]
-          : null,
-      forwardPortSuccessRegex:
-          usePortForwarding ? RegExp('Port forwarding success') : null,
-      screenshotCommand: screenshotCommand.isNotEmpty
-          ? <String>[
-              'ssh',
-              '-o',
-              'BatchMode=yes',
-              if (ipv6) '-6',
-              sshTarget,
-              screenshotCommand,
-            ]
-          : null,
+      forwardPortCommand: <String>[
+        'ssh',
+        '-o',
+        'BatchMode=yes',
+        '-o',
+        'ExitOnForwardFailure=yes',
+        if (ipv6) '-6',
+        '-L',
+        '$formattedLoopbackIp:\${hostPort}:$formattedLoopbackIp:\${devicePort}',
+        sshTarget,
+        "echo 'Port forwarding success'; read",
+      ],
+      forwardPortSuccessRegex: RegExp('Port forwarding success'),
+      screenshotCommand: null,
     );
-
-    unawaited(keystrokesSubscription.cancel());
-    unawaited(nonClosingKeystrokes.close());
 
     customDevicesConfig.add(config);
 
@@ -284,79 +236,16 @@ class AddCommand extends BaseDebuggerCommand {
     return 0;
   }
 
+  // ignore: unused_element
   bool _isValidHostname(String s) => hostnameRegex.hasMatch(s);
 
   bool _isValidPath(String s) => pathRegex.hasMatch(s);
 
   bool _isValidIpAddr(String s) => InternetAddress.tryParse(s) != null;
 
-  /// Ask the user to input a string.
-  Future<String?> askForString(
-    String name, {
-    String? description,
-    String? example,
-    String? defaultsTo,
-    Future<bool> Function(String)? validator,
-  }) async {
-    String msg = description ?? name;
-
-    final String exampleOrDefault = <String>[
-      if (example != null) 'example: $example',
-      if (defaultsTo != null) 'empty for $defaultsTo',
-    ].join(', ');
-
-    if (exampleOrDefault.isNotEmpty) {
-      msg += ' ($exampleOrDefault)';
+  void printSpaces([int n = 2]) {
+    for (int i = 0; i < n; i++) {
+      logger.printStatus(' ');
     }
-
-    logger.printStatus('\n$msg');
-    while (true) {
-      if (!await inputs.hasNext) {
-        return null;
-      }
-
-      final String input = await inputs.next;
-
-      if (validator != null && !await validator(input)) {
-        logger.printStatus('Invalid input. Please enter $name:');
-      } else {
-        return input;
-      }
-    }
-  }
-
-  /// Ask the user for a y(es) / n(o) or empty input.
-  Future<bool> askForBool(
-    String name, {
-    String? description,
-    bool defaultsTo = true,
-  }) async {
-    final String defaultsToStr = defaultsTo ? '[Y/n]' : '[y/N]';
-    logger.printStatus('\n $description $defaultsToStr (empty for default)');
-    while (true) {
-      final String input = await inputs.next;
-
-      if (input.isEmpty) {
-        return defaultsTo;
-      } else if (input.toLowerCase() == 'y') {
-        return true;
-      } else if (input.toLowerCase() == 'n') {
-        return false;
-      } else {
-        logger.printStatus(
-            'Invalid input. Expected is either y, n or empty for default. $name? $defaultsToStr');
-      }
-    }
-  }
-
-  /// Ask the user if he wants to apply the config.
-  /// Shows a different prompt if errors or warnings exist in the config.
-  Future<bool> askApplyConfig({bool hasErrorsOrWarnings = false}) {
-    return askForBool('apply',
-        description: hasErrorsOrWarnings
-            ? 'Warnings or errors exist in custom device. '
-                'Would you like to add the custom device to the config anyway?'
-            : 'Would you like to add the custom device to the config now?',
-        defaultsTo: !hasErrorsOrWarnings);
   }
 }
