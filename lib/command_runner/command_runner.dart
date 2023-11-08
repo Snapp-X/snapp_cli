@@ -35,7 +35,6 @@ class SnappDebuggerCommandRunner extends CommandRunner<int> {
       AddCommand(
         flutterSdkManager: flutterSdkManager,
         customDevicesConfig: flutterSdkManager.customDeviceConfig,
-        terminal: flutterSdkManager.terminal,
         platform: flutterSdkManager.platform,
         logger: flutterSdkManager.logger,
       ),
