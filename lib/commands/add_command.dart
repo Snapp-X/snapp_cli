@@ -1,9 +1,11 @@
 // ignore_for_file: implementation_imports
 
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter_tools/src/base/io.dart';
 import 'package:flutter_tools/src/base/platform.dart';
+import 'package:flutter_tools/src/base/process.dart';
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
 import 'package:interact/interact.dart';
 import 'package:snapp_debugger/commands/base_command.dart';
@@ -23,11 +25,16 @@ class AddCommand extends BaseDebuggerCommand {
     required super.customDevicesConfig,
     required super.logger,
     required Platform platform,
-  }) : _platform = platform;
+  }) : hostPlatform = HostRunnerPlatform.build(platform);
 
   final FlutterSdkManager flutterSdkManager;
 
-  final Platform _platform;
+  /// create a HostPlatform instance based on the current platform
+  /// with the help of this class we can make the commands platform specific
+  /// for example, the ping command is different on windows and linux
+  ///
+  /// only supports windows, linux and macos
+  final HostRunnerPlatform hostPlatform;
 
   @override
   final name = 'add';
@@ -60,7 +67,7 @@ class AddCommand extends BaseDebuggerCommand {
     _printSpaces();
 
     final selectedPredefinedDevice = Select(
-      prompt: 'Select a device to delete',
+      prompt: 'Select your device',
       options: predefinedDevices.keys.toList(),
     ).interact();
 
@@ -88,14 +95,6 @@ class AddCommand extends BaseDebuggerCommand {
   Future<int> _addCustomDevice({
     CustomDeviceConfig? predefinedConfig,
   }) async {
-    /// create a HostPlatform instance based on the current platform
-    /// with the help of this class we can make the commands platform specific
-    /// for example, the ping command is different on windows and linux
-    ///
-    /// only supports windows, linux and macos
-    ///
-    final hostPlatform = HostRunnerPlatform.build(_platform);
-
     /// path to the icu data file on the host machine
     final hostIcuDataPath = flutterSdkManager.icuDataPath;
 
@@ -151,6 +150,7 @@ class AddCommand extends BaseDebuggerCommand {
     logger.printStatus(
       'Please enter the IP-address of the device. (example: 192.168.1.101)',
     );
+
     final String targetStr = Input(
       prompt: 'Device IP-address:',
       validator: (s) {
@@ -172,29 +172,10 @@ class AddCommand extends BaseDebuggerCommand {
     logger.printStatus(
       'Please enter the username used for ssh-ing into the remote device. (example: pi)',
     );
+
     final String username = Input(
       prompt: 'Device Username:',
       defaultValue: 'no username',
-    ).interact();
-
-    _printSpaces();
-
-    logger.printStatus(
-      'We need the exact path of your flutter command line tools on the remote device. '
-      'We will use this path to run flutter commands on the remote device like "flutter build linux --debug". \n'
-      'You can use which command to find it in your remote machine: "which flutter" \n'
-      '*NOTE: if you added flutter to one of directories in \$PATH variables, you can just enter "flutter" here. \n'
-      '(example: /home/pi/sdk/flutter/bin/flutter)',
-    );
-
-    final String remoteRunnerCommand = Input(
-      prompt: 'Flutter path on device:',
-      validator: (s) {
-        if (_isValidPath(s)) {
-          return true;
-        }
-        throw ValidationError('Invalid Path to flutter. Please try again.');
-      },
     ).interact();
 
     // SSH expects IPv6 addresses to use the bracket syntax like URIs do too,
@@ -204,6 +185,63 @@ class AddCommand extends BaseDebuggerCommand {
 
     final String formattedLoopbackIp =
         ipv6 ? '[${loopbackIp.address}]' : loopbackIp.address;
+
+    _printSpaces();
+
+    final isDeviceReachable = await _tryPingDevice(targetStr, ipv6);
+
+    if (!isDeviceReachable) {
+      logger.printStatus(
+        'Could not reach the device with the given IP-address.',
+      );
+
+      final continueWithoutPing = Confirm(
+        prompt: 'Do you want to continue anyway?',
+        defaultValue: true, // this is optional
+        waitForNewLine: true, // optional and will be false by default
+      ).interact();
+
+      if (!continueWithoutPing) {
+        _printSpaces();
+        logger.printStatus('Check your device IP-address and try again.');
+        return 1;
+      }
+    }
+
+    _printSpaces();
+
+    logger.printStatus(
+      'We need the exact path of your flutter command line tools on the remote device. '
+      'We will use this path to run flutter commands on the remote device like "flutter build linux --debug". \n',
+    );
+
+    String remoteRunnerCommand = '';
+
+    if (isDeviceReachable) {
+      final possibleFlutterPath = await _findFlutterPath(sshTarget, ipv6);
+
+      remoteRunnerCommand = possibleFlutterPath ?? '';
+    }
+
+    if (remoteRunnerCommand.isEmpty) {
+      logger.printStatus(
+        'Could not find flutter in the remote machine automatically. \n\n'
+        'You need to provide it manually.'
+        'You can use which command to find it in your remote machine: "which flutter" \n'
+        '*NOTE: if you added flutter to one of directories in \$PATH variables, you can just enter "flutter" here. \n'
+        '(example: /home/pi/sdk/flutter/bin/flutter)',
+      );
+
+      remoteRunnerCommand = Input(
+        prompt: 'Flutter path on device:',
+        validator: (s) {
+          if (_isValidPath(s)) {
+            return true;
+          }
+          throw ValidationError('Invalid Path to flutter. Please try again.');
+        },
+      ).interact();
+    }
 
     CustomDeviceConfig config = CustomDeviceConfig(
       id: id,
@@ -309,7 +347,7 @@ class AddCommand extends BaseDebuggerCommand {
     _printSpaces();
 
     logger.printStatus(
-      'Successfully added custom device to config file at "${customDevicesConfig.configPath}".',
+      '✔️ Successfully added custom device to config file at "${customDevicesConfig.configPath}". ✔️',
     );
 
     _printSpaces();
@@ -347,5 +385,119 @@ class AddCommand extends BaseDebuggerCommand {
     }
 
     return '$s-$i';
+  }
+
+  Future<bool> _tryPingDevice(String pingTarget, bool ipv6) async {
+    final spinner = Spinner(
+      icon: '✔️',
+      leftPrompt: (done) => '', // prompts are optional
+      rightPrompt: (done) => done
+          ? 'pinging device completed.'
+          : 'pinging device to check if it is reachable.',
+    ).interact();
+
+    final processRunner = ProcessUtils(
+      processManager: flutterSdkManager.processManager,
+      logger: logger,
+    );
+
+    await Future.delayed(Duration(seconds: 2));
+
+    final result = await processRunner.run(
+      hostPlatform.pingCommand(ipv6: ipv6, pingTarget: pingTarget),
+      timeout: Duration(seconds: 10),
+    );
+
+    spinner.done();
+
+    logger.printTrace('Ping Command ExitCode: ${result.exitCode}');
+    logger.printTrace('Ping Command Stdout: ${result.stdout.trim()}');
+    logger.printTrace('Ping Command Stderr: ${result.stderr}');
+
+    _printSpaces();
+
+    if (result.exitCode != 0) {
+      return false;
+    }
+
+    // If the user doesn't configure a ping success regex, any ping with exitCode zero
+    // is good enough. Otherwise we check if either stdout or stderr have a match of
+    // the pingSuccessRegex.
+    final RegExp? pingSuccessRegex = hostPlatform.pingSuccessRegex;
+
+    return pingSuccessRegex == null ||
+        pingSuccessRegex.hasMatch(result.stdout) ||
+        pingSuccessRegex.hasMatch(result.stderr);
+  }
+
+  /// finds flutter in the host using ssh connection
+  /// returns the path of flutter if found it
+  /// otherwise returns null
+  Future<String?> _findFlutterPath(String sshTarget, bool ipv6) async {
+    final spinner = Spinner(
+      icon: '✔️',
+      leftPrompt: (done) => '', // prompts are optional
+      rightPrompt: (done) => done
+          ? 'finding flutter path completed'
+          : 'finding flutter path on remote device.',
+    ).interact();
+
+    final processRunner = ProcessUtils(
+      processManager: flutterSdkManager.processManager,
+      logger: logger,
+    );
+
+    final result = await processRunner.run(
+      hostPlatform.sshCommand(
+        ipv6: ipv6,
+        sshTarget: sshTarget,
+        command: 'find / -type d -name "bin" -path "*/flutter/bin" 2>/dev/null',
+      ),
+      timeout: Duration(seconds: 10),
+    );
+
+    spinner.done();
+
+    _printSpaces();
+
+    logger.printTrace('Find Flutter ExitCode: ${result.exitCode}');
+    logger.printTrace('Find Flutter Stdout: ${result.stdout.trim()}');
+    logger.printTrace('Find Flutter Stderr: ${result.stderr}');
+
+    final output = result.stdout.trim();
+
+    if (result.exitCode != 0 && output.isEmpty) {
+      return null;
+    }
+
+    final outputLinesLength = output.split('\n').length;
+    final isOutputMultipleLines = outputLinesLength > 1;
+
+    if (!isOutputMultipleLines) {
+      logger
+          .printStatus('We found flutter in "$output" in the remote machine. ');
+      final flutterSdkPathConfirmation = Confirm(
+        prompt: 'Do you want to use this path?',
+        defaultValue: true, // this is optional
+        waitForNewLine: true, // optional and will be false by default
+      ).interact();
+
+      return flutterSdkPathConfirmation ? output : null;
+    } else {
+      final outputLines = output
+          .split('\n')
+          .map((e) => e.trim())
+          .toList()
+          .sublist(0, min(2, outputLinesLength));
+
+      logger.printStatus(
+          'We found multiple flutter paths in the remote machine. ');
+      final flutterSdkPathSelection = Select(
+        prompt: 'Please select the path of flutter you want to use.',
+        options: outputLines,
+      ).interact();
+
+      return outputLines[flutterSdkPathSelection];
+    }
   }
 }
