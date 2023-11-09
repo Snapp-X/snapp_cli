@@ -172,6 +172,7 @@ class AddCommand extends BaseDebuggerCommand {
     logger.printStatus(
       'Please enter the username used for ssh-ing into the remote device. (example: pi)',
     );
+
     final String username = Input(
       prompt: 'Device Username:',
       defaultValue: 'no username',
@@ -187,14 +188,40 @@ class AddCommand extends BaseDebuggerCommand {
 
     _printSpaces();
 
+    final isDeviceReachable = await _tryPingDevice(targetStr, ipv6);
+
+    if (!isDeviceReachable) {
+      logger.printStatus(
+        'Could not reach the device with the given IP-address.',
+      );
+
+      final continueWithoutPing = Confirm(
+        prompt: 'Do you want to continue anyway?',
+        defaultValue: true, // this is optional
+        waitForNewLine: true, // optional and will be false by default
+      ).interact();
+
+      if (!continueWithoutPing) {
+        _printSpaces();
+        logger.printStatus('Check your device IP-address and try again.');
+        return 1;
+      }
+    }
+
+    _printSpaces();
+
     logger.printStatus(
       'We need the exact path of your flutter command line tools on the remote device. '
       'We will use this path to run flutter commands on the remote device like "flutter build linux --debug". \n',
     );
 
-    final possibleFlutterPath = await _findFlutterPath(sshTarget, ipv6);
+    String remoteRunnerCommand = '';
 
-    String remoteRunnerCommand = possibleFlutterPath ?? '';
+    if (isDeviceReachable) {
+      final possibleFlutterPath = await _findFlutterPath(sshTarget, ipv6);
+
+      remoteRunnerCommand = possibleFlutterPath ?? '';
+    }
 
     if (remoteRunnerCommand.isEmpty) {
       logger.printStatus(
@@ -320,7 +347,7 @@ class AddCommand extends BaseDebuggerCommand {
     _printSpaces();
 
     logger.printStatus(
-      'Successfully added custom device to config file at "${customDevicesConfig.configPath}".',
+      '✔️ Successfully added custom device to config file at "${customDevicesConfig.configPath}". ✔️',
     );
 
     _printSpaces();
@@ -360,6 +387,49 @@ class AddCommand extends BaseDebuggerCommand {
     return '$s-$i';
   }
 
+  Future<bool> _tryPingDevice(String pingTarget, bool ipv6) async {
+    final spinner = Spinner(
+      icon: '✔️',
+      leftPrompt: (done) => '', // prompts are optional
+      rightPrompt: (done) => done
+          ? 'pinging device completed.'
+          : 'pinging device to check if it is reachable.',
+    ).interact();
+
+    final processRunner = ProcessUtils(
+      processManager: flutterSdkManager.processManager,
+      logger: logger,
+    );
+
+    await Future.delayed(Duration(seconds: 2));
+
+    final result = await processRunner.run(
+      hostPlatform.pingCommand(ipv6: ipv6, pingTarget: pingTarget),
+      timeout: Duration(seconds: 10),
+    );
+
+    spinner.done();
+
+    logger.printTrace('Ping Command ExitCode: ${result.exitCode}');
+    logger.printTrace('Ping Command Stdout: ${result.stdout.trim()}');
+    logger.printTrace('Ping Command Stderr: ${result.stderr}');
+
+    _printSpaces();
+
+    if (result.exitCode != 0) {
+      return false;
+    }
+
+    // If the user doesn't configure a ping success regex, any ping with exitCode zero
+    // is good enough. Otherwise we check if either stdout or stderr have a match of
+    // the pingSuccessRegex.
+    final RegExp? pingSuccessRegex = hostPlatform.pingSuccessRegex;
+
+    return pingSuccessRegex == null ||
+        pingSuccessRegex.hasMatch(result.stdout) ||
+        pingSuccessRegex.hasMatch(result.stderr);
+  }
+
   /// finds flutter in the host using ssh connection
   /// returns the path of flutter if found it
   /// otherwise returns null
@@ -390,9 +460,9 @@ class AddCommand extends BaseDebuggerCommand {
 
     _printSpaces();
 
-    logger.printTrace('ExitCode: ${result.exitCode}');
-    logger.printTrace('Stdout: ${result.stdout.trim()}');
-    logger.printTrace('Stderr: ${result.stderr}');
+    logger.printTrace('Find Flutter ExitCode: ${result.exitCode}');
+    logger.printTrace('Find Flutter Stdout: ${result.stdout.trim()}');
+    logger.printTrace('Find Flutter Stderr: ${result.stderr}');
 
     final output = result.stdout.trim();
 
