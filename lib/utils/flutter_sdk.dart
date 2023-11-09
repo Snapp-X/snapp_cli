@@ -1,4 +1,4 @@
-// ignore_for_file: implementation_imports
+// ignore_for_file: implementation_imports, depend_on_referenced_packages
 
 import 'dart:io' as io;
 
@@ -15,6 +15,7 @@ import 'package:flutter_tools/src/base/user_messages.dart';
 import 'package:flutter_tools/src/cache.dart';
 import 'package:flutter_tools/src/globals.dart' as globals;
 import 'package:package_config/package_config.dart';
+import 'package:process/process.dart';
 import 'package:path/path.dart' as path;
 
 /// singleton class to manage flutter sdk
@@ -32,6 +33,8 @@ class FlutterSdkManager {
   FileSystem get flutterSdkFileSystem => _provider(globals.localFileSystem);
   CustomDevicesConfig get customDeviceConfig =>
       _provider(globals.customDevicesConfig);
+
+  ProcessManager get processManager => _provider(globals.processManager);
   Terminal get terminal => _provider(globals.terminal);
   Platform get platform => _provider(globals.platform);
   Logger get logger => _provider(globals.logger);
