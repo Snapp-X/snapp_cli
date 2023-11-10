@@ -6,6 +6,9 @@ repository: https://github.com/Snapp-Embedded/snapp_debugger
 environment:
   sdk: ^3.1.2
 
+executables:
+  snapp_debugger: main
+
 # Add regular dependencies here.
 dependencies:
   flutter_tools:

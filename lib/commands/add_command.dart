@@ -134,7 +134,7 @@ class AddCommand extends BaseDebuggerCommand {
       logger.printStatus(
         'Please enter the label of the device, which is a slightly more verbose name for the device. (example: Raspberry Pi Model 4B)',
       );
-      Input(
+      label = Input(
         prompt: 'Device label:',
         validator: (s) {
           if (s.trim().isNotEmpty) {
@@ -451,7 +451,8 @@ class AddCommand extends BaseDebuggerCommand {
       hostPlatform.sshCommand(
         ipv6: ipv6,
         sshTarget: sshTarget,
-        command: 'find / -type d -name "bin" -path "*/flutter/bin" 2>/dev/null',
+        command:
+            'find / -type f -name "flutter" -path "*/flutter/bin/*" 2>/dev/null',
       ),
       timeout: Duration(seconds: 10),
     );
