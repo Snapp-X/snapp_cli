@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:collection/collection.dart';
+import 'package:interact/interact.dart';
 import 'package:snapp_debugger/command_runner/command_runner.dart';
 import 'package:snapp_debugger/commands/base_command.dart';
 import 'package:flutter_tools/src/base/io.dart';
@@ -33,47 +34,87 @@ class UpdateIpCommand extends BaseDebuggerCommand {
 
   @override
   FutureOr<int>? run() {
-    if (!globalResults!.wasParsed(deviceIdOption)) {
-      missingRequiredOption();
+    if (customDevicesConfig.devices.isEmpty) {
+      throwToolExit(
+        '''
+No devices found in config at "${customDevicesConfig.configPath}"
+
+Before you can update a device, you need to add one first.
+''',
+      );
+    }
+    
+    String? deviceId;
+    if (globalResults!.wasParsed(deviceIdOption)) {
+      deviceId = globalResults!.stringArg(deviceIdOption)!;
     }
 
-    final deviceId = globalResults!.stringArg(deviceIdOption)!;
-
-    if (!argResults!.wasParsed(_ipOption)) {
-      missingRequiredOption();
+    String? ip;
+    if (argResults!.wasParsed(_ipOption)) {
+      ip = argResults!.stringArg(_ipOption)!;
     }
 
-    final ip = argResults!.stringArg(_ipOption)!;
+    if (deviceId != null && ip != null) {
+      if (!_isValidIpAddr(ip)) {
+        usageException('Ip address passed to this command is not valid');
+      }
 
-    final isIpValid = InternetAddress.tryParse(ip) != null;
-
-    if (!isIpValid) {
-      usageException('Ip address passed to this command is not valid');
+      return _updateIp(deviceId, ip);
     }
 
+    return _interactiveUpdateIp(deviceId, ip);
+  }
+
+  int _interactiveUpdateIp(String? deviceId, String? ip) {
+    if (deviceId == null) {
+      final devices = {
+        for (var e in customDevicesConfig.devices) '${e.id} : ${e.label}': e.id
+      };
+
+      logger.printStatus('Please select a device to update its IP address.');
+
+      final selectedDevice = Select(
+        prompt: 'Target device',
+        options: devices.keys.toList(),
+      ).interact();
+
+      final deviceKey = devices.keys.elementAt(selectedDevice);
+
+      deviceId = devices[deviceKey];
+    }
+
+    if (deviceId == null) {
+      throwToolExit(
+          'Couldn\'t find device with id "$deviceId" in config at "${customDevicesConfig.configPath}"');
+    }
+
+    if (ip == null) {
+      logger.printStatus(
+        'Please enter the new IP-address of the device. (example: 192.168.1.101)',
+      );
+
+      final String newIp = Input(
+        prompt: 'New IP-address:',
+        validator: (s) {
+          if (_isValidIpAddr(s)) {
+            return true;
+          }
+          throw ValidationError('Invalid IP-address. Please try again.');
+        },
+      ).interact();
+
+      ip = newIp;
+    }
+
+    return _updateIp(deviceId, ip);
+  }
+
+  int _updateIp(String deviceId, String newIp) {
     if (!customDevicesConfig.contains(deviceId)) {
       throwToolExit(
           'Couldn\'t find device with id "$deviceId" in config at "${customDevicesConfig.configPath}"');
     }
 
-    _changeIp(deviceId, ip);
-
-    return 0;
-  }
-
-  void missingRequiredOption() {
-    usageException(
-      '''
-Update IP command requires a device id and an IP address
-You can run this command like this:
-
-${runner!.executableName} $name -d <device-id> -i <ip-address>
-
-''',
-    );
-  }
-
-  void _changeIp(String deviceId, String newIp) {
     final currentDeviceConfig = customDevicesConfig.devices
         .firstWhere((element) => element.id == deviceId);
 
@@ -104,7 +145,11 @@ Or Maybe you entered a host name instead of IpAddress in add command
     logger.printStatus(
       'IP address of device with id "$deviceId" successfully changed from "$oldIp" to "$newIp" in config at "${customDevicesConfig.configPath}"',
     );
+
+    return 0;
   }
+
+  bool _isValidIpAddr(String s) => InternetAddress.tryParse(s) != null;
 
   /// find ip v4 and v6 in ping command
   String? _findOldIpInPingCommand(List<String> pingCommand) {
@@ -186,4 +231,16 @@ Or Maybe you entered a host name instead of IpAddress in add command
         }
         return item;
       }).toList();
+
+  void missingRequiredOption() {
+    usageException(
+      '''
+Update IP command requires a device id and an IP address
+You can run this command like this:
+
+${runner!.executableName} $name -d <device-id> -i <ip-address>
+
+''',
+    );
+  }
 }
