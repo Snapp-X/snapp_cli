@@ -1,3 +1,10 @@
+## 0.2.0 BETA
+
+- Beta version for pub
+- interactive mode for all commands added 
+- express mode added
+- automation for add command added 
+
 ## 0.1.0 ALPHA
 
 - Alpha version for pub.
