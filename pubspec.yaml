@@ -1,10 +1,13 @@
 name: snapp_debugger
 description: snapp_debugger is a Dart command-line tool designed to simplify the process of adding custom devices to the Flutter SDK.
-version: 0.1.0
+version: 0.2.0
 repository: https://github.com/Snapp-Embedded/snapp_debugger
 
 environment:
   sdk: ^3.1.2
+
+executables:
+  snapp_debugger: main
 
 # Add regular dependencies here.
 dependencies:
@@ -17,6 +20,8 @@ dependencies:
   file: ^6.1.4
   async: ^2.11.0
   collection: ^1.18.0
+  interact: ^2.2.0
+  process: ^4.2.4
 
 dev_dependencies:
   lints: ^2.0.0
