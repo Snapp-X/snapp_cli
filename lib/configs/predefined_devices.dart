@@ -9,7 +9,6 @@ final Map<String, CustomDeviceConfig> predefinedDevices = Map.unmodifiable(
     raspberryPi4.label: raspberryPi4,
     raspberryPi3.label: raspberryPi3,
     raspberryZero.label: raspberryZero,
-    raspberryZeroW.label: raspberryZeroW,
     raspberryZero2W.label: raspberryZero2W,
   },
 );
@@ -57,14 +56,8 @@ CustomDeviceConfig raspberryZero = _defaultConfig.copyWith(
   sdkNameAndVersion: 'Raspberry Pi Zero',
 );
 
-CustomDeviceConfig raspberryZeroW = _defaultConfig.copyWith(
-  id: 'pi-zero-w',
-  label: 'Raspberry Pi Zero W',
-  sdkNameAndVersion: 'Raspberry Pi Zero W',
-);
-
 CustomDeviceConfig raspberryZero2W = _defaultConfig.copyWith(
-  id: 'pi-zero-2-w',
+  id: 'pi-zero2w',
   label: 'Raspberry Pi Zero 2 W',
   sdkNameAndVersion: 'Raspberry Pi Zero 2 W',
 );

@@ -60,7 +60,7 @@ Before you can delete a device, you need to add one first.
     }
 
     final devices = {
-      for (var e in customDevicesConfig.devices) '${e.id}-${e.label}': e.id
+      for (var e in customDevicesConfig.devices) '${e.id} : ${e.label}': e.id
     };
 
     final selectedDevice = Select(
