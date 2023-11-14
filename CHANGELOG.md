@@ -1,3 +1,10 @@
+## 0.3.0 BETA
+- `devices` command added, with following sub-commands:
+   - `add` command added
+   - `delete` command added
+   - `list` command added
+   - `update-ip` command added
+    
 ## 0.2.0 BETA
 
 - Beta version for pub
