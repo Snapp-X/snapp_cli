@@ -10,8 +10,7 @@ import 'package:snapp_cli/commands/base_command.dart';
 /// Add a new raspberry device to the Flutter SDK custom devices
 class DeleteCommand extends BaseSnappCommand {
   DeleteCommand({
-    required super.customDevicesConfig,
-    required super.logger,
+    required super.flutterSdkManager,
   });
 
   @override

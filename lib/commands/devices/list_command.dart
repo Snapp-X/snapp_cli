@@ -7,8 +7,7 @@ import 'package:process_run/process_run.dart' as process_run;
 /// it will utilize the `flutter custom-devices list` command to show the list
 class ListCommand extends BaseSnappCommand {
   ListCommand({
-    required super.customDevicesConfig,
-    required super.logger,
+    required super.flutterSdkManager,
   });
 
   @override

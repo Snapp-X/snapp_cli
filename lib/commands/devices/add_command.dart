@@ -13,7 +13,6 @@ import 'package:snapp_cli/configs/predefined_devices.dart';
 import 'package:snapp_cli/host_runner/host_runner_platform.dart';
 import 'package:snapp_cli/utils/common.dart';
 import 'package:flutter_tools/src/base/common.dart';
-import 'package:snapp_cli/utils/flutter_sdk.dart';
 
 /// Add a new raspberry device to the Flutter SDK custom devices
 ///
@@ -21,13 +20,9 @@ import 'package:snapp_cli/utils/flutter_sdk.dart';
 // TODO: add get platform for example: x64 or arm64
 class AddCommand extends BaseSnappCommand {
   AddCommand({
-    required this.flutterSdkManager,
-    required super.customDevicesConfig,
-    required super.logger,
+    required super.flutterSdkManager,
     required Platform platform,
   }) : hostPlatform = HostRunnerPlatform.build(platform);
-
-  final FlutterSdkManager flutterSdkManager;
 
   /// create a HostPlatform instance based on the current platform
   /// with the help of this class we can make the commands platform specific
@@ -447,19 +442,27 @@ class AddCommand extends BaseSnappCommand {
       logger: logger,
     );
 
-    final result = await processRunner.run(
-      hostPlatform.sshCommand(
-        ipv6: ipv6,
-        sshTarget: sshTarget,
-        command:
-            'find / -type f -name "flutter" -path "*/flutter/bin/*" 2>/dev/null',
-      ),
-      timeout: Duration(seconds: 10),
-    );
+    final RunResult result;
+    try {
+      result = await processRunner.run(
+        hostPlatform.sshCommand(
+          ipv6: ipv6,
+          sshTarget: sshTarget,
+          command:
+              'find / -type f -name "flutter" -path "*/flutter/bin/*" 2>/dev/null',
+        ),
+        timeout: Duration(seconds: 10),
+      );
+    } catch (e, s) {
+      logger.printStatus(
+          'Something went wrong while trying to find flutter. \n $e \n $s');
 
-    spinner.done();
+      return null;
+    } finally {
+      spinner.done();
 
-    _printSpaces();
+      _printSpaces();
+    }
 
     logger.printTrace('Find Flutter ExitCode: ${result.exitCode}');
     logger.printTrace('Find Flutter Stdout: ${result.stdout.trim()}');

@@ -16,8 +16,7 @@ const _ipOption = 'ip';
 
 class UpdateIpCommand extends BaseSnappCommand {
   UpdateIpCommand({
-    required super.customDevicesConfig,
-    required super.logger,
+    required super.flutterSdkManager,
   }) {
     argParser.addOption(
       _ipOption,
