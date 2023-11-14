@@ -71,20 +71,21 @@ Make sure that system cache bin directory is added to your system's PATH to use 
 
 `snapp_cli` provides the following commands:
 
-- **add:** Add a custom device configuration.
-   - Use the `add` command to add and configure a custom device for the Flutter SDK. You can specify the device name, IP address, and other information to customize your development environment.
+- **devices:** Manage custom devices in the Flutter SDK. with this command you can add, delete, list, and update custom devices. Following sub-commands are available for this command:
+   - **add:** Add a custom device configuration.
+      - Use the `add` command to add and configure a custom device for the Flutter SDK. You can specify the device name, IP address, and other information to customize your development environment.
 
-- **delete:** Delete a custom device configuration.
-   - The `delete` command allows you to remove a previously configured custom device from your settings.
+   - **delete:** Delete a custom device configuration.
+      - The `delete` command allows you to remove a previously configured custom device from your settings.
 
-- **list:** List configured custom devices.
-   - The `list` command displays a list of all the custom devices that is available on the flutter SDK.
+   - **list:** List configured custom devices.
+      - The `list` command displays a list of all the custom devices that is available on the flutter SDK.
 
-- **update-ip:** Update the IP address of a custom device.
-   - The `update-ip` command is used to modify the IP address of an existing custom device configuration. This is useful when the device's IP address changes, such as due to DHCP, and you need to update your settings. Example:
-``` bash
-snapp_cli update-ip -d raspberry -i 192.168.115.92 
-```
+   - **update-ip:** Update the IP address of a custom device.
+      - The `update-ip` command is used to modify the IP address of an existing custom device configuration. This is useful when the device's IP address changes, such as due to DHCP, and you need to update your settings. Example:
+      ``` bash
+      snapp_cli devices update-ip 
+      ```
 
 
 ------------
@@ -107,7 +108,7 @@ Use this command to interactively specify the settings for a custom device that 
 To add a custom device, simply run the following command:
 
 ```
-snapp_cli add
+snapp_cli devices add
 ```
 
 snapp_cli will then guide you through the process, prompting you with questions to gather the necessary information for your custom device configuration. Follow the on-screen prompts to complete the configuration.

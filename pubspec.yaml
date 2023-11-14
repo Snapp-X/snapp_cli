@@ -1,6 +1,6 @@
 name: snapp_cli
 description: snapp_cli is a Dart command-line tool designed to simplify the process of adding custom devices to the Flutter SDK.
-version: 0.2.0
+version: 0.3.0
 repository: https://github.com/Snapp-Embedded/snapp_cli
 
 environment:
@@ -16,7 +16,6 @@ dependencies:
   args: ^2.4.2
   path: ^1.8.3
   package_config: ^2.1.0
-  process_run: ^0.13.1
   file: ^6.1.4
   async: ^2.11.0
   collection: ^1.18.0
