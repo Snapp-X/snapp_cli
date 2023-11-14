@@ -5,8 +5,8 @@ import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:interact/interact.dart';
-import 'package:snapp_debugger/command_runner/command_runner.dart';
-import 'package:snapp_debugger/commands/base_command.dart';
+import 'package:snapp_cli/command_runner/command_runner.dart';
+import 'package:snapp_cli/commands/base_command.dart';
 import 'package:flutter_tools/src/base/io.dart';
 
 import 'package:flutter_tools/src/base/common.dart';
@@ -14,10 +14,9 @@ import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
 
 const _ipOption = 'ip';
 
-class UpdateIpCommand extends BaseDebuggerCommand {
+class UpdateIpCommand extends BaseSnappCommand {
   UpdateIpCommand({
-    required super.customDevicesConfig,
-    required super.logger,
+    required super.flutterSdkManager,
   }) {
     argParser.addOption(
       _ipOption,
@@ -43,7 +42,7 @@ Before you can update a device, you need to add one first.
 ''',
       );
     }
-    
+
     String? deviceId;
     if (globalResults!.wasParsed(deviceIdOption)) {
       deviceId = globalResults!.stringArg(deviceIdOption)!;

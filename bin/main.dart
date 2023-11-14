@@ -3,7 +3,7 @@ import 'dart:io' as io;
 import 'package:args/command_runner.dart';
 import 'package:flutter_tools/src/context_runner.dart';
 import 'package:flutter_tools/src/base/common.dart';
-import 'package:snapp_debugger/snapp_debugger.dart';
+import 'package:snapp_cli/snapp_cli.dart';
 
 Future<void> main(List<String> arguments) async {
   late int exitCode;
@@ -22,7 +22,7 @@ Future<void> main(List<String> arguments) async {
             'Enable using `flutter config --enable-custom-devices`.');
       }
 
-      return await SnappDebuggerCommandRunner(
+      return await SnappCliCommandRunner(
             flutterSdkManager: sdkManager,
           ).run(arguments) ??
           0;

@@ -4,15 +4,18 @@ import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:flutter_tools/src/base/logger.dart';
 import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
+import 'package:snapp_cli/utils/flutter_sdk.dart';
 
-abstract class BaseDebuggerCommand extends Command<int> {
-  BaseDebuggerCommand({
-    required this.customDevicesConfig,
-    required this.logger,
+abstract class BaseSnappCommand extends Command<int> {
+  BaseSnappCommand({
+    required this.flutterSdkManager,
   });
 
-  final CustomDevicesConfig customDevicesConfig;
-  final Logger logger;
+  final FlutterSdkManager flutterSdkManager;
+
+  CustomDevicesConfig get customDevicesConfig =>
+      flutterSdkManager.customDeviceConfig;
+  Logger get logger => flutterSdkManager.logger;
 }
 
 extension ArgResultsExtension on ArgResults {

@@ -1,14 +1,13 @@
 // ignore_for_file: implementation_imports
 
-import 'package:snapp_debugger/commands/base_command.dart';
+import 'package:snapp_cli/commands/base_command.dart';
 import 'package:process_run/process_run.dart' as process_run;
 
 /// List all custom devices added to the Flutter SDK with custom-devices command
 /// it will utilize the `flutter custom-devices list` command to show the list
-class ListCommand extends BaseDebuggerCommand {
+class ListCommand extends BaseSnappCommand {
   ListCommand({
-    required super.customDevicesConfig,
-    required super.logger,
+    required super.flutterSdkManager,
   });
 
   @override

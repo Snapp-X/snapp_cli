@@ -1,10 +1,10 @@
-## snapp\_debugger
+## snapp\_cli
 
-`snapp_debugger` is a Dart command-line tool designed to simplify the process of adding custom devices to the Flutter SDK. With this tool, you can configure and run your Flutter apps on non-standard or remote devices, such as a Raspberry Pi, while maintaining essential Flutter features like hot reload and hot restart.
+`snapp_cli` is a Dart command-line tool designed to simplify the process of adding custom devices to the Flutter SDK. With this tool, you can configure and run your Flutter apps on non-standard or remote devices, such as a Raspberry Pi, while maintaining essential Flutter features like hot reload and hot restart.
 
 ## Preconditions
 
-Before using `snapp_debugger`, please ensure that you meet the following preconditions:
+Before using `snapp_cli`, please ensure that you meet the following preconditions:
 
 -   **Secure SSH Connection:** You should have a secure SSH connection between your host machine and the remote device, established using SSH keys. Password-based SSH connections are not supported.
     - Check out this [guide](https://pimylifeup.com/raspberry-pi-ssh-keys/) for more information on setting up SSH keys.
@@ -26,11 +26,11 @@ flutter config --enable-custom-devices
 ``` bash
 which flutter
 ```
-Ensure that you've met these preconditions to use snapp_debugger effectively with custom devices and remote debugging.
+Ensure that you've met these preconditions to use snapp_cli effectively with custom devices and remote debugging.
 
 ## Commands
 
-`snapp_debugger` provides the following commands:
+`snapp_cli` provides the following commands:
 
 - **add:** Add a custom device configuration.
    - Use the `add` command to add and configure a custom device for the Flutter SDK. You can specify the device name, IP address, and other information to customize your development environment.
@@ -44,18 +44,18 @@ Ensure that you've met these preconditions to use snapp_debugger effectively wit
 - **update-ip:** Update the IP address of a custom device.
    - The `update-ip` command is used to modify the IP address of an existing custom device configuration. This is useful when the device's IP address changes, such as due to DHCP, and you need to update your settings. Example:
 ``` bash
-snapp_debugger update-ip -d raspberry -i 192.168.115.92 
+snapp_cli update-ip -d raspberry -i 192.168.115.92 
 ```
 
 
 ------------
 
 
-Each command has specific options and usage, which you can explore further by running `snapp_debugger --help` or `snapp_debugger <command> --help`.
+Each command has specific options and usage, which you can explore further by running `snapp_cli --help` or `snapp_cli <command> --help`.
 
 ## add Command
 
-The `add` command allows you to add and configure a custom device for the Flutter SDK. When you run this command, `snapp_debugger` will prompt you with a series of questions to gather the necessary information for custom device configuration.
+The `add` command allows you to add and configure a custom device for the Flutter SDK. When you run this command, `snapp_cli` will prompt you with a series of questions to gather the necessary information for custom device configuration.
 
 
 Use this command to interactively specify the settings for a custom device that you want to use for your Flutter development. The questions will cover details such as:
@@ -68,7 +68,7 @@ Use this command to interactively specify the settings for a custom device that 
 To add a custom device, simply run the following command:
 
 ```
-snapp_debugger add
+snapp_cli add
 ```
 
-snapp_debugger will then guide you through the process, prompting you with questions to gather the necessary information for your custom device configuration. Follow the on-screen prompts to complete the configuration.
+snapp_cli will then guide you through the process, prompting you with questions to gather the necessary information for your custom device configuration. Follow the on-screen prompts to complete the configuration.
