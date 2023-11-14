@@ -1,4 +1,9 @@
+## 0.3.1 BETA
+
+- fix: `devices add` exception on running process
+
 ## 0.3.0 BETA
+
 - `devices` command added, with following sub-commands:
    - `add` command added
    - `delete` command added
