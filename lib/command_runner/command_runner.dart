@@ -1,19 +1,19 @@
 // ignore_for_file: implementation_imports
 
 import 'package:args/command_runner.dart';
-import 'package:snapp_debugger/commands/delete_command.dart';
-import 'package:snapp_debugger/commands/list_command.dart';
-import 'package:snapp_debugger/commands/add_command.dart';
-import 'package:snapp_debugger/commands/update_ip_command.dart';
-import 'package:snapp_debugger/utils/flutter_sdk.dart';
+import 'package:snapp_cli/commands/delete_command.dart';
+import 'package:snapp_cli/commands/list_command.dart';
+import 'package:snapp_cli/commands/add_command.dart';
+import 'package:snapp_cli/commands/update_ip_command.dart';
+import 'package:snapp_cli/utils/flutter_sdk.dart';
 import 'package:flutter_tools/src/runner/flutter_command_runner.dart';
 
 const deviceIdOption = FlutterGlobalOptions.kDeviceIdOption;
 
-class SnappDebuggerCommandRunner extends CommandRunner<int> {
-  SnappDebuggerCommandRunner({required this.flutterSdkManager})
+class SnappCliCommandRunner extends CommandRunner<int> {
+  SnappCliCommandRunner({required this.flutterSdkManager})
       : super(
-          'snapp_debugger',
+          'snapp_cli',
           'A command-line tool to manage custom devices for flutter',
         ) {
     // Add the device id option to all commands

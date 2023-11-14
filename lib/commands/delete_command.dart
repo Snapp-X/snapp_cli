@@ -4,11 +4,11 @@ import 'dart:async';
 
 import 'package:flutter_tools/src/base/common.dart';
 import 'package:interact/interact.dart';
-import 'package:snapp_debugger/command_runner/command_runner.dart';
-import 'package:snapp_debugger/commands/base_command.dart';
+import 'package:snapp_cli/command_runner/command_runner.dart';
+import 'package:snapp_cli/commands/base_command.dart';
 
 /// Add a new raspberry device to the Flutter SDK custom devices
-class DeleteCommand extends BaseDebuggerCommand {
+class DeleteCommand extends BaseSnappCommand {
   DeleteCommand({
     required super.customDevicesConfig,
     required super.logger,

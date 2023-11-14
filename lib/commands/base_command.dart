@@ -5,8 +5,8 @@ import 'package:args/command_runner.dart';
 import 'package:flutter_tools/src/base/logger.dart';
 import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
 
-abstract class BaseDebuggerCommand extends Command<int> {
-  BaseDebuggerCommand({
+abstract class BaseSnappCommand extends Command<int> {
+  BaseSnappCommand({
     required this.customDevicesConfig,
     required this.logger,
   });
