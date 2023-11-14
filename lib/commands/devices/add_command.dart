@@ -391,13 +391,23 @@ class AddCommand extends BaseSnappCommand {
     );
 
     await Future.delayed(Duration(seconds: 2));
+    final RunResult result;
+    try {
+      result = await processRunner.run(
+        hostPlatform.pingCommand(ipv6: ipv6, pingTarget: pingTarget),
+        timeout: Duration(seconds: 10),
+      );
+    } catch (e, s) {
+      logger.printTrace(
+        'Something went wrong while trying to find flutter. \n $e \n $s',
+      );
 
-    final result = await processRunner.run(
-      hostPlatform.pingCommand(ipv6: ipv6, pingTarget: pingTarget),
-      timeout: Duration(seconds: 10),
-    );
+      return false;
+    } finally {
+      spinner.done();
 
-    spinner.done();
+      printSpaces();
+    }
 
     logger.printTrace('Ping Command ExitCode: ${result.exitCode}');
     logger.printTrace('Ping Command Stdout: ${result.stdout.trim()}');
@@ -448,8 +458,9 @@ class AddCommand extends BaseSnappCommand {
         timeout: Duration(seconds: 10),
       );
     } catch (e, s) {
-      logger.printStatus(
-          'Something went wrong while trying to find flutter. \n $e \n $s');
+      logger.printTrace(
+        'Something went wrong while trying to find flutter. \n $e \n $s',
+      );
 
       return null;
     } finally {
