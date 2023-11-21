@@ -1,9 +1,12 @@
 // ignore_for_file: implementation_imports
-
 import 'package:args/command_runner.dart';
+import 'package:interact/interact.dart';
 import 'package:snapp_cli/commands/devices/devices_command.dart';
 import 'package:snapp_cli/utils/flutter_sdk.dart';
 import 'package:flutter_tools/src/runner/flutter_command_runner.dart';
+import 'package:flutter_tools/src/base/common.dart';
+import 'package:flutter_tools/src/base/process.dart';
+import 'package:flutter_tools/src/base/logger.dart';
 
 const deviceIdOption = FlutterGlobalOptions.kDeviceIdOption;
 
@@ -25,4 +28,106 @@ class SnappCliCommandRunner extends CommandRunner<int> {
   }
 
   final FlutterSdkManager flutterSdkManager;
+
+  Logger get logger => flutterSdkManager.logger;
+
+  @override
+  Future<int?> run(Iterable<String> args) async {
+    // // Check if custom devices feature is enabled
+    // // If not, throw an error
+
+    final areCustomDevicesEnabled = flutterSdkManager.areCustomDevicesEnabled;
+
+    final isLinuxEnabled = flutterSdkManager.isLinuxEnabled;
+
+    if (!areCustomDevicesEnabled || !isLinuxEnabled) {
+      printSpaces();
+
+      logger.printStatus(
+        '''
+To use snapp_cli you need to enable custom devices and linux configs.
+This is a one time setup and will not be required again.
+''',
+      );
+
+      printSpaces();
+
+      final enableConfigs = Confirm(
+        prompt: 'Do you want to enable them now?',
+        defaultValue: true, // this is optional
+        waitForNewLine: true, // optional and will be false by default
+      ).interact();
+
+      printSpaces();
+
+      if (!enableConfigs) {
+        throwToolExit('''
+Custom devices and linux configs are required.
+if don't want to enable them now, you can enable them manually by running the following command:
+
+flutter config --enable-custom-devices --enable-linux-desktop
+        ''');
+      }
+
+      await _enableConfigs();
+    }
+
+    return super.run(args);
+  }
+
+  Future<void> _enableConfigs() async {
+    final spinner = Spinner(
+      icon: '✔️',
+      leftPrompt: (done) => '', // prompts are optional
+      rightPrompt: (done) => done
+          ? 'Configs enabled successfully!'
+          : 'Enabling custom devices and linux configs...',
+    ).interact();
+
+    final processRunner = ProcessUtils(
+      processManager: flutterSdkManager.processManager,
+      logger: logger,
+    );
+
+    await Future.delayed(Duration(seconds: 1));
+
+    final RunResult result;
+    try {
+      result = await processRunner.run(
+        <String>[
+          'flutter',
+          'config',
+          '--enable-custom-devices',
+          '--enable-linux-desktop',
+        ],
+        timeout: Duration(seconds: 10),
+      );
+    } catch (e, s) {
+      logger.printTrace(
+        'Something went wrong. \n $e \n $s',
+      );
+
+      return;
+    } finally {
+      spinner.done();
+
+      printSpaces();
+    }
+
+    if (result.exitCode != 0) {
+      throwToolExit('''
+Something went wrong.
+Could not enable custom devices and linux configs.
+Please enable them manually by running the following command:
+
+flutter config --enable-custom-devices --enable-linux-desktop
+''');
+    }
+  }
+
+  void printSpaces([int n = 2]) {
+    for (int i = 0; i < n; i++) {
+      logger.printStatus(' ');
+    }
+  }
 }
