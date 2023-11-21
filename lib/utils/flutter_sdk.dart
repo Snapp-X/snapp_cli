@@ -48,6 +48,8 @@ class FlutterSdkManager {
   bool get areCustomDevicesEnabled =>
       _provider(featureFlags.areCustomDevicesEnabled);
 
+  bool get isLinuxEnabled => _provider(featureFlags.isLinuxEnabled);
+
   /// initialize the flutter sdk
   Future<void> initialize() async {
     if (isInitialized) return;
