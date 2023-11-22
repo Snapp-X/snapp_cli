@@ -25,6 +25,8 @@ abstract class HostRunnerPlatform {
 
   String get currentSourcePath;
 
+  String get homePath;
+
   List<String> commandRunner(List<String> commands);
 
   List<String> scpCommand({
@@ -32,6 +34,7 @@ abstract class HostRunnerPlatform {
     required String source,
     required String dest,
     bool lastCommand = false,
+    String endCharacter = ';',
   }) =>
       [
         'scp',
@@ -40,7 +43,7 @@ abstract class HostRunnerPlatform {
         'BatchMode=yes',
         if (ipv6) '-6',
         source,
-        '$dest ${lastCommand ? '' : ';'}',
+        '$dest ${lastCommand ? '' : endCharacter}',
       ];
 
   List<String> sshCommand({
@@ -48,6 +51,7 @@ abstract class HostRunnerPlatform {
     required String sshTarget,
     required String command,
     bool lastCommand = false,
+    String endCharacter = ';',
   }) =>
       [
         'ssh',
@@ -55,13 +59,14 @@ abstract class HostRunnerPlatform {
         'BatchMode=yes',
         if (ipv6) '-6',
         sshTarget,
-        '$command ${lastCommand ? '' : ';'}',
+        '$command ${lastCommand ? '' : endCharacter}',
       ];
 
   List<String> sshMultiCommand({
     required bool ipv6,
     required String sshTarget,
     required List<String> commands,
+    String endCharacter = ';',
   }) =>
       [
         'ssh',
@@ -69,7 +74,8 @@ abstract class HostRunnerPlatform {
         'BatchMode=yes',
         if (ipv6) '-6',
         sshTarget,
-        ...commands.map((e) => e.trim().endsWith(' ;') ? e : '$e;'),
+        ...commands.map(
+            (e) => e.trim().endsWith(' $endCharacter') ? e : '$e$endCharacter'),
       ];
 
   List<String> pingCommand({
@@ -78,6 +84,14 @@ abstract class HostRunnerPlatform {
   });
 
   RegExp? get pingSuccessRegex => null;
+
+  List<String> generateSshKeyCommand({required String filePath});
+
+  List<String> copySshKeyCommand({
+    required String filePath,
+    required bool ipv6,
+    required String targetDevice,
+  });
 }
 
 class WindowsHostRunnerPlatform extends HostRunnerPlatform {
@@ -88,6 +102,9 @@ class WindowsHostRunnerPlatform extends HostRunnerPlatform {
 
   @override
   String get currentSourcePath => '.\\';
+
+  @override
+  String get homePath => platform.environment['UserProfile']!;
 
   @override
   List<String> commandRunner(List<String> commands) {
@@ -111,6 +128,35 @@ class WindowsHostRunnerPlatform extends HostRunnerPlatform {
 
   @override
   RegExp? get pingSuccessRegex => RegExp(r'[<=]\d+ms');
+
+  @override
+  List<String> generateSshKeyCommand({
+    required String filePath,
+  }) =>
+      [
+        'ssh-keygen',
+        '-t',
+        'rsa',
+        '-b',
+        '2048',
+        '-f',
+        filePath,
+        '-q',
+        '-N',
+        '\'""\'',
+      ];
+
+  @override
+  List<String> copySshKeyCommand({
+    required String filePath,
+    required bool ipv6,
+    required String targetDevice,
+  }) {
+    return commandRunner([
+      'type $filePath |',
+      'ssh $targetDevice "cat >> .ssh/authorized_keys"'
+    ]);
+  }
 }
 
 class UnixHostRunnerPlatform extends HostRunnerPlatform {
@@ -121,6 +167,9 @@ class UnixHostRunnerPlatform extends HostRunnerPlatform {
 
   @override
   String get currentSourcePath => './';
+
+  @override
+  String get homePath => platform.environment['HOME']!;
 
   @override
   List<String> commandRunner(List<String> commands) {
@@ -141,6 +190,39 @@ class UnixHostRunnerPlatform extends HostRunnerPlatform {
         '400',
         pingTarget,
       ];
+
+  @override
+  List<String> generateSshKeyCommand({
+    required String filePath,
+  }) =>
+      [
+        'ssh-keygen',
+        '-t',
+        'rsa',
+        '-b',
+        '2048',
+        '-f',
+        filePath,
+        '-q',
+        '-N',
+        '""',
+      ];
+
+  @override
+  List<String> copySshKeyCommand({
+    required String filePath,
+    required bool ipv6,
+    required String targetDevice,
+  }) {
+    return [
+      'ssh-copy-id',
+      if (ipv6) '-6',
+      '-f',
+      '-i',
+      filePath,
+      targetDevice,
+    ];
+  }
 }
 
 extension StringListExtension on List<String> {
