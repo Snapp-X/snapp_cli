@@ -4,7 +4,6 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter_tools/src/base/io.dart';
-import 'package:flutter_tools/src/base/platform.dart';
 import 'package:flutter_tools/src/base/process.dart';
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
 import 'package:interact/interact.dart';
@@ -21,8 +20,7 @@ import 'package:flutter_tools/src/base/common.dart';
 class AddCommand extends BaseSnappCommand {
   AddCommand({
     required super.flutterSdkManager,
-    required Platform platform,
-  }) : hostPlatform = HostRunnerPlatform.build(platform);
+  }) : hostPlatform = HostRunnerPlatform.build(flutterSdkManager.platform);
 
   /// create a HostPlatform instance based on the current platform
   /// with the help of this class we can make the commands platform specific
@@ -149,7 +147,7 @@ class AddCommand extends BaseSnappCommand {
     final String targetStr = Input(
       prompt: 'Device IP-address:',
       validator: (s) {
-        if (_isValidIpAddr(s)) {
+        if (s.isValidIpAddress) {
           return true;
         }
         throw ValidationError('Invalid IP-address. Please try again.');
@@ -170,7 +168,6 @@ class AddCommand extends BaseSnappCommand {
 
     final String username = Input(
       prompt: 'Device Username:',
-      defaultValue: 'no username',
     ).interact();
 
     // SSH expects IPv6 addresses to use the bracket syntax like URIs do too,
@@ -230,7 +227,7 @@ class AddCommand extends BaseSnappCommand {
       remoteRunnerCommand = Input(
         prompt: 'Flutter path on device:',
         validator: (s) {
-          if (_isValidPath(s)) {
+          if (s.isValidPath) {
             return true;
           }
           throw ValidationError('Invalid Path to flutter. Please try again.');
@@ -350,13 +347,6 @@ class AddCommand extends BaseSnappCommand {
     return 0;
   }
 
-  // ignore: unused_element
-  bool _isValidHostname(String s) => hostnameRegex.hasMatch(s);
-
-  bool _isValidPath(String s) => pathRegex.hasMatch(s);
-
-  bool _isValidIpAddr(String s) => InternetAddress.tryParse(s) != null;
-
   bool _isDuplicatedDeviceId(String s) {
     return customDevicesConfig.devices.any((element) => element.id == s);
   }
@@ -399,7 +389,7 @@ class AddCommand extends BaseSnappCommand {
       );
     } catch (e, s) {
       logger.printTrace(
-        'Something went wrong while trying to find flutter. \n $e \n $s',
+        'Something went wrong while trying to ping the device. \n $e \n $s',
       );
 
       return false;
