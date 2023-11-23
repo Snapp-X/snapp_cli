@@ -87,6 +87,11 @@ abstract class HostRunnerPlatform {
 
   List<String> generateSshKeyCommand({required String filePath});
 
+  List<String> addSshKeyToAgent({required String filePath}) => [
+        'ssh-add',
+        filePath,
+      ];
+
   List<String> copySshKeyCommand({
     required String filePath,
     required bool ipv6,
@@ -143,7 +148,7 @@ class WindowsHostRunnerPlatform extends HostRunnerPlatform {
         filePath,
         '-q',
         '-N',
-        '\'""\'',
+        '',
       ];
 
   @override

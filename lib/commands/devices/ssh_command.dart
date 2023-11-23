@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:dartssh2/dartssh2.dart';
 import 'package:interact/interact.dart';
 import 'package:snapp_cli/commands/base_command.dart';
 import 'package:flutter_tools/src/base/common.dart';
@@ -148,11 +149,6 @@ class SshCommand extends BaseSnappCommand {
     String username,
     InternetAddress ip,
   ) async {
-    // SSH expects IPv6 addresses to use the bracket syntax like URIs do too,
-    // but the IPv6 the user enters is a raw IPv6 address, so we need to wrap it.
-    final String sshTarget = (username.isNotEmpty ? '$username@' : '') +
-        (ip.type == InternetAddressType.IPv6 ? '[${ip.address}]' : ip.address);
-
     final spinner = Spinner(
       icon: '✔️',
       leftPrompt: (done) => '', // prompts are optional
@@ -162,17 +158,18 @@ class SshCommand extends BaseSnappCommand {
     ).interact();
 
     // create a directory in the user's home directory
-    final snappCliDirectory = await _createSnapppCliDirectory();
+    final snappCliDirectory = await _createSnappCliDirectory();
 
-    final sshKeyFile =
-        await _generateSshKeyFile(processRunner, snappCliDirectory);
+    final sshKeys = await _generateSshKeyFile(processRunner, snappCliDirectory);
+
+    await _addSshKeyToAgent(sshKeys.privateKey);
 
     spinner.done();
 
     final sshKeyCopied = await _copySshKeyToRemote(
-      sshKeyFile,
-      ip.type == InternetAddressType.IPv6,
-      sshTarget,
+      sshKeys.publicKey,
+      username,
+      ip,
     );
 
     printSpaces();
@@ -182,7 +179,7 @@ class SshCommand extends BaseSnappCommand {
 
   /// Creates a directory in the user's home directory
   /// to store the snapp_cli related files like ssh keys
-  Future<Directory> _createSnapppCliDirectory() async {
+  Future<Directory> _createSnappCliDirectory() async {
     final String homePath = hostPlatform.homePath;
     final String snapppCliDirectoryPath = '$homePath/.snapp_cli';
 
@@ -195,14 +192,16 @@ class SshCommand extends BaseSnappCommand {
     return snappCliDirectory;
   }
 
-  Future<File> _generateSshKeyFile(
+  /// Generates a ssh key file in the snapp_cli directory
+  Future<({File privateKey, File publicKey})> _generateSshKeyFile(
     ProcessUtils processRunner,
     Directory snappCliDir,
   ) async {
     // generate random 6 digit file name
-    final fileName = Random().nextInt(900000) + 100000;
+    final randomNumber = Random().nextInt(900000) + 100000;
 
-    final keyFile = File('${snappCliDir.path}/$fileName');
+    final keyFile = File('${snappCliDir.path}/id_rsa_$randomNumber');
+
     final RunResult result;
     try {
       result = await processRunner.run(
@@ -224,32 +223,68 @@ class SshCommand extends BaseSnappCommand {
       throwToolExit('Something went wrong while generating the ssh key.');
     }
 
-    return keyFile;
+    return (privateKey: keyFile, publicKey: File('${keyFile.path}.pub'));
+  }
+
+  /// Adds the ssh key to the ssh-agent
+  Future<void> _addSshKeyToAgent(File sshKey) async {
+    final RunResult result;
+    try {
+      result = await processRunner.run(
+        hostPlatform.commandRunner(
+          [
+            'ssh-add',
+            sshKey.path,
+          ],
+        ),
+        timeout: Duration(seconds: 10),
+      );
+    } catch (e, s) {
+      throwToolExit(
+          'Something went wrong while adding the key to ssh-agent. \nException: $s \nStack: $s');
+    }
+
+    logger.printTrace('ssh-add Command ExitCode: ${result.exitCode}');
+    logger.printTrace('ssh-add Command Stdout: ${result.stdout.trim()}');
+    logger.printTrace('ssh-add Command Stderr: ${result.stderr}');
+
+    if (result.exitCode != 0) {
+      throwToolExit('Something went wrong while adding the key to ssh-agent.');
+    }
   }
 
   Future<bool> _copySshKeyToRemote(
     File sshKeyFile,
-    bool ipv6,
-    String targetDevice,
+    String username,
+    InternetAddress ip,
   ) async {
-    final RunResult result;
-    try {
-      result = await processRunner.run(
-        hostPlatform.copySshKeyCommand(
-          filePath: sshKeyFile.path,
-          ipv6: ipv6,
-          targetDevice: targetDevice,
-        ),
-      );
-    } catch (e, s) {
-      throwToolExit(
-          'Something went wrong while generating the ssh key. \n $s \n $s');
-    }
+    final client = SSHClient(
+      await SSHSocket.connect(
+        ip.address,
+        22,
+        timeout: Duration(seconds: 10),
+      ),
+      username: username,
+      onPasswordRequest: () {
+        stdout.write('Password: ');
+        stdin.echoMode = false;
+        return stdin.readLineSync() ?? exit(1);
+      },
+    );
 
-    logger.printTrace('SSH key copy Command ExitCode: ${result.exitCode}');
-    logger.printTrace('SSH key copy Command Stdout: ${result.stdout.trim()}');
-    logger.printTrace('SSH key copy Command Stderr: ${result.stderr}');
+    final session = await client.execute('cat >> .ssh/authorized_keys');
+    await session.stdin.addStream(sshKeyFile.openRead().cast());
 
-    return result.exitCode == 0;
+    // Close the sink to send EOF to the remote process.
+    await session.stdin.close();
+
+    // Wait for session to exit to ensure all data is flushed to the remote process.
+    await session.done;
+
+    // You can get the exit code after the session is done
+    print(session.exitCode);
+
+    client.close();
+    return true;
   }
 }
