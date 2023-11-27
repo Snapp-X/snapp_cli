@@ -82,7 +82,7 @@ flutter config --enable-custom-devices --enable-linux-desktop
 
   Future<void> _enableConfigs() async {
     final spinner = Spinner(
-      icon: '✔️',
+      icon: logger.successIcon,
       leftPrompt: (done) => '', // prompts are optional
       rightPrompt: (done) => done
           ? 'Configs enabled successfully!'

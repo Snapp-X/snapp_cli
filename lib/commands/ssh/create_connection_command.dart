@@ -13,7 +13,7 @@ import 'package:snapp_cli/utils/common.dart';
 class CreateConnectionCommand extends BaseSnappCommand {
   CreateConnectionCommand({
     required super.flutterSdkManager,
-  }) : _sshService = SshService(flutterSdkManager: flutterSdkManager);
+  }) : sshService = SshService(flutterSdkManager: flutterSdkManager);
 
   @override
   String get description =>
@@ -22,7 +22,7 @@ class CreateConnectionCommand extends BaseSnappCommand {
   @override
   String get name => 'create-connection';
 
-  final SshService _sshService;
+  final SshService sshService;
 
   @override
   FutureOr<int>? run() async {
@@ -32,7 +32,7 @@ class CreateConnectionCommand extends BaseSnappCommand {
     );
 
     final sshConnectionCreated =
-        await _sshService.createPasswordLessSshConnection(
+        await sshService.createPasswordLessSshConnection(
       username,
       ip,
     );

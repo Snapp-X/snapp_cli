@@ -39,3 +39,11 @@ extension LoggerExt on Logger {
     );
   }
 }
+
+
+extension IpExt on InternetAddress {
+  String get ipAddress => address;
+
+  bool get isIpv4 => type == InternetAddressType.IPv4;
+  bool get isIpv6 => type == InternetAddressType.IPv6;
+}

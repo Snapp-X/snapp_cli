@@ -21,11 +21,19 @@ abstract class BaseSnappCommand extends Command<int> {
       flutterSdkManager.customDeviceConfig;
   Logger get logger => flutterSdkManager.logger;
 
-  (InternetAddress ip, String username) getRemoteIpAndUsername(
-      {required String message}) {
+  (InternetAddress ip, String username) getRemoteIpAndUsername({
+    required String message,
+    String? getIpDescription,
+    String? getUsernameDescription,
+  }) {
     logger.printSpaces();
 
     logger.printStatus(message);
+
+    if (getIpDescription != null) {
+      logger.printStatus(getIpDescription);
+      logger.printSpaces();
+    }
 
     final String deviceIp = Input(
       prompt: 'Device IP-address:',
@@ -40,6 +48,11 @@ abstract class BaseSnappCommand extends Command<int> {
     final ip = InternetAddress(deviceIp);
 
     logger.printSpaces();
+
+    if (getUsernameDescription != null) {
+      logger.printStatus(getUsernameDescription);
+      logger.printSpaces();
+    }
 
     final String username = Input(
       prompt: 'Username:',

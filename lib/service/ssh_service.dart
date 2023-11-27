@@ -31,7 +31,7 @@ class SshService {
 
   Future<bool> tryPingDevice(String pingTarget, bool ipv6) async {
     final spinner = Spinner(
-      icon: '✔️',
+      icon: logger.successIcon,
       leftPrompt: (done) => '', // prompts are optional
       rightPrompt: (done) => done
           ? 'pinging device completed.'
