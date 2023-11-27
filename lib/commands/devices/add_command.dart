@@ -37,7 +37,7 @@ class AddCommand extends BaseSnappCommand {
 
   @override
   Future<int> run() async {
-    printSpaces();
+    logger.printSpaces();
 
     final addCommandOptions = [
       'Express (recommended)',
@@ -57,7 +57,7 @@ class AddCommand extends BaseSnappCommand {
   }
 
   Future<int> _addPredefinedDevice() async {
-    printSpaces();
+    logger.printSpaces();
 
     final selectedPredefinedDevice = Select(
       prompt: 'Select your device',
@@ -97,7 +97,7 @@ class AddCommand extends BaseSnappCommand {
     /// path to the icu data file on the remote machine
     const hostIcuDataClone = '$hostBuildClonePath/engine';
 
-    printSpaces();
+    logger.printSpaces();
 
     String id = predefinedConfig?.id ?? '';
 
@@ -118,7 +118,7 @@ class AddCommand extends BaseSnappCommand {
         },
       ).interact().trim();
 
-      printSpaces();
+      logger.printSpaces();
     }
 
     String label = predefinedConfig?.label ?? '';
@@ -137,7 +137,7 @@ class AddCommand extends BaseSnappCommand {
         },
       ).interact();
 
-      printSpaces();
+      logger.printSpaces();
     }
 
     logger.printStatus(
@@ -160,7 +160,7 @@ class AddCommand extends BaseSnappCommand {
     final InternetAddress loopbackIp =
         ipv6 ? InternetAddress.loopbackIPv6 : InternetAddress.loopbackIPv4;
 
-    printSpaces();
+    logger.printSpaces();
 
     logger.printStatus(
       'Please enter the username used for ssh-ing into the remote device. (example: pi)',
@@ -178,7 +178,7 @@ class AddCommand extends BaseSnappCommand {
     final String formattedLoopbackIp =
         ipv6 ? '[${loopbackIp.address}]' : loopbackIp.address;
 
-    printSpaces();
+    logger.printSpaces();
 
     final isDeviceReachable = await _tryPingDevice(targetStr, ipv6);
 
@@ -194,13 +194,13 @@ class AddCommand extends BaseSnappCommand {
       ).interact();
 
       if (!continueWithoutPing) {
-        printSpaces();
+        logger.printSpaces();
         logger.printStatus('Check your device IP-address and try again.');
         return 1;
       }
     }
 
-    printSpaces();
+    logger.printSpaces();
 
     logger.printStatus(
       'We need the exact path of your flutter command line tools on the remote device. '
@@ -336,13 +336,13 @@ class AddCommand extends BaseSnappCommand {
 
     customDevicesConfig.add(config);
 
-    printSpaces();
+    logger.printSpaces();
 
     logger.printStatus(
       '✔️ Successfully added custom device to config file at "${customDevicesConfig.configPath}". ✔️',
     );
 
-    printSpaces();
+    logger.printSpaces();
 
     return 0;
   }
@@ -396,14 +396,14 @@ class AddCommand extends BaseSnappCommand {
     } finally {
       spinner.done();
 
-      printSpaces();
+      logger.printSpaces();
     }
 
     logger.printTrace('Ping Command ExitCode: ${result.exitCode}');
     logger.printTrace('Ping Command Stdout: ${result.stdout.trim()}');
     logger.printTrace('Ping Command Stderr: ${result.stderr}');
 
-    printSpaces();
+    logger.printSpaces();
 
     if (result.exitCode != 0) {
       return false;
@@ -456,7 +456,7 @@ class AddCommand extends BaseSnappCommand {
     } finally {
       spinner.done();
 
-      printSpaces();
+      logger.printSpaces();
     }
 
     logger.printTrace('Find Flutter ExitCode: ${result.exitCode}');

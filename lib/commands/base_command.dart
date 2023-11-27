@@ -16,12 +16,6 @@ abstract class BaseSnappCommand extends Command<int> {
   CustomDevicesConfig get customDevicesConfig =>
       flutterSdkManager.customDeviceConfig;
   Logger get logger => flutterSdkManager.logger;
-
-  void printSpaces([int n = 2]) {
-    for (int i = 0; i < n; i++) {
-      logger.printStatus(' ');
-    }
-  }
 }
 
 extension ArgResultsExtension on ArgResults {

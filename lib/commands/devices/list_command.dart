@@ -2,6 +2,7 @@
 
 import 'package:snapp_cli/commands/base_command.dart';
 import 'package:flutter_tools/src/base/process.dart';
+import 'package:snapp_cli/utils/common.dart';
 
 /// List all custom devices added to the Flutter SDK with custom-devices command
 /// it will utilize the `flutter custom-devices list` command to show the list
@@ -30,7 +31,7 @@ class ListCommand extends BaseSnappCommand {
       timeout: Duration(seconds: 10),
     );
 
-    printSpaces();
+    logger.printSpaces();
 
     logger.printStatus(result.stdout);
 

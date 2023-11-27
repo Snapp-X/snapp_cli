@@ -38,7 +38,7 @@ class SshCommand extends BaseSnappCommand {
 
   @override
   FutureOr<int>? run() async {
-    printSpaces();
+    logger.printSpaces();
 
     logger.printStatus(
       'to create an SSH connection to the remote device, we need an IP address and a username',
@@ -56,13 +56,13 @@ class SshCommand extends BaseSnappCommand {
 
     final ip = InternetAddress(deviceIp);
 
-    printSpaces();
+    logger.printSpaces();
 
     final String username = Input(
       prompt: 'Username:',
     ).interact();
 
-    printSpaces();
+    logger.printSpaces();
 
     final isDeviceReachable = await _tryPingDevice(
       deviceIp,
@@ -81,7 +81,7 @@ class SshCommand extends BaseSnappCommand {
       ).interact();
 
       if (!continueWithoutPing) {
-        printSpaces();
+        logger.printSpaces();
         logger.printStatus('Check your device IP-address and try again.');
         return 1;
       }
@@ -89,7 +89,7 @@ class SshCommand extends BaseSnappCommand {
 
     print('ip formatted: ${ip.address}');
 
-    printSpaces();
+    logger.printSpaces();
 
     final sshConnectionCreated =
         await _createPasswordlessSshConnection(username, ip);
@@ -122,14 +122,14 @@ class SshCommand extends BaseSnappCommand {
     } finally {
       spinner.done();
 
-      printSpaces();
+      logger.printSpaces();
     }
 
     logger.printTrace('Ping Command ExitCode: ${result.exitCode}');
     logger.printTrace('Ping Command Stdout: ${result.stdout.trim()}');
     logger.printTrace('Ping Command Stderr: ${result.stderr}');
 
-    printSpaces();
+    logger.printSpaces();
 
     if (result.exitCode != 0) {
       return false;
@@ -172,7 +172,7 @@ class SshCommand extends BaseSnappCommand {
       ip,
     );
 
-    printSpaces();
+    logger.printSpaces();
 
     return sshKeyCopied;
   }
