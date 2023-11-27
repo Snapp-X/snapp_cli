@@ -47,7 +47,7 @@ class SshService {
       );
     } catch (e, s) {
       logger.printTrace(
-        'Something went wrong while pinging the device. \nException: $s \nStack: $s',
+        'Something went wrong while pinging the device. \nException: $e \nStack: $s',
       );
 
       return false;
@@ -112,7 +112,7 @@ class SshService {
       );
     } catch (e, s) {
       throwToolExit(
-          'Something went wrong while generating the ssh key. \nException: $s \nStack: $s');
+          'Something went wrong while generating the ssh key. \nException: $e \nStack: $s');
     }
 
     logger.printTrace('SSH Command ExitCode: ${result.exitCode}');
@@ -142,7 +142,7 @@ class SshService {
       );
     } catch (e, s) {
       throwToolExit(
-          'Something went wrong while adding the key to ssh-agent. \nException: $s \nStack: $s');
+          'Something went wrong while adding the key to ssh-agent. \nException: $e \nStack: $s');
     }
 
     logger.printTrace('ssh-add Command ExitCode: ${result.exitCode}');
@@ -221,12 +221,10 @@ class SshService {
     logger.printSpaces();
 
     final spinner = Spinner(
-      icon: '✔️',
+      icon: '🔎',
       leftPrompt: (done) => '', // prompts are optional
-      rightPrompt: (done) => done
-          // TODO: update the message
-          ? 'creating SSH connection completed.'
-          : 'creating SSH connection.',
+      rightPrompt: (done) =>
+          done ? 'Search completed.' : 'Searching for the device',
     ).interact();
 
     // create a directory in the user's home directory
@@ -246,8 +244,6 @@ class SshService {
 
     logger.printSpaces();
 
-    logger.printStatus('PasswordLess SSH Connection created successfully.');
-
     return true;
   }
 
@@ -260,11 +256,10 @@ class SshService {
         (ip.type == InternetAddressType.IPv6 ? '[${ip.address}]' : ip.address);
 
     final spinner = Spinner(
-      icon: '✔️',
+      icon: '🔎',
       leftPrompt: (done) => '', // prompts are optional
-      rightPrompt: (done) => done
-          ? 'ssh connection completed.'
-          : 'trying to connect to the device via ssh.',
+      rightPrompt: (done) =>
+          done ? 'Search completed.' : 'Searching for the device',
     ).interact();
 
     final RunResult result;
@@ -279,9 +274,10 @@ class SshService {
         timeout: Duration(seconds: 10),
       );
     } catch (e, s) {
-      logger.printTrace(
-        'Something went wrong while pinging the device. \nException: $s \nStack: $s',
+      logger.printStatus(
+        'Something went wrong while trying to connect to the device via ssh. \nException: $e',
       );
+      logger.printTrace('Stack: $s');
 
       return false;
     } finally {

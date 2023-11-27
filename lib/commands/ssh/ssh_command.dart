@@ -2,6 +2,7 @@
 
 import 'package:snapp_cli/commands/base_command.dart';
 import 'package:snapp_cli/commands/ssh/create_connection_command.dart';
+import 'package:snapp_cli/commands/ssh/test_connection_command.dart';
 
 /// Add a new raspberry device to the Flutter SDK custom devices
 class SshCommand extends BaseSnappCommand {
@@ -11,6 +12,11 @@ class SshCommand extends BaseSnappCommand {
     // Create an SSH connection to the remote device
     addSubcommand(
       CreateConnectionCommand(flutterSdkManager: flutterSdkManager),
+    );
+
+    // Test an SSH connection to the remote device
+    addSubcommand(
+      TestConnectionCommand(flutterSdkManager: flutterSdkManager),
     );
   }
 

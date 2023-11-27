@@ -6,21 +6,17 @@ import 'package:snapp_cli/commands/base_command.dart';
 import 'package:snapp_cli/service/ssh_service.dart';
 import 'package:snapp_cli/utils/common.dart';
 
-/// This command will create a PasswordLess SSH connection to the remote device.
-///
-/// The user will be prompted for the IP-address and the username of the remote device.
-///
-class CreateConnectionCommand extends BaseSnappCommand {
-  CreateConnectionCommand({
+class TestConnectionCommand extends BaseSnappCommand {
+  TestConnectionCommand({
     required super.flutterSdkManager,
   }) : _sshService = SshService(flutterSdkManager: flutterSdkManager);
 
   @override
   String get description =>
-      'Create a PasswordLess SSH connection to the remote device';
+      'Test a PasswordLess SSH connection to the remote device';
 
   @override
-  String get name => 'create-connection';
+  String get name => 'test-connection';
 
   final SshService _sshService;
 
@@ -28,21 +24,20 @@ class CreateConnectionCommand extends BaseSnappCommand {
   FutureOr<int>? run() async {
     final (ip, username) = getRemoteIpAndUsername(
       message:
-          'to create an SSH connection to the remote device, we need an IP address and a username',
+          'to test an SSH connection to the remote device, we need an IP address and a username',
     );
 
     final sshConnectionCreated =
-        await _sshService.createPasswordLessSshConnection(
+        await _sshService.testPasswordLessSshConnection(
       username,
       ip,
     );
 
-
     if (sshConnectionCreated) {
-      logger.printSuccess('SSH connection to the remote device is created!');
+      logger.printSuccess('SSH connection to the remote device is working!');
       return 0;
     } else {
-      logger.printFail('Could not create SSH connection to the remote device!');
+      logger.printFail('SSH connection to the remote device is not working!');
       return 1;
     }
   }
