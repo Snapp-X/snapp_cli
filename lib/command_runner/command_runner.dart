@@ -2,6 +2,7 @@
 import 'package:args/command_runner.dart';
 import 'package:interact/interact.dart';
 import 'package:snapp_cli/commands/devices/devices_command.dart';
+import 'package:snapp_cli/commands/ssh/ssh_command.dart';
 import 'package:snapp_cli/utils/common.dart';
 import 'package:snapp_cli/utils/flutter_sdk.dart';
 import 'package:flutter_tools/src/runner/flutter_command_runner.dart';
@@ -26,6 +27,9 @@ class SnappCliCommandRunner extends CommandRunner<int> {
 
     // Add the devices command to the command runner
     addCommand(DevicesCommand(flutterSdkManager: flutterSdkManager));
+
+    // Create and manage SSH connections
+    addCommand(SshCommand(flutterSdkManager: flutterSdkManager));
   }
 
   final FlutterSdkManager flutterSdkManager;

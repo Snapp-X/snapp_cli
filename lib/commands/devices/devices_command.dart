@@ -4,7 +4,6 @@ import 'package:snapp_cli/commands/base_command.dart';
 import 'package:snapp_cli/commands/devices/add_command.dart';
 import 'package:snapp_cli/commands/devices/delete_command.dart';
 import 'package:snapp_cli/commands/devices/list_command.dart';
-import 'package:snapp_cli/commands/devices/ssh_command.dart';
 import 'package:snapp_cli/commands/devices/update_ip_command.dart';
 
 /// Add a new raspberry device to the Flutter SDK custom devices
@@ -31,9 +30,6 @@ class DevicesCommand extends BaseSnappCommand {
     addSubcommand(
       UpdateIpCommand(flutterSdkManager: flutterSdkManager),
     );
-
-    addSubcommand(SshCommand(flutterSdkManager: flutterSdkManager));
-    
   }
 
   @override
