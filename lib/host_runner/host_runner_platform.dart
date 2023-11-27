@@ -85,7 +85,18 @@ abstract class HostRunnerPlatform {
 
   RegExp? get pingSuccessRegex => null;
 
-  List<String> generateSshKeyCommand({required String filePath});
+  List<String> generateSshKeyCommand({required String filePath}) => [
+        'ssh-keygen',
+        '-t',
+        'rsa',
+        '-b',
+        '2048',
+        '-f',
+        filePath,
+        '-q',
+        '-N',
+        '',
+      ];
 
   List<String> addSshKeyToAgent({required String filePath}) => [
         'ssh-add',
@@ -135,23 +146,6 @@ class WindowsHostRunnerPlatform extends HostRunnerPlatform {
   RegExp? get pingSuccessRegex => RegExp(r'[<=]\d+ms');
 
   @override
-  List<String> generateSshKeyCommand({
-    required String filePath,
-  }) =>
-      [
-        'ssh-keygen',
-        '-t',
-        'rsa',
-        '-b',
-        '2048',
-        '-f',
-        filePath,
-        '-q',
-        '-N',
-        '',
-      ];
-
-  @override
   List<String> copySshKeyCommand({
     required String filePath,
     required bool ipv6,
@@ -194,23 +188,6 @@ class UnixHostRunnerPlatform extends HostRunnerPlatform {
         '-W',
         '400',
         pingTarget,
-      ];
-
-  @override
-  List<String> generateSshKeyCommand({
-    required String filePath,
-  }) =>
-      [
-        'ssh-keygen',
-        '-t',
-        'rsa',
-        '-b',
-        '2048',
-        '-f',
-        filePath,
-        '-q',
-        '-N',
-        '""',
       ];
 
   @override
