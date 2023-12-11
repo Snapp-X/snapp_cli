@@ -252,8 +252,7 @@ class SshService {
     String username,
     InternetAddress ip,
   ) async {
-    final String sshTarget = (username.isNotEmpty ? '$username@' : '') +
-        (ip.type == InternetAddressType.IPv6 ? '[${ip.address}]' : ip.address);
+    final String sshTarget = ip.sshTarget(username);
 
     final spinner = Spinner(
       icon: '🔎',

@@ -12,7 +12,6 @@ import 'package:snapp_cli/configs/predefined_devices.dart';
 import 'package:snapp_cli/host_runner/host_runner_platform.dart';
 import 'package:snapp_cli/service/ssh_service.dart';
 import 'package:snapp_cli/utils/common.dart';
-import 'package:flutter_tools/src/base/common.dart';
 
 /// Add a new raspberry device to the Flutter SDK custom devices
 ///
@@ -113,8 +112,7 @@ class AddCommand extends BaseSnappCommand {
 
     // SSH expects IPv6 addresses to use the bracket syntax like URIs do too,
     // but the IPv6 the user enters is a raw IPv6 address, so we need to wrap it.
-    final String sshTarget = (username.isNotEmpty ? '$username@' : '') +
-        (ipv6 ? '[${targetIp.address}]' : targetIp.address);
+    final String sshTarget = targetIp.sshTarget(username);
 
     final String formattedLoopbackIp =
         ipv6 ? '[${loopbackIp.address}]' : loopbackIp.address;

@@ -10,6 +10,8 @@ import 'package:interact/interact.dart';
 import 'package:snapp_cli/utils/common.dart';
 import 'package:snapp_cli/utils/flutter_sdk.dart';
 
+export 'package:flutter_tools/src/base/common.dart';
+
 abstract class BaseSnappCommand extends Command<int> {
   BaseSnappCommand({
     required this.flutterSdkManager,
