@@ -1,15 +1,14 @@
 // ignore_for_file: implementation_imports
 
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter_tools/src/base/io.dart';
-import 'package:flutter_tools/src/base/process.dart';
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
 import 'package:interact/interact.dart';
 import 'package:snapp_cli/commands/base_command.dart';
 import 'package:snapp_cli/configs/predefined_devices.dart';
 import 'package:snapp_cli/host_runner/host_runner_platform.dart';
+import 'package:snapp_cli/service/remote_controller_service.dart';
 import 'package:snapp_cli/service/ssh_service.dart';
 import 'package:snapp_cli/utils/common.dart';
 
@@ -20,17 +19,12 @@ import 'package:snapp_cli/utils/common.dart';
 class AddCommand extends BaseSnappCommand {
   AddCommand({
     required super.flutterSdkManager,
-  })  : hostPlatform = HostRunnerPlatform.build(flutterSdkManager.platform),
-        sshService = SshService(flutterSdkManager: flutterSdkManager);
-
-  /// create a HostPlatform instance based on the current platform
-  /// with the help of this class we can make the commands platform specific
-  /// for example, the ping command is different on windows and linux
-  ///
-  /// only supports windows, linux and macos
-  final HostRunnerPlatform hostPlatform;
+  })  : sshService = SshService(flutterSdkManager: flutterSdkManager),
+        remoteControllerService =
+            RemoteControllerService(flutterSdkManager: flutterSdkManager);
 
   final SshService sshService;
+  final RemoteControllerService remoteControllerService;
 
   @override
   final name = 'add';
@@ -168,7 +162,8 @@ class AddCommand extends BaseSnappCommand {
     String remoteRunnerCommand = '';
 
     if (remoteHasSshConnection) {
-      final possibleFlutterPath = await _findFlutterPath(sshTarget, ipv6);
+      final possibleFlutterPath =
+          await remoteControllerService.findFlutterPath(username, targetIp);
 
       remoteRunnerCommand = possibleFlutterPath ?? '';
     }
@@ -378,86 +373,5 @@ class AddCommand extends BaseSnappCommand {
     }
 
     return '$s-$i';
-  }
-
-  /// finds flutter in the host using ssh connection
-  /// returns the path of flutter if found it
-  /// otherwise returns null
-  Future<String?> _findFlutterPath(String sshTarget, bool ipv6) async {
-    final spinner = Spinner(
-      icon: logger.successIcon,
-      leftPrompt: (done) => '', // prompts are optional
-      rightPrompt: (done) => done
-          ? 'finding flutter path completed'
-          : 'finding flutter path on remote device.',
-    ).interact();
-
-    final processRunner = ProcessUtils(
-      processManager: flutterSdkManager.processManager,
-      logger: logger,
-    );
-
-    final RunResult result;
-    try {
-      result = await processRunner.run(
-        hostPlatform.sshCommand(
-          ipv6: ipv6,
-          sshTarget: sshTarget,
-          command:
-              'find / -type f -name "flutter" -path "*/flutter/bin/*" 2>/dev/null',
-        ),
-        timeout: Duration(seconds: 10),
-      );
-    } catch (e, s) {
-      logger.printTrace(
-        'Something went wrong while trying to find flutter. \n $e \n $s',
-      );
-
-      return null;
-    } finally {
-      spinner.done();
-
-      logger.printSpaces();
-    }
-
-    logger.printTrace('Find Flutter ExitCode: ${result.exitCode}');
-    logger.printTrace('Find Flutter Stdout: ${result.stdout.trim()}');
-    logger.printTrace('Find Flutter Stderr: ${result.stderr}');
-
-    final output = result.stdout.trim();
-
-    if (result.exitCode != 0 && output.isEmpty) {
-      return null;
-    }
-
-    final outputLinesLength = output.split('\n').length;
-    final isOutputMultipleLines = outputLinesLength > 1;
-
-    if (!isOutputMultipleLines) {
-      logger
-          .printStatus('We found flutter in "$output" in the remote machine. ');
-      final flutterSdkPathConfirmation = Confirm(
-        prompt: 'Do you want to use this path?',
-        defaultValue: true, // this is optional
-        waitForNewLine: true, // optional and will be false by default
-      ).interact();
-
-      return flutterSdkPathConfirmation ? output : null;
-    } else {
-      final outputLines = output
-          .split('\n')
-          .map((e) => e.trim())
-          .toList()
-          .sublist(0, min(2, outputLinesLength));
-
-      logger.printStatus(
-          'We found multiple flutter paths in the remote machine. ');
-      final flutterSdkPathSelection = Select(
-        prompt: 'Please select the path of flutter you want to use.',
-        options: outputLines,
-      ).interact();
-
-      return outputLines[flutterSdkPathSelection];
-    }
   }
 }
