@@ -23,6 +23,7 @@ extension StringExt on String {
 }
 
 extension LoggerExt on Logger {
+  String get searchIcon => '🔎';
   String get successIcon => Theme.colorfulTheme.successPrefix;
   String get errorIcon => Theme.colorfulTheme.errorPrefix;
 

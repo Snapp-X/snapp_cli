@@ -221,8 +221,7 @@ class SshService {
     logger.printSpaces();
 
     final spinner = Spinner(
-      icon: '🔎',
-      leftPrompt: (done) => '', // prompts are optional
+      icon: logger.searchIcon,
       rightPrompt: (done) =>
           done ? 'Search completed.' : 'Searching for the device',
     ).interact();
@@ -255,8 +254,7 @@ class SshService {
     final String sshTarget = ip.sshTarget(username);
 
     final spinner = Spinner(
-      icon: '🔎',
-      leftPrompt: (done) => '', // prompts are optional
+      icon: logger.searchIcon,
       rightPrompt: (done) =>
           done ? 'Search completed.' : 'Searching for the device',
     ).interact();
