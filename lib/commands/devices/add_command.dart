@@ -4,13 +4,13 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter_tools/src/base/io.dart';
-import 'package:flutter_tools/src/base/platform.dart';
 import 'package:flutter_tools/src/base/process.dart';
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
 import 'package:interact/interact.dart';
 import 'package:snapp_cli/commands/base_command.dart';
 import 'package:snapp_cli/configs/predefined_devices.dart';
 import 'package:snapp_cli/host_runner/host_runner_platform.dart';
+import 'package:snapp_cli/service/ssh_service.dart';
 import 'package:snapp_cli/utils/common.dart';
 import 'package:flutter_tools/src/base/common.dart';
 
@@ -21,8 +21,8 @@ import 'package:flutter_tools/src/base/common.dart';
 class AddCommand extends BaseSnappCommand {
   AddCommand({
     required super.flutterSdkManager,
-    required Platform platform,
-  }) : hostPlatform = HostRunnerPlatform.build(platform);
+  })  : hostPlatform = HostRunnerPlatform.build(flutterSdkManager.platform),
+        sshService = SshService(flutterSdkManager: flutterSdkManager);
 
   /// create a HostPlatform instance based on the current platform
   /// with the help of this class we can make the commands platform specific
@@ -30,6 +30,8 @@ class AddCommand extends BaseSnappCommand {
   ///
   /// only supports windows, linux and macos
   final HostRunnerPlatform hostPlatform;
+
+  final SshService sshService;
 
   @override
   final name = 'add';
@@ -39,7 +41,7 @@ class AddCommand extends BaseSnappCommand {
 
   @override
   Future<int> run() async {
-    printSpaces();
+    logger.printSpaces();
 
     final addCommandOptions = [
       'Express (recommended)',
@@ -59,7 +61,7 @@ class AddCommand extends BaseSnappCommand {
   }
 
   Future<int> _addPredefinedDevice() async {
-    printSpaces();
+    logger.printSpaces();
 
     final selectedPredefinedDevice = Select(
       prompt: 'Select your device',
@@ -90,120 +92,75 @@ class AddCommand extends BaseSnappCommand {
   Future<int> _addCustomDevice({
     CustomDeviceConfig? predefinedConfig,
   }) async {
-    /// path to the icu data file on the host machine
-    final hostIcuDataPath = flutterSdkManager.icuDataPath;
+    logger.printSpaces();
 
-    /// path to the build artifacts on the remote machine
-    const hostBuildClonePath = 'snapp_embedded';
+    // get remote device id and label from the user
+    final (id, label) = getRemoteDeviceIdAndLabel(predefinedConfig);
 
-    /// path to the icu data file on the remote machine
-    const hostIcuDataClone = '$hostBuildClonePath/engine';
-
-    printSpaces();
-
-    String id = predefinedConfig?.id ?? '';
-
-    if (id.isEmpty) {
-      logger.printStatus(
-        'Please enter the id you want to device to have. Must contain only alphanumeric or underscore characters. (example: pi)',
-      );
-
-      id = Input(
-        prompt: 'Device Id:',
-        validator: (s) {
-          if (!RegExp(r'^\w+$').hasMatch(s.trim())) {
-            throw ValidationError('Invalid input. Please try again.');
-          } else if (_isDuplicatedDeviceId(s.trim())) {
-            throw ValidationError('Device with this id already exists.');
-          }
-          return true;
-        },
-      ).interact().trim();
-
-      printSpaces();
-    }
-
-    String label = predefinedConfig?.label ?? '';
-
-    if (label.isEmpty) {
-      logger.printStatus(
-        'Please enter the label of the device, which is a slightly more verbose name for the device. (example: Raspberry Pi Model 4B)',
-      );
-      label = Input(
-        prompt: 'Device label:',
-        validator: (s) {
-          if (s.trim().isNotEmpty) {
-            return true;
-          }
-          throw ValidationError('Input is empty. Please try again.');
-        },
-      ).interact();
-
-      printSpaces();
-    }
-
-    logger.printStatus(
-      'Please enter the IP-address of the device. (example: 192.168.1.101)',
+    // get remote device ip and username from the user
+    final (targetIp, username) = getRemoteIpAndUsername(
+      message: 'to add a new device, we need an IP address and a username.',
+      getIpDescription:
+          'Please enter the IP-address of the device. (example: 192.168.1.101)',
+      getUsernameDescription:
+          'Please enter the username used for ssh-ing into the remote device. (example: pi)',
     );
 
-    final String targetStr = Input(
-      prompt: 'Device IP-address:',
-      validator: (s) {
-        if (_isValidIpAddr(s)) {
-          return true;
-        }
-        throw ValidationError('Invalid IP-address. Please try again.');
-      },
-    ).interact();
+    final bool ipv6 = targetIp.isIpv6;
 
-    final InternetAddress? targetIp = InternetAddress.tryParse(targetStr);
-    final bool useIp = targetIp != null;
-    final bool ipv6 = useIp && targetIp.type == InternetAddressType.IPv6;
     final InternetAddress loopbackIp =
         ipv6 ? InternetAddress.loopbackIPv6 : InternetAddress.loopbackIPv4;
-
-    printSpaces();
-
-    logger.printStatus(
-      'Please enter the username used for ssh-ing into the remote device. (example: pi)',
-    );
-
-    final String username = Input(
-      prompt: 'Device Username:',
-      defaultValue: 'no username',
-    ).interact();
 
     // SSH expects IPv6 addresses to use the bracket syntax like URIs do too,
     // but the IPv6 the user enters is a raw IPv6 address, so we need to wrap it.
     final String sshTarget = (username.isNotEmpty ? '$username@' : '') +
-        (ipv6 ? '[${targetIp.address}]' : targetStr);
+        (ipv6 ? '[${targetIp.address}]' : targetIp.address);
 
     final String formattedLoopbackIp =
         ipv6 ? '[${loopbackIp.address}]' : loopbackIp.address;
 
-    printSpaces();
+    logger.printSpaces();
 
-    final isDeviceReachable = await _tryPingDevice(targetStr, ipv6);
+    bool remoteHasSshConnection =
+        await sshService.testPasswordLessSshConnection(username, targetIp);
 
-    if (!isDeviceReachable) {
-      logger.printStatus(
-        'Could not reach the device with the given IP-address.',
+    if (!remoteHasSshConnection) {
+      logger.printFail(
+        'could not establish a password-less ssh connection to the remote device. \n',
       );
 
+      logger.printStatus(
+          'We can create a ssh connection with the remote device, do you want to try it?');
+
       final continueWithoutPing = Confirm(
-        prompt: 'Do you want to continue anyway?',
+        prompt: 'Create a ssh connection?',
         defaultValue: true, // this is optional
         waitForNewLine: true, // optional and will be false by default
       ).interact();
 
       if (!continueWithoutPing) {
-        printSpaces();
-        logger.printStatus('Check your device IP-address and try again.');
+        logger.printSpaces();
+        logger.printStatus(
+            'Check your ssh connection with the remote device and try again.');
+        return 1;
+      }
+
+      logger.printSpaces();
+
+      final sshConnectionCreated =
+          await sshService.createPasswordLessSshConnection(username, targetIp);
+
+      if (sshConnectionCreated) {
+        logger.printSuccess('SSH connection to the remote device is created!');
+        remoteHasSshConnection = true;
+      } else {
+        logger
+            .printFail('Could not create SSH connection to the remote device!');
         return 1;
       }
     }
 
-    printSpaces();
+    logger.printSpaces();
 
     logger.printStatus(
       'We need the exact path of your flutter command line tools on the remote device. '
@@ -212,7 +169,7 @@ class AddCommand extends BaseSnappCommand {
 
     String remoteRunnerCommand = '';
 
-    if (isDeviceReachable) {
+    if (remoteHasSshConnection) {
       final possibleFlutterPath = await _findFlutterPath(sshTarget, ipv6);
 
       remoteRunnerCommand = possibleFlutterPath ?? '';
@@ -230,13 +187,22 @@ class AddCommand extends BaseSnappCommand {
       remoteRunnerCommand = Input(
         prompt: 'Flutter path on device:',
         validator: (s) {
-          if (_isValidPath(s)) {
+          if (s.isValidPath) {
             return true;
           }
           throw ValidationError('Invalid Path to flutter. Please try again.');
         },
       ).interact();
     }
+
+    /// path to the icu data file on the host machine
+    final hostIcuDataPath = flutterSdkManager.icuDataPath;
+
+    /// path to the build artifacts on the remote machine
+    const hostBuildClonePath = 'snapp_embedded';
+
+    /// path to the icu data file on the remote machine
+    const hostIcuDataClone = '$hostBuildClonePath/engine';
 
     CustomDeviceConfig config = CustomDeviceConfig(
       id: id,
@@ -245,7 +211,8 @@ class AddCommand extends BaseSnappCommand {
       enabled: true,
 
       // host-platform specific, filled out later
-      pingCommand: hostPlatform.pingCommand(ipv6: ipv6, pingTarget: targetStr),
+      pingCommand:
+          hostPlatform.pingCommand(ipv6: ipv6, pingTarget: targetIp.address),
       pingSuccessRegex: hostPlatform.pingSuccessRegex,
       postBuildCommand: const <String>[],
 
@@ -339,23 +306,62 @@ class AddCommand extends BaseSnappCommand {
 
     customDevicesConfig.add(config);
 
-    printSpaces();
+    logger.printSpaces();
 
     logger.printStatus(
       '✔️ Successfully added custom device to config file at "${customDevicesConfig.configPath}". ✔️',
     );
 
-    printSpaces();
+    logger.printSpaces();
 
     return 0;
   }
 
-  // ignore: unused_element
-  bool _isValidHostname(String s) => hostnameRegex.hasMatch(s);
+  (String id, String label) getRemoteDeviceIdAndLabel(
+    CustomDeviceConfig? predefinedConfig,
+  ) {
+    String id = predefinedConfig?.id ?? '';
+    String label = predefinedConfig?.label ?? '';
 
-  bool _isValidPath(String s) => pathRegex.hasMatch(s);
+    if (id.isEmpty) {
+      logger.printStatus(
+        'Please enter the id you want to device to have. Must contain only alphanumeric or underscore characters. (example: pi)',
+      );
 
-  bool _isValidIpAddr(String s) => InternetAddress.tryParse(s) != null;
+      id = Input(
+        prompt: 'Device Id:',
+        validator: (s) {
+          if (!RegExp(r'^\w+$').hasMatch(s.trim())) {
+            throw ValidationError('Invalid input. Please try again.');
+          } else if (_isDuplicatedDeviceId(s.trim())) {
+            throw ValidationError('Device with this id already exists.');
+          }
+          return true;
+        },
+      ).interact().trim();
+
+      logger.printSpaces();
+    }
+
+    if (label.isEmpty) {
+      logger.printStatus(
+        'Please enter the label of the device, which is a slightly more verbose name for the device. (example: Raspberry Pi Model 4B)',
+      );
+      label = Input(
+        prompt: 'Device label:',
+        validator: (s) {
+          if (s.trim().isNotEmpty) {
+            return true;
+          }
+          throw ValidationError('Input is empty. Please try again.');
+        },
+      ).interact();
+
+      logger.printSpaces();
+    }
+
+    return (id, label);
+  }
 
   bool _isDuplicatedDeviceId(String s) {
     return customDevicesConfig.devices.any((element) => element.id == s);
@@ -376,65 +382,12 @@ class AddCommand extends BaseSnappCommand {
     return '$s-$i';
   }
 
-  Future<bool> _tryPingDevice(String pingTarget, bool ipv6) async {
-    final spinner = Spinner(
-      icon: '✔️',
-      leftPrompt: (done) => '', // prompts are optional
-      rightPrompt: (done) => done
-          ? 'pinging device completed.'
-          : 'pinging device to check if it is reachable.',
-    ).interact();
-
-    final processRunner = ProcessUtils(
-      processManager: flutterSdkManager.processManager,
-      logger: logger,
-    );
-
-    await Future.delayed(Duration(seconds: 2));
-    final RunResult result;
-    try {
-      result = await processRunner.run(
-        hostPlatform.pingCommand(ipv6: ipv6, pingTarget: pingTarget),
-        timeout: Duration(seconds: 10),
-      );
-    } catch (e, s) {
-      logger.printTrace(
-        'Something went wrong while trying to find flutter. \n $e \n $s',
-      );
-
-      return false;
-    } finally {
-      spinner.done();
-
-      printSpaces();
-    }
-
-    logger.printTrace('Ping Command ExitCode: ${result.exitCode}');
-    logger.printTrace('Ping Command Stdout: ${result.stdout.trim()}');
-    logger.printTrace('Ping Command Stderr: ${result.stderr}');
-
-    printSpaces();
-
-    if (result.exitCode != 0) {
-      return false;
-    }
-
-    // If the user doesn't configure a ping success regex, any ping with exitCode zero
-    // is good enough. Otherwise we check if either stdout or stderr have a match of
-    // the pingSuccessRegex.
-    final RegExp? pingSuccessRegex = hostPlatform.pingSuccessRegex;
-
-    return pingSuccessRegex == null ||
-        pingSuccessRegex.hasMatch(result.stdout) ||
-        pingSuccessRegex.hasMatch(result.stderr);
-  }
-
   /// finds flutter in the host using ssh connection
   /// returns the path of flutter if found it
   /// otherwise returns null
   Future<String?> _findFlutterPath(String sshTarget, bool ipv6) async {
     final spinner = Spinner(
-      icon: '✔️',
+      icon: logger.successIcon,
       leftPrompt: (done) => '', // prompts are optional
       rightPrompt: (done) => done
           ? 'finding flutter path completed'
@@ -466,7 +419,7 @@ class AddCommand extends BaseSnappCommand {
     } finally {
       spinner.done();
 
-      printSpaces();
+      logger.printSpaces();
     }
 
     logger.printTrace('Find Flutter ExitCode: ${result.exitCode}');

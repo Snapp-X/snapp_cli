@@ -13,31 +13,22 @@ class DevicesCommand extends BaseSnappCommand {
   }) {
     // List command to list all custom devices
     addSubcommand(
-      ListCommand(
-        flutterSdkManager: flutterSdkManager,
-      ),
+      ListCommand(flutterSdkManager: flutterSdkManager),
     );
 
     // Add command to add a new custom device
     addSubcommand(
-      AddCommand(
-        flutterSdkManager: flutterSdkManager,
-        platform: flutterSdkManager.platform,
-      ),
+      AddCommand(flutterSdkManager: flutterSdkManager),
     );
 
     // Delete command to delete a custom device
     addSubcommand(
-      DeleteCommand(
-        flutterSdkManager: flutterSdkManager,
-      ),
+      DeleteCommand(flutterSdkManager: flutterSdkManager),
     );
 
     // Update IP command to update the IP address of a custom device
     addSubcommand(
-      UpdateIpCommand(
-        flutterSdkManager: flutterSdkManager,
-      ),
+      UpdateIpCommand(flutterSdkManager: flutterSdkManager),
     );
   }
 

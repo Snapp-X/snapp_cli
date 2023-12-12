@@ -2,6 +2,8 @@
 import 'package:args/command_runner.dart';
 import 'package:interact/interact.dart';
 import 'package:snapp_cli/commands/devices/devices_command.dart';
+import 'package:snapp_cli/commands/ssh/ssh_command.dart';
+import 'package:snapp_cli/utils/common.dart';
 import 'package:snapp_cli/utils/flutter_sdk.dart';
 import 'package:flutter_tools/src/runner/flutter_command_runner.dart';
 import 'package:flutter_tools/src/base/common.dart';
@@ -25,6 +27,9 @@ class SnappCliCommandRunner extends CommandRunner<int> {
 
     // Add the devices command to the command runner
     addCommand(DevicesCommand(flutterSdkManager: flutterSdkManager));
+
+    // Create and manage SSH connections
+    addCommand(SshCommand(flutterSdkManager: flutterSdkManager));
   }
 
   final FlutterSdkManager flutterSdkManager;
@@ -41,7 +46,7 @@ class SnappCliCommandRunner extends CommandRunner<int> {
     final isLinuxEnabled = flutterSdkManager.isLinuxEnabled;
 
     if (!areCustomDevicesEnabled || !isLinuxEnabled) {
-      printSpaces();
+      logger.printSpaces();
 
       logger.printStatus(
         '''
@@ -50,7 +55,7 @@ This is a one time setup and will not be required again.
 ''',
       );
 
-      printSpaces();
+      logger.printSpaces();
 
       final enableConfigs = Confirm(
         prompt: 'Do you want to enable them now?',
@@ -58,7 +63,7 @@ This is a one time setup and will not be required again.
         waitForNewLine: true, // optional and will be false by default
       ).interact();
 
-      printSpaces();
+      logger.printSpaces();
 
       if (!enableConfigs) {
         throwToolExit('''
@@ -77,7 +82,7 @@ flutter config --enable-custom-devices --enable-linux-desktop
 
   Future<void> _enableConfigs() async {
     final spinner = Spinner(
-      icon: '✔️',
+      icon: logger.successIcon,
       leftPrompt: (done) => '', // prompts are optional
       rightPrompt: (done) => done
           ? 'Configs enabled successfully!'
@@ -111,7 +116,7 @@ flutter config --enable-custom-devices --enable-linux-desktop
     } finally {
       spinner.done();
 
-      printSpaces();
+      logger.printSpaces();
     }
 
     if (result.exitCode != 0) {
@@ -122,12 +127,6 @@ Please enable them manually by running the following command:
 
 flutter config --enable-custom-devices --enable-linux-desktop
 ''');
-    }
-  }
-
-  void printSpaces([int n = 2]) {
-    for (int i = 0; i < n; i++) {
-      logger.printStatus(' ');
     }
   }
 }
