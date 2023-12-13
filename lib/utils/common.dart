@@ -11,6 +11,7 @@ import 'package:flutter_tools/src/base/process.dart';
 
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
 import 'package:process/process.dart';
+import 'package:snapp_cli/commands/base_command.dart';
 
 final RegExp hostnameRegex = RegExp(
     r'^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$');
@@ -77,8 +78,24 @@ extension CustomDevicesConfigExt on CustomDeviceConfig {
   /// sample: username@192.168.1.1
   /// If the ping command doesn't contain a username, then throw an error
   String get deviceUsername {
-    // TODO(payam): Complete this method
-    throw UnimplementedError();
+    final deviceIp = this.deviceIp;
+
+    final targetSsh = uninstallCommand.firstWhere(
+      (element) {
+        if (element.contains(deviceIp)) {
+          final username = element.split('@').first;
+
+          if (username.isNotEmpty) return true;
+        }
+        return false;
+      },
+      orElse: () => throwToolExit(
+        'Could not find the device username in the device config file',
+      ),
+    );
+
+    return targetSsh.split('@').first;
+    
   }
 }
 
