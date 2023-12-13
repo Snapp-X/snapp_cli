@@ -1,13 +1,13 @@
 // ignore_for_file: implementation_imports
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
 import 'package:interact/interact.dart';
 import 'package:flutter_tools/src/base/logger.dart';
 import 'package:flutter_tools/src/base/process.dart';
+import 'package:process/process.dart';
 import 'package:snapp_cli/host_runner/host_runner_platform.dart';
 import 'package:snapp_cli/snapp_cli.dart';
 import 'package:snapp_cli/utils/common.dart';
@@ -17,6 +17,7 @@ class RemoteControllerService {
     required FlutterSdkManager flutterSdkManager,
   })  : logger = flutterSdkManager.logger,
         hostPlatform = HostRunnerPlatform.build(flutterSdkManager.platform),
+        processManager = flutterSdkManager.processManager,
         processRunner = ProcessUtils(
           processManager: flutterSdkManager.processManager,
           logger: flutterSdkManager.logger,
@@ -26,6 +27,7 @@ class RemoteControllerService {
 
   final HostRunnerPlatform hostPlatform;
 
+  final ProcessManager processManager;
   final ProcessUtils processRunner;
 
   /// finds flutter in the remote machine using ssh connection
@@ -226,28 +228,22 @@ class RemoteControllerService {
     String username,
     InternetAddress ip,
   ) async {
-    final process = await processRunner.start(
+    final process = await processRunner.runWithOutput(
       hostPlatform.sshCommand(
         ipv6: ip.isIpv6,
         sshTarget: ip.sshTarget(username),
         lastCommand: true,
         command:
-            'bash <(curl -fSL https://raw.githubusercontent.com/Snapp-Embedded/snapp_installer/main/installer.sh) && source ~/.bashrc',
+            'bash <(curl -fSL https://raw.githubusercontent.com/Snapp-Embedded/snapp_installer/main/installer.sh)',
       ),
+      processManager: processManager,
+      logger: logger,
     );
 
-    process.stdout
-        .transform(utf8.decoder)
-        .transform(const LineSplitter())
-        .listen((line) {
-      logger.printStatus(line);
-    });
-
-    final exitCode = await process.exitCode;
-
-    return exitCode == 0;
+    return process.exitCode == 0;
   }
 
+  /// in
   /// install flutter in the remote machine using ssh connection
   ///
   /// we will use snapp_installer[https://github.com/Snapp-Embedded/snapp_installer] to install flutter in the remote machine
@@ -263,24 +259,18 @@ class RemoteControllerService {
       ip,
     );
 
-    final process = await processRunner.start(
+    final process = await processRunner.runWithOutput(
       hostPlatform.sshCommand(
         ipv6: ip.isIpv6,
         sshTarget: ip.sshTarget(username),
         lastCommand: true,
         command: '$snappInstallerPath install',
       ),
+      processManager: processManager,
+      logger: logger,
+      showStderr: true,
     );
 
-    process.stdout
-        .transform(utf8.decoder)
-        .transform(const LineSplitter())
-        .listen((line) {
-      logger.printStatus(line);
-    });
-
-    final exitCode = await process.exitCode;
-
-    return exitCode == 0;
+    return process.exitCode == 0;
   }
 }

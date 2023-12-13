@@ -222,8 +222,9 @@ class SshService {
 
     final spinner = Spinner(
       icon: logger.searchIcon,
-      rightPrompt: (done) =>
-          done ? 'Search completed.' : 'Searching for the device',
+      rightPrompt: (done) => done
+          ? 'Preparing SSH connection completed'
+          : 'Preparing SSH connection',
     ).interact();
 
     // create a directory in the user's home directory
@@ -256,7 +257,7 @@ class SshService {
     final spinner = Spinner(
       icon: logger.searchIcon,
       rightPrompt: (done) =>
-          done ? 'Search completed.' : 'Searching for the device',
+          done ? 'SSH connection test completed.' : 'Testing SSH connection',
     ).interact();
 
     final RunResult result;
@@ -287,12 +288,6 @@ class SshService {
     logger.printTrace('SSH Test Command Stdout: ${result.stdout.trim()}');
     logger.printTrace('SSH Test Command Stderr: ${result.stderr}');
 
-    logger.printSpaces();
-
-    if (result.exitCode != 0) {
-      return false;
-    }
-
-    return true;
+    return result.exitCode == 0;
   }
 }

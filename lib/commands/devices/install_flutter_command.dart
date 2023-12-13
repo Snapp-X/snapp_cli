@@ -41,6 +41,8 @@ class InstallFlutterCommand extends BaseSnappCommand {
     final flutterPath =
         await remoteControllerService.findFlutterPath(username, ip);
 
+    logger.printSpaces();
+
     if (flutterPath != null) {
       logger.printSuccess(
           'Flutter is already installed on the device at "$flutterPath"');
@@ -48,14 +50,27 @@ class InstallFlutterCommand extends BaseSnappCommand {
       return 0;
     }
 
+    logger.printStatus(
+      '''
+Flutter is not installed on the device
+We will install it for you.
+''',
+    );
+    logger.printSpaces();
+
     // 5. If not, install snapp_installer on the device
     final snappInstallerPath =
         await remoteControllerService.findSnappInstallerPath(username, ip);
 
     if (snappInstallerPath == null) {
       logger.printStatus(
-        'snapp_installer is not installed on the device, we will install it for you.',
+        '''
+snapp_installer is not installed on the device
+but don't worry, we will install it for you.
+''',
       );
+
+      logger.printSpaces();
 
       final snappInstallerInstalled = await remoteControllerService
           .installSnappInstallerOnRemote(username, ip);
@@ -64,8 +79,15 @@ class InstallFlutterCommand extends BaseSnappCommand {
         throwToolExit('Could not install snapp_installer on the device!');
       }
 
-      logger.printSuccess('snapp_installer is installed on the device!');
+      logger.printSuccess(
+        '''
+snapp_installer is installed on the device!
+Now we can install flutter on the device with the help of snapp_installer.
+''',
+      );
     }
+
+    logger.printSpaces();
 
     // 6. Install flutter on the device with snapp_installer
     final flutterInstalled =
@@ -89,10 +111,14 @@ class InstallFlutterCommand extends BaseSnappCommand {
     logger.printStatus(
         'Please select the type of device you want to install Flutter on.');
 
+    logger.printSpaces();
+
     final deviceTypeIndex = Select(
       prompt: 'Device Type:',
       options: deviceOptions,
     ).interact();
+
+    logger.printSpaces();
 
     final isNewDevice = deviceTypeIndex == 1;
 
@@ -145,7 +171,7 @@ Before you can install flutter on a device, you need to add one first.
     String username,
     InternetAddress ip,
   ) async {
-    var remoteHasSshConnection =
+    final remoteHasSshConnection =
         await sshService.testPasswordLessSshConnection(username, ip);
 
     if (!remoteHasSshConnection) {
@@ -156,13 +182,13 @@ Before you can install flutter on a device, you need to add one first.
       logger.printStatus(
           'We can create a ssh connection with the remote device, do you want to try it?');
 
-      final continueWithoutPing = Confirm(
+      final createSshConfirmation = Confirm(
         prompt: 'Create a ssh connection?',
         defaultValue: true, // this is optional
         waitForNewLine: true, // optional and will be false by default
       ).interact();
 
-      if (!continueWithoutPing) {
+      if (!createSshConfirmation) {
         logger.printSpaces();
         throwToolExit(
             'Check your ssh connection with the remote device and try again.');

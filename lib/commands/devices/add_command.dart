@@ -301,8 +301,8 @@ class AddCommand extends BaseSnappCommand {
 
     logger.printSpaces();
 
-    logger.printStatus(
-      '✔️ Successfully added custom device to config file at "${customDevicesConfig.configPath}". ✔️',
+    logger.printSuccess(
+      'Successfully added custom device to config file at "${customDevicesConfig.configPath}".',
     );
 
     logger.printSpaces();
