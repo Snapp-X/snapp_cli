@@ -88,6 +88,7 @@ extension ProcessUtilsExt on ProcessUtils {
     required ProcessManager processManager,
     required Logger logger,
     Duration? timeout,
+    bool showStderr = false,
   }) async {
     while (true) {
       final Process process = await start(cmd);
@@ -101,10 +102,13 @@ extension ProcessUtilsExt on ProcessUtils {
           logger.printStatus(event);
         },
       ).asFuture<void>();
-      final Future<void> stderrFuture = process.stderr
-          .transform<String>(const Utf8Decoder())
-          .listen(stderrBuffer.write)
-          .asFuture<void>();
+
+      final Future<void> stderrFuture =
+          process.stderr.transform<String>(const Utf8Decoder()).listen((event) {
+        stderrBuffer.write(event);
+
+        if (showStderr) logger.printStatus(event);
+      }).asFuture<void>();
 
       int? exitCode;
       exitCode = timeout == null
@@ -128,7 +132,10 @@ extension ProcessUtilsExt on ProcessUtils {
           stdioFuture = stdioFuture.timeout(const Duration(seconds: 1));
         }
         await stdioFuture;
-      } on Exception {
+      } on Exception catch (e, s) {
+        logger.printStatus(
+            'Exception while running process with output | waiting for stdio streams: $e, $s: $e\n$s');
+
         // Ignore errors on the process' stdout and stderr streams. Just capture
         // whatever we got, and use the exit code
       }
