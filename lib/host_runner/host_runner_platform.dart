@@ -98,10 +98,10 @@ abstract class HostRunnerPlatform {
         '',
       ];
 
-  List<String> addSshKeyToAgent({required String filePath}) => [
+  List<String> addSshKeyToAgent({required String filePath}) => commandRunner([
         'ssh-add',
         filePath,
-      ];
+      ]);
 
   List<String> copySshKeyCommand({
     required String filePath,

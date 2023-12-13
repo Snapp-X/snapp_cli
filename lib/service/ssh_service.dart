@@ -131,13 +131,7 @@ class SshService {
     final RunResult result;
     try {
       result = await processRunner.run(
-        // TODO: add this to the hostPlatform
-        hostPlatform.commandRunner(
-          [
-            'ssh-add',
-            sshKey.path,
-          ],
-        ),
+        hostPlatform.addSshKeyToAgent(filePath: sshKey.path),
         timeout: Duration(seconds: 10),
       );
     } catch (e, s) {

@@ -9,7 +9,6 @@ import 'package:snapp_cli/command_runner/command_runner.dart';
 import 'package:snapp_cli/commands/base_command.dart';
 import 'package:flutter_tools/src/base/io.dart';
 
-import 'package:flutter_tools/src/base/common.dart';
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
 
 const _ipOption = 'ip';
