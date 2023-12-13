@@ -159,34 +159,8 @@ class AddCommand extends BaseSnappCommand {
       'We will use this path to run flutter commands on the remote device like "flutter build linux --debug". \n',
     );
 
-    String remoteRunnerCommand = '';
-
-    if (remoteHasSshConnection) {
-      final possibleFlutterPath =
-          await remoteControllerService.findFlutterPath(username, targetIp);
-
-      remoteRunnerCommand = possibleFlutterPath ?? '';
-    }
-
-    if (remoteRunnerCommand.isEmpty) {
-      logger.printStatus(
-        'Could not find flutter in the remote machine automatically. \n\n'
-        'You need to provide it manually.'
-        'You can use which command to find it in your remote machine: "which flutter" \n'
-        '*NOTE: if you added flutter to one of directories in \$PATH variables, you can just enter "flutter" here. \n'
-        '(example: /home/pi/sdk/flutter/bin/flutter)',
-      );
-
-      remoteRunnerCommand = Input(
-        prompt: 'Flutter path on device:',
-        validator: (s) {
-          if (s.isValidPath) {
-            return true;
-          }
-          throw ValidationError('Invalid Path to flutter. Please try again.');
-        },
-      ).interact();
-    }
+    String remoteRunnerCommand =
+        await _provideFlutterCommandRunner(username, targetIp);
 
     /// path to the icu data file on the host machine
     final hostIcuDataPath = flutterSdkManager.icuDataPath;
@@ -373,5 +347,115 @@ class AddCommand extends BaseSnappCommand {
     }
 
     return '$s-$i';
+  }
+
+  Future<String> _provideFlutterCommandRunner(
+    String username,
+    InternetAddress targetIp,
+  ) async {
+    final possibleFlutterPath =
+        await remoteControllerService.findFlutterPath(username, targetIp);
+
+    if (possibleFlutterPath != null) return possibleFlutterPath;
+
+    logger.printStatus(
+        'Could not find flutter in the remote machine automatically. \n\n'
+        'We need the exact path of your flutter command line tools on the remote device. \n'
+        'Now you have two options: \n'
+        '1. You can enter the path to flutter manually. \n'
+        '2. We can install flutter on the remote machine for you. \n');
+
+    logger.printSpaces();
+
+    final provideFlutterPathOption = Select(
+      prompt: 'Please select one of the options:',
+      options: [
+        'Enter the path to flutter manually',
+        'Install flutter on the remote machine',
+      ],
+    ).interact();
+
+    logger.printSpaces();
+
+    if (provideFlutterPathOption == 0) return _provideFlutterPathManually();
+
+    return _installFlutterOnRemote(username, targetIp);
+  }
+
+  Future<String> _provideFlutterPathManually() async {
+    logger.printStatus(
+      'You can use which command to find it in your remote machine: "which flutter" \n'
+      '*NOTE: if you added flutter to one of directories in \$PATH variables, you can just enter "flutter" here. \n'
+      '(example: /home/pi/sdk/flutter/bin/flutter)',
+    );
+
+    final manualFlutterPath = Input(
+      prompt: 'Flutter path on device:',
+      validator: (s) {
+        if (s.isValidPath) {
+          return true;
+        }
+        throw ValidationError('Invalid Path to flutter. Please try again.');
+      },
+    ).interact();
+
+    /// check if [manualFlutterPath] is a valid file path
+    if (!manualFlutterPath.isValidPath) {
+      throwToolExit(
+          'Invalid Path to flutter. Please make sure about flutter path on the remote machine and try again.');
+    }
+
+    return manualFlutterPath;
+  }
+
+  Future<String> _installFlutterOnRemote(
+    String username,
+    InternetAddress ip,
+  ) async {
+    // 5. If not, install snapp_installer on the device
+    final snappInstallerPath = await remoteControllerService
+        .findSnappInstallerPathInteractive(username, ip);
+
+    if (snappInstallerPath == null) {
+      logger.printStatus(
+        '''
+snapp_installer is not installed on the device
+but don't worry, we will install it for you.
+''',
+      );
+
+      logger.printSpaces();
+
+      final snappInstallerInstalled = await remoteControllerService
+          .installSnappInstallerOnRemote(username, ip);
+
+      if (!snappInstallerInstalled) {
+        throwToolExit('Could not install snapp_installer on the device!');
+      }
+
+      logger.printSuccess(
+        '''
+snapp_installer is installed on the device!
+Now we can install flutter on the device with the help of snapp_installer.
+''',
+      );
+    }
+
+    logger.printSpaces();
+
+    // 6. Install flutter on the device with snapp_installer
+    final flutterInstalled =
+        await remoteControllerService.installFlutterOnRemote(username, ip);
+
+    if (!flutterInstalled) {
+      throwToolExit('Could not install flutter on the device!');
+    }
+
+    logger.printSuccess('Flutter is installed on the device!');
+
+    return (await remoteControllerService.findFlutterPathInteractive(
+      username,
+      ip,
+    ))!;
   }
 }
