@@ -107,6 +107,47 @@ class RemoteControllerService {
     }
   }
 
+  Future<String?> findFlutterPathInteractive(
+    String username,
+    InternetAddress ip,
+  ) async {
+    final RunResult result;
+    try {
+      result = await processRunner.run(
+        hostPlatform.sshCommand(
+          ipv6: ip.type == InternetAddressType.IPv6,
+          sshTarget: ip.sshTarget(username),
+          command:
+              'find / -type f -name "flutter" -path "*/flutter/bin/*" 2>/dev/null',
+        ),
+        timeout: Duration(seconds: 10),
+      );
+    } catch (e, s) {
+      logger.printTrace(
+        'Something went wrong while trying to find flutter. \n $e \n $s',
+      );
+
+      return null;
+    } finally {
+      logger.printSpaces();
+    }
+
+    logger.printTrace('Find Flutter ExitCode: ${result.exitCode}');
+    logger.printTrace('Find Flutter Stdout: ${result.stdout.trim()}');
+    logger.printTrace('Find Flutter Stderr: ${result.stderr}');
+
+    final output = result.stdout.trim();
+
+    if (result.exitCode != 0 && output.isEmpty) {
+      return null;
+    }
+    final outputLines = output.split('\n').map((e) => e.trim()).toList();
+    final outputLinesLength = outputLines.length;
+    final isOutputMultipleLines = outputLinesLength > 1;
+
+    return isOutputMultipleLines ? outputLines.first : output;
+  }
+
   /// finds snapp_installer in the remote machine using ssh connection
   /// returns the path of snapp_installer if found it
   /// otherwise returns null
