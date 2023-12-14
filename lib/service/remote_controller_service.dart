@@ -343,7 +343,6 @@ class RemoteControllerService {
         ),
         processManager: processManager,
         logger: logger,
-        showStderr: true,
       );
     } catch (e, s) {
       logger.printTrace(

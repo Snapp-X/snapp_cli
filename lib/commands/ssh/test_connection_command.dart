@@ -27,8 +27,7 @@ class TestConnectionCommand extends BaseSnappCommand {
           'to test an SSH connection to the remote device, we need an IP address and a username',
     );
 
-    final sshConnectionCreated =
-        await sshService.testPasswordLessSshConnection(
+    final sshConnectionCreated = await sshService.testPasswordLessSshConnection(
       username,
       ip,
     );

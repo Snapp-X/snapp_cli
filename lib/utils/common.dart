@@ -95,7 +95,6 @@ extension CustomDevicesConfigExt on CustomDeviceConfig {
     );
 
     return targetSsh.split('@').first;
-    
   }
 }
 
