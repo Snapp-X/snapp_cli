@@ -1,14 +1,18 @@
 // ignore_for_file: implementation_imports
+import 'dart:io';
+
+import 'package:flutter_tools/src/runner/flutter_command_runner.dart';
+import 'package:flutter_tools/src/base/common.dart';
+import 'package:flutter_tools/src/base/process.dart';
+import 'package:flutter_tools/src/base/logger.dart';
+
 import 'package:args/command_runner.dart';
 import 'package:interact/interact.dart';
 import 'package:snapp_cli/commands/devices/devices_command.dart';
 import 'package:snapp_cli/commands/ssh/ssh_command.dart';
 import 'package:snapp_cli/utils/common.dart';
 import 'package:snapp_cli/utils/flutter_sdk.dart';
-import 'package:flutter_tools/src/runner/flutter_command_runner.dart';
-import 'package:flutter_tools/src/base/common.dart';
-import 'package:flutter_tools/src/base/process.dart';
-import 'package:flutter_tools/src/base/logger.dart';
+import 'package:snapp_cli/utils/update.dart';
 
 const deviceIdOption = FlutterGlobalOptions.kDeviceIdOption;
 
@@ -33,6 +37,8 @@ class SnappCliCommandRunner extends CommandRunner<int> {
   }
 
   final FlutterSdkManager flutterSdkManager;
+
+  final UpdateController updateController = UpdateController();
 
   Logger get logger => flutterSdkManager.logger;
 
@@ -76,6 +82,10 @@ flutter config --enable-custom-devices --enable-linux-desktop
 
       await _enableConfigs();
     }
+
+    await _checkForUpdates();
+
+    logger.printSpaces();
 
     return super.run(args);
   }
@@ -127,6 +137,51 @@ Please enable them manually by running the following command:
 
 flutter config --enable-custom-devices --enable-linux-desktop
 ''');
+    }
+  }
+
+  Future<void> _checkForUpdates() async {
+    final isUpdateAvailable = await updateController.isUpdateAvailable();
+
+    logger.printSpaces();
+
+    if (isUpdateAvailable) {
+      logger.printStatus('A new version of snapp_cli is available!');
+
+      final updateConfirmed = Confirm(
+        prompt: 'Do you want to update now?',
+        defaultValue: true, // this is optional
+        waitForNewLine: true, // optional and will be false by default
+      ).interact();
+
+      logger.printSpaces();
+
+      if (!updateConfirmed) return;
+
+      final spinner = Spinner(
+        icon: logger.successIcon,
+        leftPrompt: (done) => '', // prompts are optional
+        rightPrompt: (done) =>
+            done ? 'Updated process completed!' : 'Updating snapp_cli...',
+      ).interact();
+
+      final result = await updateController.update();
+
+      logger.printSpaces();
+
+      spinner.done();
+
+      if (result.exitCode != 0) {
+        throwToolExit('Something went wrong. \n ${result.stderr}');
+      }
+
+      logger.printStatus(result.stdout);
+
+      logger.printSpaces();
+
+      logger.printSuccess('Snapp_cli updated successfully! 🎉');
+
+      exit(0);
     }
   }
 }

@@ -1,3 +1,7 @@
+## 0.3.2 BETA
+
+- Add check for update for cli 
+
 ## 0.3.1 BETA
 
 - fix: `devices add` exception on running process
