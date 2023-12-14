@@ -48,6 +48,8 @@ class FlutterSdkManager {
   bool get areCustomDevicesEnabled =>
       _provider(featureFlags.areCustomDevicesEnabled);
 
+  bool get isLinuxEnabled => _provider(featureFlags.isLinuxEnabled);
+
   /// initialize the flutter sdk
   Future<void> initialize() async {
     if (isInitialized) return;
@@ -74,8 +76,7 @@ class FlutterSdkManager {
 
   /// get the flutter sdk path
   Future<String> _getFlutterRootDirectory() async {
-    final pkgConfig = await findPackageConfigUri(io.Platform.script);
-    pkgConfig!;
+    final pkgConfig = (await findPackageConfigUri(io.Platform.script))!;
 
     final flutterToolsPath =
         pkgConfig.resolve(Uri.parse('package:flutter_tools/'))!.toFilePath();
