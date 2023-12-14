@@ -13,9 +13,6 @@ class UpdateController {
 
     final path = pkgConfig.resolve(Uri.parse('package:$kPackageName/'));
 
-    print('script: ${Platform.script}');
-    print('path: $path');
-
     final pubspecPath = path!.resolve('../pubspec.yaml').toFilePath();
 
     final pubspecFile = File(pubspecPath);
@@ -25,8 +22,6 @@ class UpdateController {
     final pubspec = loadYaml(pubspecContent);
 
     final versionString = pubspec['version'] as String?;
-
-    print('versionString: $versionString');
 
     return versionString!;
   }

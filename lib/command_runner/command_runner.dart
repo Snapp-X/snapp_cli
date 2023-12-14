@@ -44,9 +44,6 @@ class SnappCliCommandRunner extends CommandRunner<int> {
 
   @override
   Future<int?> run(Iterable<String> args) async {
-    // // Check if custom devices feature is enabled
-    // // If not, throw an error
-
     final areCustomDevicesEnabled = flutterSdkManager.areCustomDevicesEnabled;
 
     final isLinuxEnabled = flutterSdkManager.isLinuxEnabled;
@@ -141,7 +138,16 @@ flutter config --enable-custom-devices --enable-linux-desktop
   }
 
   Future<void> _checkForUpdates() async {
-    final isUpdateAvailable = await updateController.isUpdateAvailable();
+    final bool isUpdateAvailable;
+    try {
+      isUpdateAvailable = await updateController.isUpdateAvailable();
+    } catch (e, s) {
+      logger.printTrace(
+        'Something went wrong. During checking for updates. \n $e \n $s',
+      );
+
+      return;
+    }
 
     logger.printSpaces();
 
