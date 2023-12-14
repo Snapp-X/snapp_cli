@@ -33,6 +33,7 @@ abstract class HostRunnerPlatform {
     required bool ipv6,
     required String source,
     required String dest,
+    bool addHostToKnownHosts = false,
     bool lastCommand = false,
     String endCharacter = ';',
   }) =>
@@ -41,6 +42,10 @@ abstract class HostRunnerPlatform {
         '-r',
         '-o',
         'BatchMode=yes',
+        if (addHostToKnownHosts) ...[
+          '-o',
+          'StrictHostKeyChecking=accept-new',
+        ],
         if (ipv6) '-6',
         source,
         '$dest ${lastCommand ? '' : endCharacter}',
@@ -50,6 +55,7 @@ abstract class HostRunnerPlatform {
     required bool ipv6,
     required String sshTarget,
     required String command,
+    bool addHostToKnownHosts = false,
     bool lastCommand = false,
     String endCharacter = ';',
   }) =>
@@ -57,6 +63,10 @@ abstract class HostRunnerPlatform {
         'ssh',
         '-o',
         'BatchMode=yes',
+        if (addHostToKnownHosts) ...[
+          '-o',
+          'StrictHostKeyChecking=accept-new',
+        ],
         if (ipv6) '-6',
         sshTarget,
         '$command ${lastCommand ? '' : endCharacter}',
@@ -66,12 +76,17 @@ abstract class HostRunnerPlatform {
     required bool ipv6,
     required String sshTarget,
     required List<String> commands,
+    bool addHostToKnownHosts = false,
     String endCharacter = ';',
   }) =>
       [
         'ssh',
         '-o',
         'BatchMode=yes',
+        if (addHostToKnownHosts) ...[
+          '-o',
+          'StrictHostKeyChecking=accept-new',
+        ],
         if (ipv6) '-6',
         sshTarget,
         ...commands.map(

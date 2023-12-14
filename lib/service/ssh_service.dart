@@ -186,8 +186,9 @@ class SshService {
 
   Future<bool> createPasswordLessSshConnection(
     String username,
-    InternetAddress ip,
-  ) async {
+    InternetAddress ip, {
+    bool addHostToKnownHosts = true,
+  }) async {
     final isDeviceReachable = await tryPingDevice(
       ip.address,
       ip.type == InternetAddressType.IPv6,
@@ -244,8 +245,9 @@ class SshService {
   /// Checks if the device is reachable via ssh
   Future<bool> testPasswordLessSshConnection(
     String username,
-    InternetAddress ip,
-  ) async {
+    InternetAddress ip, {
+    bool addHostToKnownHosts = true,
+  }) async {
     final String sshTarget = ip.sshTarget(username);
 
     final spinner = Spinner(
@@ -261,6 +263,7 @@ class SshService {
           ipv6: ip.type == InternetAddressType.IPv6,
           sshTarget: sshTarget,
           command: 'echo "Test SSH Connection"',
+          addHostToKnownHosts: addHostToKnownHosts,
           lastCommand: true,
         ),
         timeout: Duration(seconds: 10),

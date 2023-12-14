@@ -166,14 +166,12 @@ Before you can install flutter on a device, you need to add one first.
 
     logger.printSpaces();
 
-    logger.printStatus(
-      '''
+    logger.printStatus('''
 Target Device info: 
 
 Ip Address: $deviceIp
 Username: $username
-'''
-    );
+''');
 
     return (InternetAddress.tryParse(deviceIp)!, username);
   }

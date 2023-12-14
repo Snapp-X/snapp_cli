@@ -33,7 +33,11 @@ class RemoteControllerService {
   /// finds flutter in the remote machine using ssh connection
   /// returns the path of flutter if found it
   /// otherwise returns null
-  Future<String?> findFlutterPath(String username, InternetAddress ip) async {
+  Future<String?> findFlutterPath(
+    String username,
+    InternetAddress ip, {
+    bool addHostToKnownHosts = true,
+  }) async {
     final spinner = Spinner(
       icon: logger.successIcon,
       rightPrompt: (done) => done
@@ -49,6 +53,7 @@ class RemoteControllerService {
           sshTarget: ip.sshTarget(username),
           command:
               'find / -type f -name "flutter" -path "*/flutter/bin/*" 2>/dev/null',
+          addHostToKnownHosts: addHostToKnownHosts,
         ),
         timeout: Duration(seconds: 10),
       );
@@ -109,8 +114,9 @@ class RemoteControllerService {
 
   Future<String?> findFlutterPathInteractive(
     String username,
-    InternetAddress ip,
-  ) async {
+    InternetAddress ip, {
+    bool addHostToKnownHosts = true,
+  }) async {
     final RunResult result;
     try {
       result = await processRunner.run(
@@ -119,6 +125,7 @@ class RemoteControllerService {
           sshTarget: ip.sshTarget(username),
           command:
               'find / -type f -name "flutter" -path "*/flutter/bin/*" 2>/dev/null',
+          addHostToKnownHosts: addHostToKnownHosts,
         ),
         timeout: Duration(seconds: 10),
       );
@@ -153,8 +160,9 @@ class RemoteControllerService {
   /// otherwise returns null
   Future<String?> findSnappInstallerPath(
     String username,
-    InternetAddress ip,
-  ) async {
+    InternetAddress ip, {
+    bool addHostToKnownHosts = true,
+  }) async {
     final spinner = Spinner(
       icon: logger.successIcon,
       rightPrompt: (done) => done
@@ -170,6 +178,7 @@ class RemoteControllerService {
           sshTarget: ip.sshTarget(username),
           command:
               'find / -type f -name "snapp_installer" -path "*/snapp_installer/bin/*" 2>/dev/null',
+          addHostToKnownHosts: addHostToKnownHosts,
         ),
         timeout: Duration(seconds: 10),
       );
@@ -219,8 +228,9 @@ class RemoteControllerService {
   /// this method is not communicating with the user directly
   Future<String?> findSnappInstallerPathInteractive(
     String username,
-    InternetAddress ip,
-  ) async {
+    InternetAddress ip, {
+    bool addHostToKnownHosts = true,
+  }) async {
     final RunResult result;
     try {
       result = await processRunner.run(
@@ -229,6 +239,7 @@ class RemoteControllerService {
           sshTarget: ip.sshTarget(username),
           command:
               'find / -type f -name "snapp_installer" -path "*/snapp_installer/bin/*" 2>/dev/null',
+          addHostToKnownHosts: addHostToKnownHosts,
         ),
         timeout: Duration(seconds: 10),
       );
@@ -267,21 +278,40 @@ class RemoteControllerService {
   /// otherwise returns false
   Future<bool> installSnappInstallerOnRemote(
     String username,
-    InternetAddress ip,
-  ) async {
-    final process = await processRunner.runWithOutput(
-      hostPlatform.sshCommand(
-        ipv6: ip.isIpv6,
-        sshTarget: ip.sshTarget(username),
-        lastCommand: true,
-        command:
-            'bash <(curl -fSL https://raw.githubusercontent.com/Snapp-Embedded/snapp_installer/main/installer.sh)',
-      ),
-      processManager: processManager,
-      logger: logger,
-    );
+    InternetAddress ip, {
+    bool addHostToKnownHosts = true,
+  }) async {
+    final RunResult result;
+    try {
+      result = await processRunner.runWithOutput(
+        hostPlatform.sshCommand(
+          ipv6: ip.isIpv6,
+          sshTarget: ip.sshTarget(username),
+          lastCommand: true,
+          command:
+              'bash <(curl -fSL https://raw.githubusercontent.com/Snapp-Embedded/snapp_installer/main/installer.sh)',
+          addHostToKnownHosts: addHostToKnownHosts,
+        ),
+        processManager: processManager,
+        logger: logger,
+      );
+    } catch (e, s) {
+      logger.printTrace(
+        'Something went wrong while trying to find snapp_installer. \n $e \n $s',
+      );
 
-    return process.exitCode == 0;
+      return false;
+    } finally {
+      logger.printSpaces();
+    }
+
+    if (result.exitCode != 0) {
+      logger.printStatus('Snapp Installer ExitCode: ${result.exitCode}');
+      logger.printStatus('Snapp Installer Stdout: ${result.stdout.trim()}');
+      logger.printStatus('Snapp Installer Stderr: ${result.stderr}');
+    }
+
+    return result.exitCode == 0;
   }
 
   /// in
@@ -293,25 +323,44 @@ class RemoteControllerService {
   /// otherwise returns false
   Future<bool> installFlutterOnRemote(
     String username,
-    InternetAddress ip,
-  ) async {
+    InternetAddress ip, {
+    bool addHostToKnownHosts = true,
+  }) async {
     final snappInstallerPath = await findSnappInstallerPathInteractive(
       username,
       ip,
     );
 
-    final process = await processRunner.runWithOutput(
-      hostPlatform.sshCommand(
-        ipv6: ip.isIpv6,
-        sshTarget: ip.sshTarget(username),
-        lastCommand: true,
-        command: '$snappInstallerPath install',
-      ),
-      processManager: processManager,
-      logger: logger,
-      showStderr: true,
-    );
+    final RunResult result;
+    try {
+      result = await processRunner.runWithOutput(
+        hostPlatform.sshCommand(
+          ipv6: ip.isIpv6,
+          sshTarget: ip.sshTarget(username),
+          lastCommand: true,
+          command: '$snappInstallerPath install',
+          addHostToKnownHosts: addHostToKnownHosts,
+        ),
+        processManager: processManager,
+        logger: logger,
+        showStderr: true,
+      );
+    } catch (e, s) {
+      logger.printTrace(
+        'Something went wrong while trying to install flutter on the remote. \n $e \n $s',
+      );
 
-    return process.exitCode == 0;
+      return false;
+    } finally {
+      logger.printSpaces();
+    }
+
+    if (result.exitCode != 0) {
+      logger.printStatus('Flutter Installer ExitCode: ${result.exitCode}');
+      logger.printStatus('Flutter Installer Stdout: ${result.stdout.trim()}');
+      logger.printStatus('Flutter Installer Stderr: ${result.stderr}');
+    }
+
+    return result.exitCode == 0;
   }
 }
