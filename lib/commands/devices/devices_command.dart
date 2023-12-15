@@ -3,6 +3,7 @@
 import 'package:snapp_cli/commands/base_command.dart';
 import 'package:snapp_cli/commands/devices/add_command.dart';
 import 'package:snapp_cli/commands/devices/delete_command.dart';
+import 'package:snapp_cli/commands/devices/install_flutter_command.dart';
 import 'package:snapp_cli/commands/devices/list_command.dart';
 import 'package:snapp_cli/commands/devices/update_ip_command.dart';
 
@@ -29,6 +30,11 @@ class DevicesCommand extends BaseSnappCommand {
     // Update IP command to update the IP address of a custom device
     addSubcommand(
       UpdateIpCommand(flutterSdkManager: flutterSdkManager),
+    );
+
+    // Install Flutter command to install Flutter on a remote device
+    addSubcommand(
+      InstallFlutterCommand(flutterSdkManager: flutterSdkManager),
     );
   }
 

@@ -1,18 +1,16 @@
 // ignore_for_file: implementation_imports
 
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter_tools/src/base/io.dart';
-import 'package:flutter_tools/src/base/process.dart';
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
 import 'package:interact/interact.dart';
 import 'package:snapp_cli/commands/base_command.dart';
 import 'package:snapp_cli/configs/predefined_devices.dart';
 import 'package:snapp_cli/host_runner/host_runner_platform.dart';
+import 'package:snapp_cli/service/remote_controller_service.dart';
 import 'package:snapp_cli/service/ssh_service.dart';
 import 'package:snapp_cli/utils/common.dart';
-import 'package:flutter_tools/src/base/common.dart';
 
 /// Add a new raspberry device to the Flutter SDK custom devices
 ///
@@ -21,17 +19,12 @@ import 'package:flutter_tools/src/base/common.dart';
 class AddCommand extends BaseSnappCommand {
   AddCommand({
     required super.flutterSdkManager,
-  })  : hostPlatform = HostRunnerPlatform.build(flutterSdkManager.platform),
-        sshService = SshService(flutterSdkManager: flutterSdkManager);
-
-  /// create a HostPlatform instance based on the current platform
-  /// with the help of this class we can make the commands platform specific
-  /// for example, the ping command is different on windows and linux
-  ///
-  /// only supports windows, linux and macos
-  final HostRunnerPlatform hostPlatform;
+  })  : sshService = SshService(flutterSdkManager: flutterSdkManager),
+        remoteControllerService =
+            RemoteControllerService(flutterSdkManager: flutterSdkManager);
 
   final SshService sshService;
+  final RemoteControllerService remoteControllerService;
 
   @override
   final name = 'add';
@@ -113,8 +106,7 @@ class AddCommand extends BaseSnappCommand {
 
     // SSH expects IPv6 addresses to use the bracket syntax like URIs do too,
     // but the IPv6 the user enters is a raw IPv6 address, so we need to wrap it.
-    final String sshTarget = (username.isNotEmpty ? '$username@' : '') +
-        (ipv6 ? '[${targetIp.address}]' : targetIp.address);
+    final String sshTarget = targetIp.sshTarget(username);
 
     final String formattedLoopbackIp =
         ipv6 ? '[${loopbackIp.address}]' : loopbackIp.address;
@@ -167,33 +159,8 @@ class AddCommand extends BaseSnappCommand {
       'We will use this path to run flutter commands on the remote device like "flutter build linux --debug". \n',
     );
 
-    String remoteRunnerCommand = '';
-
-    if (remoteHasSshConnection) {
-      final possibleFlutterPath = await _findFlutterPath(sshTarget, ipv6);
-
-      remoteRunnerCommand = possibleFlutterPath ?? '';
-    }
-
-    if (remoteRunnerCommand.isEmpty) {
-      logger.printStatus(
-        'Could not find flutter in the remote machine automatically. \n\n'
-        'You need to provide it manually.'
-        'You can use which command to find it in your remote machine: "which flutter" \n'
-        '*NOTE: if you added flutter to one of directories in \$PATH variables, you can just enter "flutter" here. \n'
-        '(example: /home/pi/sdk/flutter/bin/flutter)',
-      );
-
-      remoteRunnerCommand = Input(
-        prompt: 'Flutter path on device:',
-        validator: (s) {
-          if (s.isValidPath) {
-            return true;
-          }
-          throw ValidationError('Invalid Path to flutter. Please try again.');
-        },
-      ).interact();
-    }
+    String remoteRunnerCommand =
+        await _provideFlutterCommandRunner(username, targetIp);
 
     /// path to the icu data file on the host machine
     final hostIcuDataPath = flutterSdkManager.icuDataPath;
@@ -308,8 +275,8 @@ class AddCommand extends BaseSnappCommand {
 
     logger.printSpaces();
 
-    logger.printStatus(
-      '✔️ Successfully added custom device to config file at "${customDevicesConfig.configPath}". ✔️',
+    logger.printSuccess(
+      'Successfully added custom device to config file at "${customDevicesConfig.configPath}".',
     );
 
     logger.printSpaces();
@@ -382,84 +349,113 @@ class AddCommand extends BaseSnappCommand {
     return '$s-$i';
   }
 
-  /// finds flutter in the host using ssh connection
-  /// returns the path of flutter if found it
-  /// otherwise returns null
-  Future<String?> _findFlutterPath(String sshTarget, bool ipv6) async {
-    final spinner = Spinner(
-      icon: logger.successIcon,
-      leftPrompt: (done) => '', // prompts are optional
-      rightPrompt: (done) => done
-          ? 'finding flutter path completed'
-          : 'finding flutter path on remote device.',
+  Future<String> _provideFlutterCommandRunner(
+    String username,
+    InternetAddress targetIp,
+  ) async {
+    final possibleFlutterPath =
+        await remoteControllerService.findFlutterPath(username, targetIp);
+
+    if (possibleFlutterPath != null) return possibleFlutterPath;
+
+    logger.printStatus(
+        'Could not find flutter in the remote machine automatically. \n\n'
+        'We need the exact path of your flutter command line tools on the remote device. \n'
+        'Now you have two options: \n'
+        '1. You can enter the path to flutter manually. \n'
+        '2. We can install flutter on the remote machine for you. \n');
+
+    logger.printSpaces();
+
+    final provideFlutterPathOption = Select(
+      prompt: 'Please select one of the options:',
+      options: [
+        'Enter the path to flutter manually',
+        'Install flutter on the remote machine',
+      ],
     ).interact();
 
-    final processRunner = ProcessUtils(
-      processManager: flutterSdkManager.processManager,
-      logger: logger,
+    logger.printSpaces();
+
+    if (provideFlutterPathOption == 0) return _provideFlutterPathManually();
+
+    return _installFlutterOnRemote(username, targetIp);
+  }
+
+  Future<String> _provideFlutterPathManually() async {
+    logger.printStatus(
+      'You can use which command to find it in your remote machine: "which flutter" \n'
+      '*NOTE: if you added flutter to one of directories in \$PATH variables, you can just enter "flutter" here. \n'
+      '(example: /home/pi/sdk/flutter/bin/flutter)',
     );
 
-    final RunResult result;
-    try {
-      result = await processRunner.run(
-        hostPlatform.sshCommand(
-          ipv6: ipv6,
-          sshTarget: sshTarget,
-          command:
-              'find / -type f -name "flutter" -path "*/flutter/bin/*" 2>/dev/null',
-        ),
-        timeout: Duration(seconds: 10),
-      );
-    } catch (e, s) {
-      logger.printTrace(
-        'Something went wrong while trying to find flutter. \n $e \n $s',
-      );
+    final manualFlutterPath = Input(
+      prompt: 'Flutter path on device:',
+      validator: (s) {
+        if (s.isValidPath) {
+          return true;
+        }
+        throw ValidationError('Invalid Path to flutter. Please try again.');
+      },
+    ).interact();
 
-      return null;
-    } finally {
-      spinner.done();
+    /// check if [manualFlutterPath] is a valid file path
+    if (!manualFlutterPath.isValidPath) {
+      throwToolExit(
+          'Invalid Path to flutter. Please make sure about flutter path on the remote machine and try again.');
+    }
+
+    return manualFlutterPath;
+  }
+
+  Future<String> _installFlutterOnRemote(
+    String username,
+    InternetAddress ip,
+  ) async {
+    // 5. If not, install snapp_installer on the device
+    final snappInstallerPath = await remoteControllerService
+        .findSnappInstallerPathInteractive(username, ip);
+
+    if (snappInstallerPath == null) {
+      logger.printStatus(
+        '''
+snapp_installer is not installed on the device
+but don't worry, we will install it for you.
+''',
+      );
 
       logger.printSpaces();
+
+      final snappInstallerInstalled = await remoteControllerService
+          .installSnappInstallerOnRemote(username, ip);
+
+      if (!snappInstallerInstalled) {
+        throwToolExit('Could not install snapp_installer on the device!');
+      }
+
+      logger.printSuccess(
+        '''
+snapp_installer is installed on the device!
+Now we can install flutter on the device with the help of snapp_installer.
+''',
+      );
     }
 
-    logger.printTrace('Find Flutter ExitCode: ${result.exitCode}');
-    logger.printTrace('Find Flutter Stdout: ${result.stdout.trim()}');
-    logger.printTrace('Find Flutter Stderr: ${result.stderr}');
+    logger.printSpaces();
 
-    final output = result.stdout.trim();
+    // 6. Install flutter on the device with snapp_installer
+    final flutterInstalled =
+        await remoteControllerService.installFlutterOnRemote(username, ip);
 
-    if (result.exitCode != 0 && output.isEmpty) {
-      return null;
+    if (!flutterInstalled) {
+      throwToolExit('Could not install flutter on the device!');
     }
 
-    final outputLinesLength = output.split('\n').length;
-    final isOutputMultipleLines = outputLinesLength > 1;
+    logger.printSuccess('Flutter is installed on the device!');
 
-    if (!isOutputMultipleLines) {
-      logger
-          .printStatus('We found flutter in "$output" in the remote machine. ');
-      final flutterSdkPathConfirmation = Confirm(
-        prompt: 'Do you want to use this path?',
-        defaultValue: true, // this is optional
-        waitForNewLine: true, // optional and will be false by default
-      ).interact();
-
-      return flutterSdkPathConfirmation ? output : null;
-    } else {
-      final outputLines = output
-          .split('\n')
-          .map((e) => e.trim())
-          .toList()
-          .sublist(0, min(2, outputLinesLength));
-
-      logger.printStatus(
-          'We found multiple flutter paths in the remote machine. ');
-      final flutterSdkPathSelection = Select(
-        prompt: 'Please select the path of flutter you want to use.',
-        options: outputLines,
-      ).interact();
-
-      return outputLines[flutterSdkPathSelection];
-    }
+    return (await remoteControllerService.findFlutterPathInteractive(
+      username,
+      ip,
+    ))!;
   }
 }

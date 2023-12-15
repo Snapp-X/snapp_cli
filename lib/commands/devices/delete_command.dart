@@ -2,7 +2,6 @@
 
 import 'dart:async';
 
-import 'package:flutter_tools/src/base/common.dart';
 import 'package:interact/interact.dart';
 import 'package:snapp_cli/command_runner/command_runner.dart';
 import 'package:snapp_cli/commands/base_command.dart';

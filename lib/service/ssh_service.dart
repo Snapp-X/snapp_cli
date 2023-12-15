@@ -131,13 +131,7 @@ class SshService {
     final RunResult result;
     try {
       result = await processRunner.run(
-        // TODO: add this to the hostPlatform
-        hostPlatform.commandRunner(
-          [
-            'ssh-add',
-            sshKey.path,
-          ],
-        ),
+        hostPlatform.addSshKeyToAgent(filePath: sshKey.path),
         timeout: Duration(seconds: 10),
       );
     } catch (e, s) {
@@ -192,8 +186,9 @@ class SshService {
 
   Future<bool> createPasswordLessSshConnection(
     String username,
-    InternetAddress ip,
-  ) async {
+    InternetAddress ip, {
+    bool addHostToKnownHosts = true,
+  }) async {
     final isDeviceReachable = await tryPingDevice(
       ip.address,
       ip.type == InternetAddressType.IPv6,
@@ -221,10 +216,10 @@ class SshService {
     logger.printSpaces();
 
     final spinner = Spinner(
-      icon: '🔎',
-      leftPrompt: (done) => '', // prompts are optional
-      rightPrompt: (done) =>
-          done ? 'Search completed.' : 'Searching for the device',
+      icon: logger.searchIcon,
+      rightPrompt: (done) => done
+          ? 'Preparing SSH connection completed'
+          : 'Preparing SSH connection',
     ).interact();
 
     // create a directory in the user's home directory
@@ -250,16 +245,15 @@ class SshService {
   /// Checks if the device is reachable via ssh
   Future<bool> testPasswordLessSshConnection(
     String username,
-    InternetAddress ip,
-  ) async {
-    final String sshTarget = (username.isNotEmpty ? '$username@' : '') +
-        (ip.type == InternetAddressType.IPv6 ? '[${ip.address}]' : ip.address);
+    InternetAddress ip, {
+    bool addHostToKnownHosts = true,
+  }) async {
+    final String sshTarget = ip.sshTarget(username);
 
     final spinner = Spinner(
-      icon: '🔎',
-      leftPrompt: (done) => '', // prompts are optional
+      icon: logger.searchIcon,
       rightPrompt: (done) =>
-          done ? 'Search completed.' : 'Searching for the device',
+          done ? 'SSH connection test completed.' : 'Testing SSH connection',
     ).interact();
 
     final RunResult result;
@@ -269,6 +263,7 @@ class SshService {
           ipv6: ip.type == InternetAddressType.IPv6,
           sshTarget: sshTarget,
           command: 'echo "Test SSH Connection"',
+          addHostToKnownHosts: addHostToKnownHosts,
           lastCommand: true,
         ),
         timeout: Duration(seconds: 10),
@@ -290,12 +285,6 @@ class SshService {
     logger.printTrace('SSH Test Command Stdout: ${result.stdout.trim()}');
     logger.printTrace('SSH Test Command Stderr: ${result.stderr}');
 
-    logger.printSpaces();
-
-    if (result.exitCode != 0) {
-      return false;
-    }
-
-    return true;
+    return result.exitCode == 0;
   }
 }

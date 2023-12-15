@@ -37,7 +37,6 @@ class CreateConnectionCommand extends BaseSnappCommand {
       ip,
     );
 
-
     if (sshConnectionCreated) {
       logger.printSuccess('SSH connection to the remote device is created!');
       return 0;
