@@ -40,9 +40,13 @@ class RemoteControllerService {
   }) async {
     final spinner = Spinner(
       icon: logger.successIcon,
-      rightPrompt: (done) => done
-          ? 'search for Flutter path completed'
-          : 'search for Flutter path on remote device.',
+      failedIcon: logger.errorIcon,
+      rightPrompt: (state) => switch (state) {
+        SpinnerStateType.inProgress =>
+          'search for flutter path on remote device.',
+        SpinnerStateType.done => 'search for flutter path completed',
+        SpinnerStateType.failed => 'search for flutter path failed',
+      },
     ).interact();
 
     final RunResult result;
@@ -58,14 +62,13 @@ class RemoteControllerService {
         timeout: Duration(seconds: 10),
       );
     } catch (e, s) {
+      spinner.failed();
       logger.printTrace(
         'Something went wrong while trying to find flutter. \n $e \n $s',
       );
 
       return null;
     } finally {
-      spinner.done();
-
       logger.printSpaces();
     }
 
@@ -76,8 +79,11 @@ class RemoteControllerService {
     final output = result.stdout.trim();
 
     if (result.exitCode != 0 && output.isEmpty) {
+      spinner.failed();
       return null;
     }
+
+    spinner.done();
 
     final outputLinesLength = output.split('\n').length;
     final isOutputMultipleLines = outputLinesLength > 1;
@@ -165,9 +171,12 @@ class RemoteControllerService {
   }) async {
     final spinner = Spinner(
       icon: logger.successIcon,
-      rightPrompt: (done) => done
-          ? 'search for snapp_installer path completed'
-          : 'search for snapp_installer path on remote device.',
+      rightPrompt: (done) => switch (done) {
+        SpinnerStateType.inProgress =>
+          'search for snapp_installer path on remote device.',
+        SpinnerStateType.done => 'search for snapp_installer path completed',
+        SpinnerStateType.failed => 'search for snapp_installer path failed',
+      },
     ).interact();
 
     final RunResult result;
@@ -183,14 +192,14 @@ class RemoteControllerService {
         timeout: Duration(seconds: 10),
       );
     } catch (e, s) {
+      spinner.failed();
+
       logger.printTrace(
         'Something went wrong while trying to find snapp_installer. \n $e \n $s',
       );
 
       return null;
     } finally {
-      spinner.done();
-
       logger.printSpaces();
     }
 
@@ -201,8 +210,12 @@ class RemoteControllerService {
     final output = result.stdout.trim();
 
     if (result.exitCode != 0 && output.isEmpty) {
+      spinner.failed();
+
       return null;
     }
+
+    spinner.done();
 
     final outputLinesLength = output.split('\n').length;
     final isOutputMultipleLines = outputLinesLength > 1;

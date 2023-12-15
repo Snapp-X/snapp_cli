@@ -89,12 +89,15 @@ flutter config --enable-custom-devices --enable-linux-desktop
 
   Future<void> _enableConfigs() async {
     final spinner = Spinner(
-      icon: logger.successIcon,
-      leftPrompt: (done) => '', // prompts are optional
-      rightPrompt: (done) => done
-          ? 'Configs enabled successfully!'
-          : 'Enabling custom devices and linux configs...',
-    ).interact();
+        icon: logger.successIcon,
+        failedIcon: logger.errorIcon,
+        rightPrompt: (state) => switch (state) {
+              SpinnerStateType.inProgress =>
+                'Enabling custom devices and linux configs...',
+              SpinnerStateType.done => 'Configs enabled successfully!',
+              SpinnerStateType.failed =>
+                'Enabling custom devices and linux configs failed!',
+            }).interact();
 
     final processRunner = ProcessUtils(
       processManager: flutterSdkManager.processManager,
@@ -115,18 +118,20 @@ flutter config --enable-custom-devices --enable-linux-desktop
         timeout: Duration(seconds: 10),
       );
     } catch (e, s) {
+      spinner.failed();
+
       logger.printTrace(
         'Something went wrong. \n $e \n $s',
       );
 
       return;
     } finally {
-      spinner.done();
-
       logger.printSpaces();
     }
 
     if (result.exitCode != 0) {
+      spinner.failed();
+
       throwToolExit('''
 Something went wrong.
 Could not enable custom devices and linux configs.
@@ -135,6 +140,8 @@ Please enable them manually by running the following command:
 flutter config --enable-custom-devices --enable-linux-desktop
 ''');
     }
+
+    spinner.done();
   }
 
   Future<void> _checkForUpdates() async {
@@ -166,20 +173,24 @@ flutter config --enable-custom-devices --enable-linux-desktop
 
       final spinner = Spinner(
         icon: logger.successIcon,
-        leftPrompt: (done) => '', // prompts are optional
-        rightPrompt: (done) =>
-            done ? 'Updated process completed!' : 'Updating snapp_cli...',
+        failedIcon: logger.errorIcon,
+        rightPrompt: (done) => switch (done) {
+          SpinnerStateType.inProgress => 'Updating snapp_cli...',
+          SpinnerStateType.done => 'Update process completed!',
+          SpinnerStateType.failed => 'snapp_cli update failed!',
+        },
       ).interact();
 
       final result = await updateController.update();
 
       logger.printSpaces();
 
-      spinner.done();
-
       if (result.exitCode != 0) {
+        spinner.failed();
         throwToolExit('Something went wrong. \n ${result.stderr}');
       }
+
+      spinner.done();
 
       logger.printStatus(result.stdout);
 
