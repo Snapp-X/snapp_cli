@@ -15,7 +15,6 @@ import 'package:snapp_cli/utils/common.dart';
 /// Add a new raspberry device to the Flutter SDK custom devices
 ///
 ///
-// TODO: add get platform for example: x64 or arm64
 class AddCommand extends BaseSnappCommand {
   AddCommand({
     required super.flutterSdkManager,
@@ -82,9 +81,7 @@ class AddCommand extends BaseSnappCommand {
     return _addCustomDevice(predefinedConfig: predefinedDeviceConfig);
   }
 
-  Future<int> _addCustomDevice({
-    CustomDeviceConfig? predefinedConfig,
-  }) async {
+  Future<int> _addCustomDevice({CustomDeviceConfig? predefinedConfig}) async {
     logger.printSpaces();
 
     // get remote device id and label from the user
@@ -412,7 +409,6 @@ class AddCommand extends BaseSnappCommand {
     String username,
     InternetAddress ip,
   ) async {
-    // 5. If not, install snapp_installer on the device
     final snappInstallerPath = await remoteControllerService
         .findSnappInstallerPathInteractive(username, ip);
 
@@ -443,7 +439,6 @@ Now we can install flutter on the device with the help of snapp_installer.
 
     logger.printSpaces();
 
-    // 6. Install flutter on the device with snapp_installer
     final flutterInstalled =
         await remoteControllerService.installFlutterOnRemote(username, ip);
 

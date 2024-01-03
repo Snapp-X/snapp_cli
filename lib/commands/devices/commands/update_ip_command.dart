@@ -1,15 +1,11 @@
 // ignore_for_file: implementation_imports
 
 import 'dart:async';
-import 'dart:io';
-
-import 'package:collection/collection.dart';
 import 'package:interact/interact.dart';
-import 'package:snapp_cli/command_runner/command_runner.dart';
+import 'package:snapp_cli/command_runner.dart';
 import 'package:snapp_cli/commands/base_command.dart';
-import 'package:flutter_tools/src/base/io.dart';
-
-import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
+import 'package:snapp_cli/utils/common.dart';
+import 'package:snapp_cli/utils/custom_device.dart';
 
 const _ipOption = 'ip';
 
@@ -53,7 +49,7 @@ Before you can update a device, you need to add one first.
     }
 
     if (deviceId != null && ip != null) {
-      if (!_isValidIpAddr(ip)) {
+      if (!ip.isValidIpAddress) {
         usageException('Ip address passed to this command is not valid');
       }
 
@@ -94,7 +90,7 @@ Before you can update a device, you need to add one first.
       final String newIp = Input(
         prompt: 'New IP-address:',
         validator: (s) {
-          if (_isValidIpAddr(s)) {
+          if (s.isValidIpAddress) {
             return true;
           }
           throw ValidationError('Invalid IP-address. Please try again.');
@@ -116,7 +112,7 @@ Before you can update a device, you need to add one first.
     final currentDeviceConfig = customDevicesConfig.devices
         .firstWhere((element) => element.id == deviceId);
 
-    final oldIp = _findOldIpInPingCommand(currentDeviceConfig.pingCommand);
+    final oldIp = currentDeviceConfig.tryFindDeviceIp;
 
     if (oldIp == null) {
       throwToolExit(
@@ -128,7 +124,7 @@ Or Maybe you entered a host name instead of IpAddress in add command
       );
     }
 
-    final newDeviceConfig = _replaceNewIp(currentDeviceConfig, oldIp, newIp);
+    final newDeviceConfig = currentDeviceConfig.replaceDeviceIp(oldIp, newIp);
 
     final newDeviceRemoved = customDevicesConfig.remove(currentDeviceConfig.id);
 
@@ -146,89 +142,6 @@ Or Maybe you entered a host name instead of IpAddress in add command
 
     return 0;
   }
-
-  bool _isValidIpAddr(String s) => InternetAddress.tryParse(s) != null;
-
-  /// find ip v4 and v6 in ping command
-  String? _findOldIpInPingCommand(List<String> pingCommand) {
-    return pingCommand.firstWhereOrNull(
-      (element) => InternetAddress.tryParse(element) != null,
-    );
-  }
-
-  CustomDeviceConfig _replaceNewIp(
-    CustomDeviceConfig device,
-    String oldIp,
-    String newIp,
-  ) {
-    final newDevice = device.copyWith();
-
-    final newPingCommand = _replaceNewIpInCommand(
-      newDevice.pingCommand,
-      oldIp,
-      newIp,
-    );
-
-    final newPostBuildCommand = _replaceNewIpInCommand(
-      newDevice.postBuildCommand,
-      oldIp,
-      newIp,
-    );
-
-    final newInstallCommand = _replaceNewIpInCommand(
-      newDevice.installCommand,
-      oldIp,
-      newIp,
-    );
-
-    final newUninstallCommand = _replaceNewIpInCommand(
-      newDevice.uninstallCommand,
-      oldIp,
-      newIp,
-    );
-
-    final newRunDebugCommand = _replaceNewIpInCommand(
-      newDevice.runDebugCommand,
-      oldIp,
-      newIp,
-    );
-
-    final newForwardPortCommand = _replaceNewIpInCommand(
-      newDevice.forwardPortCommand,
-      oldIp,
-      newIp,
-    );
-
-    final newScreenshotCommand = _replaceNewIpInCommand(
-      newDevice.screenshotCommand,
-      oldIp,
-      newIp,
-    );
-
-    return newDevice.copyWith(
-      pingCommand: newPingCommand,
-      postBuildCommand: newPostBuildCommand,
-      installCommand: newInstallCommand,
-      uninstallCommand: newUninstallCommand,
-      runDebugCommand: newRunDebugCommand,
-      forwardPortCommand: newForwardPortCommand,
-      screenshotCommand: newScreenshotCommand,
-    );
-  }
-
-  List<String>? _replaceNewIpInCommand(
-    List<String>? command,
-    String oldIp,
-    String newIp,
-  ) =>
-      command?.map((item) {
-        final hasOldInText = item.contains(oldIp);
-
-        if (hasOldInText) {
-          return item.replaceAll(oldIp, newIp);
-        }
-        return item;
-      }).toList();
 
   void missingRequiredOption() {
     usageException(

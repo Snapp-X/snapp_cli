@@ -3,7 +3,7 @@
 import 'dart:async';
 
 import 'package:interact/interact.dart';
-import 'package:snapp_cli/command_runner/command_runner.dart';
+import 'package:snapp_cli/command_runner.dart';
 import 'package:snapp_cli/commands/base_command.dart';
 
 /// Add a new raspberry device to the Flutter SDK custom devices
