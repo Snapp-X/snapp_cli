@@ -1,11 +1,11 @@
 // ignore_for_file: implementation_imports
 
 import 'package:snapp_cli/commands/base_command.dart';
-import 'package:snapp_cli/commands/devices/add_command.dart';
-import 'package:snapp_cli/commands/devices/delete_command.dart';
-import 'package:snapp_cli/commands/devices/install_flutter_command.dart';
-import 'package:snapp_cli/commands/devices/list_command.dart';
-import 'package:snapp_cli/commands/devices/update_ip_command.dart';
+import 'package:snapp_cli/commands/devices/commands/add_command.dart';
+import 'package:snapp_cli/commands/devices/commands/delete_command.dart';
+import 'package:snapp_cli/commands/devices/commands/install_flutter_command.dart';
+import 'package:snapp_cli/commands/devices/commands/list_command.dart';
+import 'package:snapp_cli/commands/devices/commands/update_ip_command.dart';
 
 /// Add a new raspberry device to the Flutter SDK custom devices
 class DevicesCommand extends BaseSnappCommand {
