@@ -32,5 +32,10 @@ Future<void> main(List<String> arguments) async {
     exitCode = 1;
   }
 
-  io.exit(exitCode);
+  await _flushThenExit(exitCode);
+}
+
+Future<void> _flushThenExit(int status) {
+  return Future.wait<void>([io.stdout.close(), io.stderr.close()])
+      .then<void>((_) => io.exit(status));
 }

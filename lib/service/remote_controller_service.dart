@@ -67,9 +67,9 @@ class RemoteControllerService {
         'Something went wrong while trying to find flutter. \n $e \n $s',
       );
 
-      return null;
-    } finally {
       logger.printSpaces();
+
+      return null;
     }
 
     logger.printTrace('Find Flutter ExitCode: ${result.exitCode}');
@@ -80,10 +80,14 @@ class RemoteControllerService {
 
     if (result.exitCode != 0 && output.isEmpty) {
       spinner.failed();
+      logger.printSpaces();
+
       return null;
     }
 
     spinner.done();
+
+    logger.printSpaces();
 
     final outputLinesLength = output.split('\n').length;
     final isOutputMultipleLines = outputLinesLength > 1;
@@ -198,9 +202,9 @@ class RemoteControllerService {
         'Something went wrong while trying to find snapp_installer. \n $e \n $s',
       );
 
-      return null;
-    } finally {
       logger.printSpaces();
+
+      return null;
     }
 
     logger.printTrace('Find snapp_installer ExitCode: ${result.exitCode}');
@@ -212,10 +216,14 @@ class RemoteControllerService {
     if (result.exitCode != 0 && output.isEmpty) {
       spinner.failed();
 
+      logger.printSpaces();
+
       return null;
     }
 
     spinner.done();
+
+    logger.printSpaces();
 
     final outputLinesLength = output.split('\n').length;
     final isOutputMultipleLines = outputLinesLength > 1;

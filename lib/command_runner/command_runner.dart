@@ -125,8 +125,6 @@ flutter config --enable-custom-devices --enable-linux-desktop
       );
 
       return;
-    } finally {
-      logger.printSpaces();
     }
 
     if (result.exitCode != 0) {
@@ -142,6 +140,8 @@ flutter config --enable-custom-devices --enable-linux-desktop
     }
 
     spinner.done();
+
+    logger.printSpaces();
   }
 
   Future<void> _checkForUpdates() async {
@@ -183,14 +183,14 @@ flutter config --enable-custom-devices --enable-linux-desktop
 
       final result = await updateController.update();
 
-      logger.printSpaces();
-
       if (result.exitCode != 0) {
         spinner.failed();
         throwToolExit('Something went wrong. \n ${result.stderr}');
       }
 
       spinner.done();
+
+      logger.printSpaces();
 
       logger.printStatus(result.stdout);
 

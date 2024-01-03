@@ -55,23 +55,21 @@ class SshService {
       );
 
       return false;
-    } finally {
-      logger.printSpaces();
     }
 
     logger.printTrace('Ping Command ExitCode: ${result.exitCode}');
     logger.printTrace('Ping Command Stdout: ${result.stdout.trim()}');
     logger.printTrace('Ping Command Stderr: ${result.stderr}');
 
-    logger.printSpaces();
-
     if (result.exitCode != 0) {
       spinner.failed();
-      
+
       return false;
     }
 
     spinner.done();
+
+    logger.printSpaces();
     // If the user doesn't configure a ping success regex, any ping with exitCode zero
     // is good enough. Otherwise we check if either stdout or stderr have a match of
     // the pingSuccessRegex.
@@ -289,13 +287,12 @@ class SshService {
       logger.printTrace('Stack: $s');
 
       return false;
-    } finally {
-      logger.printSpaces();
     }
 
     logger.printTrace('SSH Test Command ExitCode: ${result.exitCode}');
     logger.printTrace('SSH Test Command Stdout: ${result.stdout.trim()}');
     logger.printTrace('SSH Test Command Stderr: ${result.stderr}');
+
     if (result.exitCode != 0) {
       spinner.failed();
 
@@ -303,6 +300,8 @@ class SshService {
     }
 
     spinner.done();
+
+    logger.printSpaces();
 
     return true;
   }
