@@ -32,10 +32,13 @@ class SshService {
   Future<bool> tryPingDevice(String pingTarget, bool ipv6) async {
     final spinner = Spinner(
       icon: logger.successIcon,
-      leftPrompt: (done) => '', // prompts are optional
-      rightPrompt: (done) => done
-          ? 'pinging device completed.'
-          : 'pinging device to check if it is reachable.',
+      failedIcon: logger.errorIcon,
+      rightPrompt: (state) => switch (state) {
+        SpinnerStateType.inProgress =>
+          'Pinging device to check if it is reachable',
+        SpinnerStateType.done => 'Pinging device completed',
+        SpinnerStateType.failed => 'Pinging device failed',
+      },
     ).interact();
 
     await Future.delayed(Duration(seconds: 2));
@@ -46,14 +49,13 @@ class SshService {
         timeout: Duration(seconds: 10),
       );
     } catch (e, s) {
+      spinner.failed();
       logger.printTrace(
         'Something went wrong while pinging the device. \nException: $e \nStack: $s',
       );
 
       return false;
     } finally {
-      spinner.done();
-
       logger.printSpaces();
     }
 
@@ -64,9 +66,12 @@ class SshService {
     logger.printSpaces();
 
     if (result.exitCode != 0) {
+      spinner.failed();
+      
       return false;
     }
 
+    spinner.done();
     // If the user doesn't configure a ping success regex, any ping with exitCode zero
     // is good enough. Otherwise we check if either stdout or stderr have a match of
     // the pingSuccessRegex.
@@ -217,9 +222,12 @@ class SshService {
 
     final spinner = Spinner(
       icon: logger.searchIcon,
-      rightPrompt: (done) => done
-          ? 'Preparing SSH connection completed'
-          : 'Preparing SSH connection',
+      failedIcon: logger.errorIcon,
+      rightPrompt: (done) => switch (done) {
+        SpinnerStateType.inProgress => 'Preparing SSH connection',
+        SpinnerStateType.done => 'Preparing SSH connection completed',
+        SpinnerStateType.failed => 'Preparing SSH connection failed',
+      },
     ).interact();
 
     // create a directory in the user's home directory
@@ -252,8 +260,12 @@ class SshService {
 
     final spinner = Spinner(
       icon: logger.searchIcon,
-      rightPrompt: (done) =>
-          done ? 'SSH connection test completed.' : 'Testing SSH connection',
+      failedIcon: logger.errorIcon,
+      rightPrompt: (done) => switch (done) {
+        SpinnerStateType.inProgress => 'Testing SSH connection',
+        SpinnerStateType.done => 'Testing SSH connection completed',
+        SpinnerStateType.failed => 'Testing SSH connection failed',
+      },
     ).interact();
 
     final RunResult result;
@@ -269,6 +281,8 @@ class SshService {
         timeout: Duration(seconds: 10),
       );
     } catch (e, s) {
+      spinner.failed();
+
       logger.printStatus(
         'Something went wrong while trying to connect to the device via ssh. \nException: $e',
       );
@@ -276,15 +290,20 @@ class SshService {
 
       return false;
     } finally {
-      spinner.done();
-
       logger.printSpaces();
     }
 
     logger.printTrace('SSH Test Command ExitCode: ${result.exitCode}');
     logger.printTrace('SSH Test Command Stdout: ${result.stdout.trim()}');
     logger.printTrace('SSH Test Command Stderr: ${result.stderr}');
+    if (result.exitCode != 0) {
+      spinner.failed();
 
-    return result.exitCode == 0;
+      return false;
+    }
+
+    spinner.done();
+
+    return true;
   }
 }
