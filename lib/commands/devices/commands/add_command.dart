@@ -85,14 +85,26 @@ class AddCommand extends BaseSnappCommand {
     logger.printSpaces();
 
     // get remote device id and label from the user
-    final (id, label) = getRemoteDeviceIdAndLabel(predefinedConfig);
+    final id = predefinedConfig?.id.isNotEmpty == true
+        ? predefinedConfig!.id
+        : interaction.readDeviceId(customDevicesConfig);
+
+    final label = predefinedConfig?.label.isNotEmpty == true
+        ? predefinedConfig!.label
+        : interaction.readDeviceLabel();
 
     // get remote device ip and username from the user
-    final (targetIp, username) = getRemoteIpAndUsername(
-      message: 'to add a new device, we need an IP address and a username.',
-      getIpDescription:
-          'Please enter the IP-address of the device. (example: 192.168.1.101)',
-      getUsernameDescription:
+    logger.printSpaces();
+
+    logger.printStatus(
+        'to add a new device, we need an IP address and a username.');
+
+    final targetIp = interaction.readDeviceIp(
+        description:
+            'Please enter the IP-address of the device. (example: 192.168.1.101)');
+
+    final username = interaction.readDeviceUsername(
+      description:
           'Please enter the username used for ssh-ing into the remote device. (example: pi)',
     );
 
@@ -281,52 +293,6 @@ class AddCommand extends BaseSnappCommand {
     return 0;
   }
 
-  (String id, String label) getRemoteDeviceIdAndLabel(
-    CustomDeviceConfig? predefinedConfig,
-  ) {
-    String id = predefinedConfig?.id ?? '';
-    String label = predefinedConfig?.label ?? '';
-
-    if (id.isEmpty) {
-      logger.printStatus(
-        'Please enter the id you want to device to have. Must contain only alphanumeric or underscore characters. (example: pi)',
-      );
-
-      id = Input(
-        prompt: 'Device Id:',
-        validator: (s) {
-          if (!RegExp(r'^\w+$').hasMatch(s.trim())) {
-            throw ValidationError('Invalid input. Please try again.');
-          } else if (_isDuplicatedDeviceId(s.trim())) {
-            throw ValidationError('Device with this id already exists.');
-          }
-          return true;
-        },
-      ).interact().trim();
-
-      logger.printSpaces();
-    }
-
-    if (label.isEmpty) {
-      logger.printStatus(
-        'Please enter the label of the device, which is a slightly more verbose name for the device. (example: Raspberry Pi Model 4B)',
-      );
-      label = Input(
-        prompt: 'Device label:',
-        validator: (s) {
-          if (s.trim().isNotEmpty) {
-            return true;
-          }
-          throw ValidationError('Input is empty. Please try again.');
-        },
-      ).interact();
-
-      logger.printSpaces();
-    }
-
-    return (id, label);
-  }
-
   bool _isDuplicatedDeviceId(String s) {
     return customDevicesConfig.devices.any((element) => element.id == s);
   }
@@ -374,35 +340,11 @@ class AddCommand extends BaseSnappCommand {
 
     logger.printSpaces();
 
-    if (provideFlutterPathOption == 0) return _provideFlutterPathManually();
-
-    return _installFlutterOnRemote(username, targetIp);
-  }
-
-  Future<String> _provideFlutterPathManually() async {
-    logger.printStatus(
-      'You can use which command to find it in your remote machine: "which flutter" \n'
-      '*NOTE: if you added flutter to one of directories in \$PATH variables, you can just enter "flutter" here. \n'
-      '(example: /home/pi/sdk/flutter/bin/flutter)',
-    );
-
-    final manualFlutterPath = Input(
-      prompt: 'Flutter path on device:',
-      validator: (s) {
-        if (s.isValidPath) {
-          return true;
-        }
-        throw ValidationError('Invalid Path to flutter. Please try again.');
-      },
-    ).interact();
-
-    /// check if [manualFlutterPath] is a valid file path
-    if (!manualFlutterPath.isValidPath) {
-      throwToolExit(
-          'Invalid Path to flutter. Please make sure about flutter path on the remote machine and try again.');
+    if (provideFlutterPathOption == 0) {
+      return interaction.readFlutterManualPath();
     }
 
-    return manualFlutterPath;
+    return _installFlutterOnRemote(username, targetIp);
   }
 
   Future<String> _installFlutterOnRemote(

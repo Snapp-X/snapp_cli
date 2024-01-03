@@ -8,7 +8,6 @@ import 'package:snapp_cli/commands/base_command.dart';
 import 'package:snapp_cli/service/remote_controller_service.dart';
 import 'package:snapp_cli/service/ssh_service.dart';
 import 'package:snapp_cli/utils/common.dart';
-import 'package:snapp_cli/utils/custom_device.dart';
 
 /// Add a new raspberry device to the Flutter SDK custom devices
 class InstallFlutterCommand extends BaseSnappCommand {
@@ -33,7 +32,10 @@ class InstallFlutterCommand extends BaseSnappCommand {
     // Steps:
     // 1. Check user want to install flutter on a new device or an existing device
     // 2. If new device, get information about the device (IP address, username, password)
-    final (ip, username) = await _getDeviceInfoFromUser();
+    final (ip, username) = interaction.getDeviceInfoInteractively(
+      customDevicesConfig,
+      'Please select the type of device you want to install Flutter on.',
+    );
 
     // 3. Check if the device is reachable
     await _establishDeviceSshConnection(username, ip);
@@ -101,80 +103,6 @@ Now we can install flutter on the device with the help of snapp_installer.
     logger.printSuccess('Flutter is installed on the device!');
 
     return 0;
-  }
-
-  Future<(InternetAddress ip, String username)> _getDeviceInfoFromUser() async {
-    final deviceOptions = [
-      'Existing device',
-      'New device',
-    ];
-
-    logger.printStatus(
-        'Please select the type of device you want to install Flutter on.');
-
-    logger.printSpaces();
-
-    final deviceTypeIndex = Select(
-      prompt: 'Device Type:',
-      options: deviceOptions,
-    ).interact();
-
-    logger.printSpaces();
-
-    final isNewDevice = deviceTypeIndex == 1;
-
-    if (isNewDevice) {
-      return getRemoteIpAndUsername(message: 'Please enter the device info:');
-    }
-
-    if (customDevicesConfig.devices.isEmpty) {
-      throwToolExit(
-        '''
-No devices found in config at "${customDevicesConfig.configPath}"
-
-Before you can install flutter on a device, you need to add one first.
-''',
-      );
-    }
-
-    final devices = {
-      for (var e in customDevicesConfig.devices) '${e.id} : ${e.label}': e
-    };
-
-    final selectedDevice = Select(
-      prompt: 'Select a target device',
-      options: devices.keys.toList(),
-    ).interact();
-
-    final deviceKey = devices.keys.elementAt(selectedDevice);
-
-    final targetDevice = devices[deviceKey];
-
-    if (targetDevice == null) {
-      throwToolExit(
-          'Couldn\'t find device with id "${targetDevice!.id}" in config at "${customDevicesConfig.configPath}"');
-    }
-
-    final deviceIp = targetDevice.tryFindDeviceIp;
-
-    if (deviceIp == null) {
-      throwToolExit(
-        'Couldn\'t find device ip address in ping command for device with id "${targetDevice.id}" in config at "${customDevicesConfig.configPath}"',
-      );
-    }
-
-    final username = targetDevice.deviceUsername;
-
-    logger.printSpaces();
-
-    logger.printStatus('''
-Target Device info: 
-
-Ip Address: $deviceIp
-Username: $username
-''');
-
-    return (InternetAddress.tryParse(deviceIp)!, username);
   }
 
   Future<void> _establishDeviceSshConnection(

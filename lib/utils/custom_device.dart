@@ -3,9 +3,15 @@
 import 'package:collection/collection.dart';
 import 'package:flutter_tools/src/base/io.dart';
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
+import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
 import 'package:snapp_cli/commands/base_command.dart';
 
-extension CustomDevicesConfigExt on CustomDeviceConfig {
+extension CustomDevicesConfigX on CustomDevicesConfig {
+  bool isDuplicatedDeviceId(String s) =>
+      devices.any((element) => element.id == s);
+}
+
+extension CustomDeviceConfigX on CustomDeviceConfig {
   /// Try to find the device ip address in the ping command
   String? get tryFindDeviceIp => pingCommand.firstWhereOrNull(
         (element) => InternetAddress.tryParse(element) != null,

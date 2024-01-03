@@ -87,17 +87,13 @@ Before you can update a device, you need to add one first.
         'Please enter the new IP-address of the device. (example: 192.168.1.101)',
       );
 
-      final String newIp = Input(
-        prompt: 'New IP-address:',
-        validator: (s) {
-          if (s.isValidIpAddress) {
-            return true;
-          }
-          throw ValidationError('Invalid IP-address. Please try again.');
-        },
-      ).interact();
-
-      ip = newIp;
+      final newIp = interaction.readDeviceIp(
+        description:
+            'Please enter the new IP-address of the device. (example: 192.168.1.101)',
+        title: 'New IP-address:',
+      );
+      
+      ip = newIp.address;
     }
 
     return _updateIp(deviceId, ip);
@@ -141,17 +137,5 @@ Or Maybe you entered a host name instead of IpAddress in add command
     );
 
     return 0;
-  }
-
-  void missingRequiredOption() {
-    usageException(
-      '''
-Update IP command requires a device id and an IP address
-You can run this command like this:
-
-${runner!.executableName} $name -d <device-id> -i <ip-address>
-
-''',
-    );
   }
 }

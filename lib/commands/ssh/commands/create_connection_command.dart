@@ -26,10 +26,15 @@ class CreateConnectionCommand extends BaseSnappCommand {
 
   @override
   FutureOr<int>? run() async {
-    final (ip, username) = getRemoteIpAndUsername(
-      message:
-          'to create an SSH connection to the remote device, we need an IP address and a username',
+    logger.printSpaces();
+
+    logger.printStatus(
+      'to create an SSH connection to the remote device, we need an IP address and a username',
     );
+
+    final ip = interaction.readDeviceIp();
+
+    final username = interaction.readDeviceUsername();
 
     final sshConnectionCreated =
         await sshService.createPasswordLessSshConnection(

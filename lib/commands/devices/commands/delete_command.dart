@@ -32,20 +32,6 @@ class DeleteCommand extends BaseSnappCommand {
     return _interactiveDeleteDevice();
   }
 
-  /// Delete device with id [deviceId] from the Flutter SDK
-  int _deleteDeviceWithId(String deviceId) {
-    if (!customDevicesConfig.contains(deviceId)) {
-      throwToolExit(
-          'Couldn\'t find device with id "$deviceId" in config at "${customDevicesConfig.configPath}"');
-    }
-
-    customDevicesConfig.remove(deviceId);
-    logger.printStatus(
-        'Successfully removed device with id "$deviceId" from config at "${customDevicesConfig.configPath}"');
-
-    return 0;
-  }
-
   int _interactiveDeleteDevice() {
     if (customDevicesConfig.devices.isEmpty) {
       throwToolExit(
@@ -78,15 +64,17 @@ Before you can delete a device, you need to add one first.
     return _deleteDeviceWithId(deviceId);
   }
 
-  void missingRequiredOption() {
-    usageException(
-      '''
-Delete command requires a device id
-You can run this command like this:
+  /// Delete device with id [deviceId] from the Flutter SDK
+  int _deleteDeviceWithId(String deviceId) {
+    if (!customDevicesConfig.contains(deviceId)) {
+      throwToolExit(
+          'Couldn\'t find device with id "$deviceId" in config at "${customDevicesConfig.configPath}"');
+    }
 
-${runner!.executableName} $name -d <device-id>
+    customDevicesConfig.remove(deviceId);
+    logger.printStatus(
+        'Successfully removed device with id "$deviceId" from config at "${customDevicesConfig.configPath}"');
 
-''',
-    );
+    return 0;
   }
 }
