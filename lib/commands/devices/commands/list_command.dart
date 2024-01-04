@@ -28,9 +28,9 @@ class ListCommand extends BaseSnappCommand {
       ),
     );
 
-    logger.printSpaces();
+    logger.spaces();
 
-    logger.printStatus(result!.stdout);
+    logger.info(result!.stdout);
 
     return result.exitCode;
   }

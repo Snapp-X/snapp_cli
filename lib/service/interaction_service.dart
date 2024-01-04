@@ -35,8 +35,8 @@ class InteractionService {
     String? failedIcon,
   }) {
     return Spinner(
-      icon: doneIcon ?? logger.icons.success.padRight(2).green(),
-      failedIcon: failedIcon ?? logger.icons.failure.padRight(2).red(),
+      icon: doneIcon ?? logger.icons.success.padRight(2).green().bold(),
+      failedIcon: failedIcon ?? logger.icons.failure.padRight(2).red().bold(),
       rightPrompt: (state) => switch (state) {
         SpinnerStateType.inProgress => inProgressMessage,
         SpinnerStateType.done => doneMessage,
@@ -97,25 +97,25 @@ class InteractionService {
       'New device',
     ];
 
-    logger.printStatus(message);
+    logger.info(message);
 
-    logger.printSpaces();
+    logger.spaces();
 
     final deviceTypeIndex = Select(
       prompt: 'Device Type:',
       options: deviceOptions,
     ).interact();
 
-    logger.printSpaces();
+    logger.spaces();
 
     final isNewDevice = deviceTypeIndex == 1;
 
     final (InternetAddress ip, String username) deviceInfo;
 
     if (isNewDevice) {
-      logger.printSpaces();
+      logger.spaces();
 
-      logger.printStatus("Please enter the device info:");
+      logger.info("Please enter the device info:");
       deviceInfo = (readDeviceIp(), readDeviceUsername());
     } else {
       final selectedDevice = selectDevice(customDevicesConfig);
@@ -127,7 +127,7 @@ class InteractionService {
     }
 
     if (printSelectedDeviceInfo) {
-      logger.printStatus('''
+      logger.info('''
 Target Device info: 
 
 Ip Address: ${deviceInfo.$1}
@@ -156,8 +156,8 @@ ${errorDescription ?? 'Before you can select a device, you need to add one first
     }
 
     if (description != null) {
-      logger.printStatus(description);
-      logger.printSpaces();
+      logger.info(description);
+      logger.spaces();
     }
 
     final devices = {
@@ -183,8 +183,8 @@ ${errorDescription ?? 'Before you can select a device, you need to add one first
 
   InternetAddress readDeviceIp({String? description, String? title}) {
     if (description != null) {
-      logger.printStatus(description);
-      logger.printSpaces();
+      logger.info(description);
+      logger.spaces();
     }
 
     final String deviceIp = Input(
@@ -199,22 +199,22 @@ ${errorDescription ?? 'Before you can select a device, you need to add one first
 
     final ip = InternetAddress(deviceIp);
 
-    logger.printSpaces();
+    logger.spaces();
 
     return ip;
   }
 
   String readDeviceUsername({String? description}) {
     if (description != null) {
-      logger.printStatus(description);
-      logger.printSpaces();
+      logger.info(description);
+      logger.spaces();
     }
 
     final String username = Input(
       prompt: 'Username:',
     ).interact();
 
-    logger.printSpaces();
+    logger.spaces();
 
     return username;
   }
@@ -223,7 +223,7 @@ ${errorDescription ?? 'Before you can select a device, you need to add one first
     CustomDevicesConfig customDevicesConfig, {
     String? description,
   }) {
-    logger.printStatus(
+    logger.info(
       description ??
           'Please enter the id you want to device to have. Must contain only alphanumeric or underscore characters. (example: pi)',
     );
@@ -240,13 +240,13 @@ ${errorDescription ?? 'Before you can select a device, you need to add one first
       },
     ).interact().trim();
 
-    logger.printSpaces();
+    logger.spaces();
 
     return id;
   }
 
   String readDeviceLabel({String? description}) {
-    logger.printStatus(
+    logger.info(
       description ??
           'Please enter the label of the device, which is a slightly more verbose name for the device. (example: Raspberry Pi Model 4B)',
     );
@@ -260,13 +260,13 @@ ${errorDescription ?? 'Before you can select a device, you need to add one first
       },
     ).interact();
 
-    logger.printSpaces();
+    logger.spaces();
 
     return label;
   }
 
   Future<String> readFlutterManualPath({String? description}) async {
-    logger.printStatus(
+    logger.info(
       description ??
           '''You can use which command to find it in your remote machine: "which flutter" 
 *NOTE: if you added flutter to one of directories in \$PATH variables, you can just enter "flutter" here. 

@@ -59,28 +59,38 @@ class SnappCliCommandRunner extends CommandRunner<int> {
 
     logger.spacer;
 
+    await _checkConfigs();
+
+    await _checkForUpdates();
+
+    logger.spaces();
+
+    return runCommand(argResults);
+  }
+
+  Future<void> _checkConfigs() async {
     final areCustomDevicesEnabled = flutterSdkManager.areCustomDevicesEnabled;
 
     final isLinuxEnabled = flutterSdkManager.isLinuxEnabled;
 
     if (!areCustomDevicesEnabled || !isLinuxEnabled) {
-      logger.printSpaces();
+      logger.spaces();
 
-      logger.printStatus(
+      logger.info(
         '''
 To use snapp_cli you need to enable custom devices and linux configs.
 This is a one time setup and will not be required again.
 ''',
       );
 
-      logger.printSpaces();
+      logger.spaces();
 
       final enableConfigs = interaction.confirm(
         'Do you want to enable them now?',
         defaultValue: true, // this is optional
       );
 
-      logger.printSpaces();
+      logger.spaces();
 
       if (!enableConfigs) {
         throwToolExit('''
@@ -91,29 +101,18 @@ flutter config --enable-custom-devices --enable-linux-desktop
         ''');
       }
 
-      await _enableConfigs();
-    }
+      final processRunner = flutterSdkManager.processRunner;
 
-    await _checkForUpdates();
-
-    logger.printSpaces();
-
-    return runCommand(argResults);
-  }
-
-  Future<void> _enableConfigs() async {
-    final processRunner = flutterSdkManager.processRunner;
-
-    await processRunner.runCommand(
-      <String>[
-        'flutter',
-        'config',
-        '--enable-custom-devices',
-        '--enable-linux-desktop',
-      ],
-      parseResult: (runResult) {},
-      parseFail: (e, s) {
-        throwToolExit('''
+      await processRunner.runCommand(
+        <String>[
+          'flutter',
+          'config',
+          '--enable-custom-devices',
+          '--enable-linux-desktop',
+        ],
+        parseResult: (runResult) {},
+        parseFail: (e, s) {
+          throwToolExit('''
 Something went wrong.
 Could not enable custom devices and linux configs.
 Please enable them manually by running the following command:
@@ -123,13 +122,14 @@ flutter config --enable-custom-devices --enable-linux-desktop
 Error: $e
 Stacktrace: $s
 ''');
-      },
-      spinner: interaction.spinner(
-        inProgressMessage: 'Enabling custom devices and linux configs...',
-        doneMessage: 'Configs enabled successfully!',
-        failedMessage: 'Enabling custom devices and linux configs failed!',
-      ),
-    );
+        },
+        spinner: interaction.spinner(
+          inProgressMessage: 'Enabling custom devices and linux configs...',
+          doneMessage: 'Configs enabled successfully!',
+          failedMessage: 'Enabling custom devices and linux configs failed!',
+        ),
+      );
+    }
   }
 
   Future<void> _checkForUpdates() async {
@@ -137,24 +137,24 @@ Stacktrace: $s
     try {
       isUpdateAvailable = await updateController.isUpdateAvailable();
     } catch (e, s) {
-      logger.printTrace(
+      logger.detail(
         'Something went wrong. During checking for updates. \n $e \n $s',
       );
 
       return;
     }
 
-    logger.printSpaces();
+    logger.spaces();
 
     if (isUpdateAvailable) {
-      logger.printStatus('A new version of snapp_cli is available!');
+      logger.info('A new version of snapp_cli is available!');
 
       final updateConfirmed = interaction.confirm(
         'Do you want to update now?',
         defaultValue: true,
       );
 
-      logger.printSpaces();
+      logger.spaces();
 
       if (!updateConfirmed) return;
 
@@ -173,13 +173,13 @@ Stacktrace: $s
 
       spinner.done();
 
-      logger.printSpaces();
+      logger.spaces();
 
-      logger.printStatus(result.stdout);
+      logger.info(result.stdout);
 
-      logger.printSpaces();
+      logger.spaces();
 
-      logger.printSuccess('Snapp_cli updated successfully! 🎉');
+      logger.success('Snapp_cli updated successfully! 🎉');
 
       exit(0);
     }

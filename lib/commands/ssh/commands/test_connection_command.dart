@@ -21,7 +21,7 @@ class TestConnectionCommand extends BaseSnappCommand {
 
   @override
   FutureOr<int>? run() async {
-    logger.printSpaces();
+    logger.spaces();
 
     final (ip, username) = interaction.getDeviceInfoInteractively(
       customDevicesConfig,
@@ -34,10 +34,10 @@ class TestConnectionCommand extends BaseSnappCommand {
     );
 
     if (sshConnectionCreated) {
-      logger.printSuccess('SSH connection to the remote device is working!');
+      logger.success('SSH connection to the remote device is working!');
       return 0;
     } else {
-      logger.printFail('SSH connection to the remote device is not working!');
+      logger.fail('SSH connection to the remote device is not working!');
       return 1;
     }
   }

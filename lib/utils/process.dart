@@ -28,9 +28,9 @@ extension ProcessUtilsExt on ProcessUtils {
         timeout: timeout,
       );
 
-      logger?.printTrace('$label ExitCode: ${result.exitCode}');
-      logger?.printTrace('$label Stdout: ${result.stdout.trim()}');
-      logger?.printTrace('$label Stderr: ${result.stderr}');
+      logger?.detail('$label ExitCode: ${result.exitCode}');
+      logger?.detail('$label Stdout: ${result.stdout.trim()}');
+      logger?.detail('$label Stderr: ${result.stderr}');
 
       if (throwOnError && result.exitCode != 0) {
         throwToolExit('''
@@ -46,7 +46,7 @@ ${result.stderr.trim()}
     } catch (e, s) {
       spinnerState?.failed();
 
-      logger?.printTrace('$label Error: $e\n$s');
+      logger?.detail('$label Error: $e\n$s');
 
       return parseFail?.call(e, s);
     }
@@ -68,7 +68,7 @@ ${result.stderr.trim()}
           process.stdout.transform<String>(const Utf8Decoder()).listen(
         (event) {
           stdoutBuffer.write(event);
-          logger.printStatus(event);
+          logger.info(event);
         },
       ).asFuture<void>();
 
@@ -76,7 +76,7 @@ ${result.stderr.trim()}
           process.stderr.transform<String>(const Utf8Decoder()).listen((event) {
         stderrBuffer.write(event);
 
-        if (showStderr) logger.printStatus(event);
+        if (showStderr) logger.info(event);
       }).asFuture<void>();
 
       int? exitCode;
@@ -102,7 +102,7 @@ ${result.stderr.trim()}
         }
         await stdioFuture;
       } on Exception catch (e, s) {
-        logger.printStatus(
+        logger.info(
             'Exception while running process with output | waiting for stdio streams: $e, $s: $e\n$s');
 
         // Ignore errors on the process' stdout and stderr streams. Just capture
@@ -117,7 +117,7 @@ ${result.stderr.trim()}
 
       // If the process did not timeout. We are done.
       if (exitCode != null) {
-        logger.printTrace(runResult.toString());
+        logger.detail(runResult.toString());
 
         return runResult;
       }

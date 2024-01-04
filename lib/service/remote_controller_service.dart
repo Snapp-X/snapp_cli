@@ -55,7 +55,7 @@ class RemoteControllerService {
         final output = runResult.stdout.trim();
 
         if (runResult.exitCode != 0 && output.isEmpty) {
-          logger.printSpaces();
+          logger.spaces();
 
           return null;
         }
@@ -63,11 +63,11 @@ class RemoteControllerService {
         return output;
       },
       parseFail: (e, s) {
-        logger.printTrace(
+        logger.detail(
           'Something went wrong while trying to find flutter. \n $e \n $s',
         );
 
-        logger.printSpaces();
+        logger.spaces();
 
         return null;
       },
@@ -76,9 +76,9 @@ class RemoteControllerService {
       logger: logger,
     );
 
-    logger.printTrace('Find Flutter output: $output');
+    logger.detail('Find Flutter output: $output');
 
-    logger.printSpaces();
+    logger.spaces();
 
     if (output == null) return null;
 
@@ -86,8 +86,7 @@ class RemoteControllerService {
     final isOutputMultipleLines = outputLinesLength > 1;
 
     if (!isOutputMultipleLines) {
-      logger
-          .printStatus('We found flutter in "$output" in the remote machine. ');
+      logger.info('We found flutter in "$output" in the remote machine. ');
 
       final flutterSdkPathConfirmation = interaction.confirm(
         'Do you want to use this path?',
@@ -102,8 +101,7 @@ class RemoteControllerService {
           .toList()
           .sublist(0, min(2, outputLinesLength));
 
-      logger.printStatus(
-          'We found multiple flutter paths in the remote machine. ');
+      logger.info('We found multiple flutter paths in the remote machine. ');
 
       return interaction.select(
         'Please select the path of flutter you want to use.',
@@ -140,7 +138,7 @@ class RemoteControllerService {
         return isOutputMultipleLines ? outputLines.first : output;
       },
       parseFail: (e, s) {
-        logger.printTrace(
+        logger.detail(
           'Something went wrong while trying to find flutter. \n $e \n $s',
         );
 
@@ -178,7 +176,7 @@ class RemoteControllerService {
         final output = runResult.stdout.trim();
 
         if (runResult.exitCode != 0 && output.isEmpty) {
-          logger.printSpaces();
+          logger.spaces();
 
           return null;
         }
@@ -186,11 +184,11 @@ class RemoteControllerService {
         return output;
       },
       parseFail: (e, s) {
-        logger.printTrace(
+        logger.detail(
           'Something went wrong while trying to find flutter. \n $e \n $s',
         );
 
-        logger.printSpaces();
+        logger.spaces();
 
         return null;
       },
@@ -199,7 +197,7 @@ class RemoteControllerService {
       logger: logger,
     );
 
-    logger.printSpaces();
+    logger.spaces();
 
     if (output == null) return null;
 
@@ -207,7 +205,7 @@ class RemoteControllerService {
     final isOutputMultipleLines = outputLinesLength > 1;
 
     if (!isOutputMultipleLines) {
-      logger.printStatus(
+      logger.info(
           'We found snapp_installer in "$output" in the remote machine. ');
 
       final snappInstallerPathConfirmation = interaction.confirm(
@@ -252,7 +250,7 @@ class RemoteControllerService {
         return isOutputMultipleLines ? outputLines.first : output;
       },
       parseFail: (e, s) {
-        logger.printTrace(
+        logger.detail(
           'Something went wrong while trying to find snapp_installer. \n $e \n $s',
         );
 
@@ -290,19 +288,19 @@ class RemoteControllerService {
         logger: logger,
       );
     } catch (e, s) {
-      logger.printTrace(
+      logger.detail(
         'Something went wrong while trying to find snapp_installer. \n $e \n $s',
       );
 
       return false;
     } finally {
-      logger.printSpaces();
+      logger.spaces();
     }
 
     if (result.exitCode != 0) {
-      logger.printStatus('Snapp Installer ExitCode: ${result.exitCode}');
-      logger.printStatus('Snapp Installer Stdout: ${result.stdout.trim()}');
-      logger.printStatus('Snapp Installer Stderr: ${result.stderr}');
+      logger.info('Snapp Installer ExitCode: ${result.exitCode}');
+      logger.info('Snapp Installer Stdout: ${result.stdout.trim()}');
+      logger.info('Snapp Installer Stderr: ${result.stderr}');
     }
 
     return result.exitCode == 0;
@@ -339,19 +337,19 @@ class RemoteControllerService {
         logger: logger,
       );
     } catch (e, s) {
-      logger.printTrace(
+      logger.detail(
         'Something went wrong while trying to install flutter on the remote. \n $e \n $s',
       );
 
       return false;
     } finally {
-      logger.printSpaces();
+      logger.spaces();
     }
 
     if (result.exitCode != 0) {
-      logger.printStatus('Flutter Installer ExitCode: ${result.exitCode}');
-      logger.printStatus('Flutter Installer Stdout: ${result.stdout.trim()}');
-      logger.printStatus('Flutter Installer Stderr: ${result.stderr}');
+      logger.info('Flutter Installer ExitCode: ${result.exitCode}');
+      logger.info('Flutter Installer Stdout: ${result.stdout.trim()}');
+      logger.info('Flutter Installer Stderr: ${result.stderr}');
     }
 
     return result.exitCode == 0;

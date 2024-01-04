@@ -24,34 +24,22 @@ class LoggerService {
 
   CliIcons get icons => CliIcons._();
 
-  void printSpaces([int count = 1]) {
+  void spaces([int count = 1]) {
     for (var i = 0; i < count; i++) {
       print('');
     }
   }
 
-  void printStatus(String message) => info(message);
-
-  void printTrace(String message) => detail(message);
-
-  void printSuccess(String message) {
-    info(
-      icons.success.green() + message.bold(),
-    );
-  }
-
-  void printFail(String message) {
-    info(
-      icons.failure.red() + message.bold(),
-    );
-  }
+  void write(String message) => _logger.write(message);
 
   void warn(String message) => _logger.warn(message);
   void info(String message) => _logger.info(message);
   void err(String message) => _logger.err(message);
   void detail(String message) => _logger.detail(message);
-
-  void write(String message) => _logger.write(message);
+  void fail(String message) =>
+      info(icons.failure.red().bold() + message.bold());
+  void success(String message) =>
+      info(icons.success.green().bold() + message.bold());
 
   String get stdout {
     return logger.stdout;

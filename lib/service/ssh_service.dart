@@ -40,10 +40,10 @@ class SshService {
       hostPlatform.pingCommand(ipv6: ipv6, pingTarget: pingTarget),
       parseResult: (result) => result,
       parseFail: (e, s) {
-        logger.printStatus(
+        logger.info(
           'Something went wrong while pinging the device.',
         );
-        logger.printTrace(
+        logger.detail(
           'Exception: $e \nStack: $s',
         );
 
@@ -153,9 +153,9 @@ class SshService {
     client.close();
 
     // You can get the exit code after the session is done
-    logger.printTrace('SSH Session ExitCode: ${session.exitCode}');
-    logger.printTrace('SSH Session stdout: ${session.stdout}');
-    logger.printTrace('SSH Session stderr: ${session.stderr}');
+    logger.detail('SSH Session ExitCode: ${session.exitCode}');
+    logger.detail('SSH Session stdout: ${session.stdout}');
+    logger.detail('SSH Session stderr: ${session.stderr}');
   }
 
   Future<bool> createPasswordLessSshConnection(
@@ -169,7 +169,7 @@ class SshService {
     );
 
     if (!isDeviceReachable) {
-      logger.printStatus(
+      logger.info(
         'Could not reach the device with the given IP-address.',
       );
 
@@ -179,14 +179,14 @@ class SshService {
       );
 
       if (!continueWithoutPing) {
-        logger.printSpaces();
-        logger.printStatus('Check your device IP-address and try again.');
+        logger.spaces();
+        logger.info('Check your device IP-address and try again.');
 
         return false;
       }
     }
 
-    logger.printSpaces();
+    logger.spaces();
 
     final spinner = interaction.runSpinner(
       inProgressMessage: 'Preparing SSH connection',
@@ -209,7 +209,7 @@ class SshService {
       ip,
     );
 
-    logger.printSpaces();
+    logger.spaces();
 
     return true;
   }
@@ -240,9 +240,9 @@ class SshService {
         return true;
       },
       parseFail: (e, s) {
-        logger.printStatus(
+        logger.info(
             'Something went wrong while trying to connect to the device via ssh.');
-        logger.printTrace(
+        logger.detail(
           'Exception: $e \nStack: $s',
         );
         return false;

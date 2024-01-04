@@ -42,36 +42,36 @@ class InstallFlutterCommand extends BaseSnappCommand {
     final flutterPath =
         await remoteControllerService.findFlutterPath(username, ip);
 
-    logger.printSpaces();
+    logger.spaces();
 
     if (flutterPath != null) {
-      logger.printSuccess(
+      logger.success(
           'Flutter is already installed on the device at "$flutterPath"');
 
       return 0;
     }
 
-    logger.printStatus(
+    logger.info(
       '''
 Flutter is not installed on the device
 We will install it for you.
 ''',
     );
-    logger.printSpaces();
+    logger.spaces();
 
     // 5. If not, install snapp_installer on the device
     final snappInstallerPath =
         await remoteControllerService.findSnappInstallerPath(username, ip);
 
     if (snappInstallerPath == null) {
-      logger.printStatus(
+      logger.info(
         '''
 snapp_installer is not installed on the device
 but don't worry, we will install it for you.
 ''',
       );
 
-      logger.printSpaces();
+      logger.spaces();
 
       final snappInstallerInstalled = await remoteControllerService
           .installSnappInstallerOnRemote(username, ip);
@@ -80,7 +80,7 @@ but don't worry, we will install it for you.
         throwToolExit('Could not install snapp_installer on the device!');
       }
 
-      logger.printSuccess(
+      logger.success(
         '''
 snapp_installer is installed on the device!
 Now we can install flutter on the device with the help of snapp_installer.
@@ -88,7 +88,7 @@ Now we can install flutter on the device with the help of snapp_installer.
       );
     }
 
-    logger.printSpaces();
+    logger.spaces();
 
     // 6. Install flutter on the device with snapp_installer
     final flutterInstalled =
@@ -98,7 +98,7 @@ Now we can install flutter on the device with the help of snapp_installer.
       throwToolExit('Could not install flutter on the device!');
     }
 
-    logger.printSuccess('Flutter is installed on the device!');
+    logger.success('Flutter is installed on the device!');
 
     return 0;
   }
@@ -111,11 +111,11 @@ Now we can install flutter on the device with the help of snapp_installer.
         await sshService.testPasswordLessSshConnection(username, ip);
 
     if (!remoteHasSshConnection) {
-      logger.printFail(
+      logger.fail(
         'could not establish a password-less ssh connection to the remote device. \n',
       );
 
-      logger.printStatus(
+      logger.info(
           'We can create a ssh connection with the remote device, do you want to try it?');
 
       final createSshConfirmation = interaction.confirm(
@@ -124,12 +124,12 @@ Now we can install flutter on the device with the help of snapp_installer.
       );
 
       if (!createSshConfirmation) {
-        logger.printSpaces();
+        logger.spaces();
         throwToolExit(
             'Check your ssh connection with the remote device and try again.');
       }
 
-      logger.printSpaces();
+      logger.spaces();
 
       final sshConnectionCreated =
           await sshService.createPasswordLessSshConnection(username, ip);
@@ -138,7 +138,7 @@ Now we can install flutter on the device with the help of snapp_installer.
         throwToolExit('Could not create SSH connection to the remote device!');
       }
 
-      logger.printSuccess('SSH connection to the remote device is created!');
+      logger.success('SSH connection to the remote device is created!');
     }
   }
 }

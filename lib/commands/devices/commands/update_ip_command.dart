@@ -76,7 +76,7 @@ Before you can update a device, you need to add one first.
     }
 
     if (ip == null) {
-      logger.printStatus(
+      logger.info(
         'Please enter the new IP-address of the device. (example: 192.168.1.101)',
       );
 
@@ -125,7 +125,7 @@ Or Maybe you entered a host name instead of IpAddress in add command
 
     customDevicesConfig.add(newDeviceConfig);
 
-    logger.printStatus(
+    logger.info(
       'IP address of device with id "$deviceId" successfully changed from "$oldIp" to "$newIp" in config at "${customDevicesConfig.configPath}"',
     );
 

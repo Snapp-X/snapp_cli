@@ -57,7 +57,7 @@ class DeleteCommand extends BaseSnappCommand {
     }
 
     customDevicesConfig.remove(deviceId);
-    logger.printStatus(
+    logger.info(
         'Successfully removed device with id "$deviceId" from config at "${customDevicesConfig.configPath}"');
 
     return 0;
