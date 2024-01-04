@@ -1,4 +1,3 @@
-import 'package:interact/interact.dart';
 import 'package:mason_logger/mason_logger.dart';
 import 'package:tint/tint.dart';
 
@@ -37,13 +36,13 @@ class LoggerService {
 
   void printSuccess(String message) {
     info(
-      icons.success.green() + Theme.colorfulTheme.messageStyle(message),
+      icons.success.green() + message.bold(),
     );
   }
 
   void printFail(String message) {
     info(
-      icons.failure.red() + Theme.colorfulTheme.messageStyle(message),
+      icons.failure.red() + message.bold(),
     );
   }
 

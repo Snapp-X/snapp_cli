@@ -5,13 +5,13 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:dartssh2/dartssh2.dart';
-import 'package:interact/interact.dart';
 import 'package:flutter_tools/src/base/common.dart';
 import 'package:flutter_tools/src/base/process.dart';
 import 'package:snapp_cli/host_runner/host_runner_platform.dart';
 import 'package:snapp_cli/service/logger_service.dart';
 import 'package:snapp_cli/snapp_cli.dart';
 import 'package:snapp_cli/utils/common.dart';
+import 'package:snapp_cli/service/interaction_service.dart';
 import 'package:snapp_cli/utils/process.dart';
 
 class SshService {
@@ -28,15 +28,10 @@ class SshService {
   final ProcessUtils processRunner;
 
   Future<bool> tryPingDevice(String pingTarget, bool ipv6) async {
-    final spinner = Spinner(
-      icon: logger.icons.success,
-      failedIcon: logger.icons.failure,
-      rightPrompt: (state) => switch (state) {
-        SpinnerStateType.inProgress =>
-          'Pinging device to check if it is reachable',
-        SpinnerStateType.done => 'Pinging device completed',
-        SpinnerStateType.failed => 'Pinging device failed',
-      },
+    final spinner = interaction.spinner(
+      inProgressMessage: 'Pinging device to check if it is reachable',
+      doneMessage: 'Pinging device completed',
+      failedMessage: 'Pinging device failed',
     );
 
     await Future.delayed(Duration(seconds: 2));
@@ -178,11 +173,10 @@ class SshService {
         'Could not reach the device with the given IP-address.',
       );
 
-      final continueWithoutPing = Confirm(
-        prompt: 'Do you want to continue anyway?',
+      final continueWithoutPing = interaction.confirm(
+        'Do you want to continue anyway?',
         defaultValue: true, // this is optional
-        waitForNewLine: true, // optional and will be false by default
-      ).interact();
+      );
 
       if (!continueWithoutPing) {
         logger.printSpaces();
@@ -194,15 +188,11 @@ class SshService {
 
     logger.printSpaces();
 
-    final spinner = Spinner(
-      icon: logger.icons.success,
-      failedIcon: logger.icons.failure,
-      rightPrompt: (done) => switch (done) {
-        SpinnerStateType.inProgress => 'Preparing SSH connection',
-        SpinnerStateType.done => 'Preparing SSH connection completed',
-        SpinnerStateType.failed => 'Preparing SSH connection failed',
-      },
-    ).interact();
+    final spinner = interaction.runSpinner(
+      inProgressMessage: 'Preparing SSH connection',
+      doneMessage: 'Preparing SSH connection completed',
+      failedMessage: 'Preparing SSH connection failed',
+    );
 
     // create a directory in the user's home directory
     final snappCliDirectory = await createSnappCliDirectory();
@@ -232,14 +222,10 @@ class SshService {
   }) async {
     final String sshTarget = ip.sshTarget(username);
 
-    final spinner = Spinner(
-      icon: logger.icons.success,
-      failedIcon: logger.icons.failure,
-      rightPrompt: (done) => switch (done) {
-        SpinnerStateType.inProgress => 'Testing SSH connection',
-        SpinnerStateType.done => 'Testing SSH connection completed',
-        SpinnerStateType.failed => 'Testing SSH connection failed',
-      },
+    final spinner = interaction.spinner(
+      inProgressMessage: 'Testing SSH connection',
+      doneMessage: 'Testing SSH connection completed',
+      failedMessage: 'Testing SSH connection failed',
     );
 
     final result = await processRunner.runCommand(

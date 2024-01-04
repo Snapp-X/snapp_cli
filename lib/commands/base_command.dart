@@ -5,11 +5,11 @@ import 'package:args/command_runner.dart';
 import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
 import 'package:snapp_cli/host_runner/host_runner_platform.dart';
 import 'package:snapp_cli/flutter_sdk.dart';
-import 'package:snapp_cli/utils/interact.dart';
 import 'package:flutter_tools/src/base/process.dart';
 
 export 'package:flutter_tools/src/base/common.dart';
 export 'package:snapp_cli/service/logger_service.dart';
+export 'package:snapp_cli/service/interaction_service.dart';
 
 abstract class BaseSnappCommand extends Command<int> {
   BaseSnappCommand({
@@ -17,12 +17,10 @@ abstract class BaseSnappCommand extends Command<int> {
   })  : hostPlatform = HostRunnerPlatform.build(flutterSdkManager.platform),
         processRunner = ProcessUtils(
             processManager: flutterSdkManager.processManager,
-            logger: flutterSdkManager.logger),
-        interaction = Interaction();
+            logger: flutterSdkManager.logger);
 
   final FlutterSdkManager flutterSdkManager;
   final ProcessUtils processRunner;
-  final Interaction interaction;
 
   /// create a HostPlatform instance based on the current platform
   /// with the help of this class we can make the commands platform specific

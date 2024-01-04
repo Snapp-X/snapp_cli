@@ -1,7 +1,6 @@
 // ignore_for_file: implementation_imports
 
 import 'dart:async';
-import 'package:interact/interact.dart';
 import 'package:snapp_cli/command_runner.dart';
 import 'package:snapp_cli/commands/base_command.dart';
 import 'package:snapp_cli/utils/common.dart';
@@ -61,23 +60,17 @@ Before you can update a device, you need to add one first.
 
   int _interactiveUpdateIp(String? deviceId, String? ip) {
     if (deviceId == null) {
-      final devices = {
-        for (var e in customDevicesConfig.devices) '${e.id} : ${e.label}': e.id
-      };
+      final selectedDevice = interaction.selectDevice(
+        customDevicesConfig,
+        description: 'Please select a device to update its IP address.',
+        errorDescription:
+            'Before you can update a device, you need to add one first.',
+      );
 
-      logger.printStatus('Please select a device to update its IP address.');
-
-      final selectedDevice = Select(
-        prompt: 'Target device',
-        options: devices.keys.toList(),
-      ).interact();
-
-      final deviceKey = devices.keys.elementAt(selectedDevice);
-
-      deviceId = devices[deviceKey];
+      deviceId = selectedDevice.id;
     }
 
-    if (deviceId == null) {
+    if (deviceId.isEmpty) {
       throwToolExit(
           'Couldn\'t find device with id "$deviceId" in config at "${customDevicesConfig.configPath}"');
     }

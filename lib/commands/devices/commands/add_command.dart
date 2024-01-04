@@ -4,7 +4,6 @@ import 'dart:async';
 
 import 'package:flutter_tools/src/base/io.dart';
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
-import 'package:interact/interact.dart';
 import 'package:snapp_cli/commands/base_command.dart';
 import 'package:snapp_cli/configs/predefined_devices.dart';
 import 'package:snapp_cli/host_runner/host_runner_platform.dart';
@@ -19,8 +18,9 @@ class AddCommand extends BaseSnappCommand {
   AddCommand({
     required super.flutterSdkManager,
   })  : sshService = SshService(flutterSdkManager: flutterSdkManager),
-        remoteControllerService =
-            RemoteControllerService(flutterSdkManager: flutterSdkManager);
+        remoteControllerService = RemoteControllerService(
+          flutterSdkManager: flutterSdkManager,
+        );
 
   final SshService sshService;
   final RemoteControllerService remoteControllerService;
@@ -40,10 +40,10 @@ class AddCommand extends BaseSnappCommand {
       'Custom',
     ];
 
-    final commandIndex = Select(
-      prompt: 'Please select the type of device you want to add.',
+    final commandIndex = interaction.selectIndex(
+      'Please select the type of device you want to add.',
       options: addCommandOptions,
-    ).interact();
+    );
 
     if (commandIndex == 0) {
       return _addPredefinedDevice();
@@ -55,13 +55,10 @@ class AddCommand extends BaseSnappCommand {
   Future<int> _addPredefinedDevice() async {
     logger.printSpaces();
 
-    final selectedPredefinedDevice = Select(
-      prompt: 'Select your device',
+    final deviceKey = interaction.select(
+      'Select your device',
       options: predefinedDevices.keys.toList(),
-    ).interact();
-
-    final deviceKey =
-        predefinedDevices.keys.elementAt(selectedPredefinedDevice);
+    );
 
     var predefinedDeviceConfig = predefinedDevices[deviceKey];
 
@@ -133,11 +130,10 @@ class AddCommand extends BaseSnappCommand {
       logger.printStatus(
           'We can create a ssh connection with the remote device, do you want to try it?');
 
-      final continueWithoutPing = Confirm(
-        prompt: 'Create a ssh connection?',
-        defaultValue: true, // this is optional
-        waitForNewLine: true, // optional and will be false by default
-      ).interact();
+      final continueWithoutPing = interaction.confirm(
+        'Create a ssh connection?',
+        defaultValue: true,
+      );
 
       if (!continueWithoutPing) {
         logger.printSpaces();
@@ -330,13 +326,13 @@ class AddCommand extends BaseSnappCommand {
 
     logger.printSpaces();
 
-    final provideFlutterPathOption = Select(
-      prompt: 'Please select one of the options:',
+    final provideFlutterPathOption = interaction.selectIndex(
+      'Please select one of the options:',
       options: [
         'Enter the path to flutter manually',
         'Install flutter on the remote machine',
       ],
-    ).interact();
+    );
 
     logger.printSpaces();
 

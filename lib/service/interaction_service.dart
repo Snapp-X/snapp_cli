@@ -9,12 +9,55 @@ import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
 import 'package:snapp_cli/utils/custom_device.dart';
 
-class Interaction {
-  const Interaction();
+const interaction = InteractionService._();
 
-  bool confirm(String? message, {bool? defaultValue}) {
-    return Confirm(prompt: message ?? '', defaultValue: defaultValue)
-        .interact();
+class InteractionService {
+  const InteractionService._();
+
+  bool confirm(
+    String? message, {
+    bool? defaultValue,
+    bool waitForNewLine = true,
+  }) {
+    return Confirm(
+      prompt: message ?? '',
+      defaultValue: defaultValue,
+      waitForNewLine: waitForNewLine,
+    ).interact();
+  }
+
+  Spinner spinner({
+    required String inProgressMessage,
+    required String doneMessage,
+    required String failedMessage,
+    String? doneIcon,
+    String? failedIcon,
+  }) {
+    return Spinner(
+      icon: doneIcon ?? logger.icons.success,
+      failedIcon: failedIcon ?? logger.icons.failure,
+      rightPrompt: (state) => switch (state) {
+        SpinnerStateType.inProgress => inProgressMessage,
+        SpinnerStateType.done => doneMessage,
+        SpinnerStateType.failed => failedMessage,
+      },
+    );
+  }
+
+  SpinnerState runSpinner({
+    required String inProgressMessage,
+    required String doneMessage,
+    required String failedMessage,
+    String? doneIcon,
+    String? failedIcon,
+  }) {
+    return spinner(
+      inProgressMessage: inProgressMessage,
+      doneMessage: doneMessage,
+      failedMessage: failedMessage,
+      doneIcon: doneIcon,
+      failedIcon: failedIcon,
+    ).interact();
   }
 
   String select(
@@ -95,15 +138,25 @@ Username: ${deviceInfo.$2}
     return deviceInfo;
   }
 
-  CustomDeviceConfig selectDevice(CustomDevicesConfig customDevicesConfig) {
+  CustomDeviceConfig selectDevice(
+    CustomDevicesConfig customDevicesConfig, {
+    String? title,
+    String? description,
+    String? errorDescription,
+  }) {
     if (customDevicesConfig.devices.isEmpty) {
       throwToolExit(
         '''
 No devices found in config at "${customDevicesConfig.configPath}"
 
-Before you can install flutter on a device, you need to add one first.
+${errorDescription ?? 'Before you can select a device, you need to add one first.'}
 ''',
       );
+    }
+
+    if (description != null) {
+      logger.printStatus(description);
+      logger.printSpaces();
     }
 
     final devices = {
@@ -111,7 +164,7 @@ Before you can install flutter on a device, you need to add one first.
     };
 
     final selectedTarget = Select(
-      prompt: 'Select a target device',
+      prompt: title ?? 'Select a target device',
       options: devices.keys.toList(),
     ).interact();
 

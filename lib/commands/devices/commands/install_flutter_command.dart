@@ -3,7 +3,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:interact/interact.dart';
 import 'package:snapp_cli/commands/base_command.dart';
 import 'package:snapp_cli/service/remote_controller_service.dart';
 import 'package:snapp_cli/service/ssh_service.dart';
@@ -119,11 +118,10 @@ Now we can install flutter on the device with the help of snapp_installer.
       logger.printStatus(
           'We can create a ssh connection with the remote device, do you want to try it?');
 
-      final createSshConfirmation = Confirm(
-        prompt: 'Create a ssh connection?',
+      final createSshConfirmation = interaction.confirm(
+        'Create a ssh connection?',
         defaultValue: true, // this is optional
-        waitForNewLine: true, // optional and will be false by default
-      ).interact();
+      );
 
       if (!createSshConfirmation) {
         logger.printSpaces();

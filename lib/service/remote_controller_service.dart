@@ -4,13 +4,13 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:interact/interact.dart';
 import 'package:flutter_tools/src/base/process.dart';
 import 'package:process/process.dart';
 import 'package:snapp_cli/host_runner/host_runner_platform.dart';
 import 'package:snapp_cli/service/logger_service.dart';
 import 'package:snapp_cli/snapp_cli.dart';
 import 'package:snapp_cli/utils/common.dart';
+import 'package:snapp_cli/service/interaction_service.dart';
 import 'package:snapp_cli/utils/process.dart';
 
 class RemoteControllerService {
@@ -36,15 +36,10 @@ class RemoteControllerService {
     InternetAddress ip, {
     bool addHostToKnownHosts = true,
   }) async {
-    final spinner = Spinner(
-      icon: logger.icons.success,
-      failedIcon: logger.icons.failure,
-      rightPrompt: (state) => switch (state) {
-        SpinnerStateType.inProgress =>
-          'search for flutter path on remote device.',
-        SpinnerStateType.done => 'search for flutter path completed',
-        SpinnerStateType.failed => 'search for flutter path failed',
-      },
+    final spinner = interaction.spinner(
+      inProgressMessage: 'search for flutter path on remote device.',
+      doneMessage: 'search for flutter path completed',
+      failedMessage: 'search for flutter path failed',
     );
 
     final output = await processRunner.runCommand(
@@ -94,11 +89,10 @@ class RemoteControllerService {
       logger
           .printStatus('We found flutter in "$output" in the remote machine. ');
 
-      final flutterSdkPathConfirmation = Confirm(
-        prompt: 'Do you want to use this path?',
+      final flutterSdkPathConfirmation = interaction.confirm(
+        'Do you want to use this path?',
         defaultValue: true, // this is optional
-        waitForNewLine: true, // optional and will be false by default
-      ).interact();
+      );
 
       return flutterSdkPathConfirmation ? output : null;
     } else {
@@ -111,12 +105,10 @@ class RemoteControllerService {
       logger.printStatus(
           'We found multiple flutter paths in the remote machine. ');
 
-      final flutterSdkPathSelection = Select(
-        prompt: 'Please select the path of flutter you want to use.',
+      return interaction.select(
+        'Please select the path of flutter you want to use.',
         options: outputLines,
-      ).interact();
-
-      return outputLines[flutterSdkPathSelection];
+      );
     }
   }
 
@@ -167,15 +159,10 @@ class RemoteControllerService {
     InternetAddress ip, {
     bool addHostToKnownHosts = true,
   }) async {
-    final spinner = Spinner(
-      icon: logger.icons.success,
-      failedIcon: logger.icons.failure,
-      rightPrompt: (done) => switch (done) {
-        SpinnerStateType.inProgress =>
-          'search for snapp_installer path on remote device.',
-        SpinnerStateType.done => 'search for snapp_installer path completed',
-        SpinnerStateType.failed => 'search for snapp_installer path failed',
-      },
+    final spinner = interaction.spinner(
+      inProgressMessage: 'search for snapp_installer path on remote device.',
+      doneMessage: 'search for snapp_installer path completed',
+      failedMessage: 'search for snapp_installer path failed',
     );
 
     final output = await processRunner.runCommand(
@@ -223,11 +210,10 @@ class RemoteControllerService {
       logger.printStatus(
           'We found snapp_installer in "$output" in the remote machine. ');
 
-      final snappInstallerPathConfirmation = Confirm(
-        prompt: 'Do you want to use this path?',
-        defaultValue: true, // this is optional
-        waitForNewLine: true, // optional and will be false by default
-      ).interact();
+      final snappInstallerPathConfirmation = interaction.confirm(
+        'Do you want to use this path?',
+        defaultValue: true,
+      );
 
       return snappInstallerPathConfirmation ? output : null;
     }

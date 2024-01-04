@@ -2,7 +2,6 @@
 
 import 'dart:async';
 
-import 'package:interact/interact.dart';
 import 'package:snapp_cli/command_runner.dart';
 import 'package:snapp_cli/commands/base_command.dart';
 
@@ -33,30 +32,16 @@ class DeleteCommand extends BaseSnappCommand {
   }
 
   int _interactiveDeleteDevice() {
-    if (customDevicesConfig.devices.isEmpty) {
-      throwToolExit(
-        '''
-No devices found in config at "${customDevicesConfig.configPath}"
+    final selectedDevice = interaction.selectDevice(
+      customDevicesConfig,
+      title: 'Select a device to delete',
+      errorDescription:
+          'Before you can delete a device, you need to add one first.',
+    );
 
-Before you can delete a device, you need to add one first.
-''',
-      );
-    }
+    final deviceId = selectedDevice.id;
 
-    final devices = {
-      for (var e in customDevicesConfig.devices) '${e.id} : ${e.label}': e.id
-    };
-
-    final selectedDevice = Select(
-      prompt: 'Select a device to delete',
-      options: devices.keys.toList(),
-    ).interact();
-
-    final deviceKey = devices.keys.elementAt(selectedDevice);
-
-    final deviceId = devices[deviceKey];
-
-    if (deviceId == null) {
+    if (deviceId.isEmpty) {
       throwToolExit(
           'Couldn\'t find device with id "$deviceId" in config at "${customDevicesConfig.configPath}"');
     }

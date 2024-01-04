@@ -5,11 +5,11 @@ import 'package:flutter_tools/src/runner/flutter_command_runner.dart';
 import 'package:flutter_tools/src/base/common.dart';
 
 import 'package:args/command_runner.dart';
-import 'package:interact/interact.dart';
 import 'package:snapp_cli/commands/devices/devices_command.dart';
 import 'package:snapp_cli/commands/ssh/ssh_command.dart';
 import 'package:snapp_cli/flutter_sdk.dart';
 import 'package:snapp_cli/service/logger_service.dart';
+import 'package:snapp_cli/service/interaction_service.dart';
 import 'package:snapp_cli/utils/process.dart';
 import 'package:snapp_cli/utils/update.dart';
 
@@ -58,11 +58,10 @@ This is a one time setup and will not be required again.
 
       logger.printSpaces();
 
-      final enableConfigs = Confirm(
-        prompt: 'Do you want to enable them now?',
+      final enableConfigs = interaction.confirm(
+        'Do you want to enable them now?',
         defaultValue: true, // this is optional
-        waitForNewLine: true, // optional and will be false by default
-      ).interact();
+      );
 
       logger.printSpaces();
 
@@ -108,16 +107,10 @@ Error: $e
 Stacktrace: $s
 ''');
       },
-      spinner: Spinner(
-        icon: logger.icons.success,
-        failedIcon: logger.icons.failure,
-        rightPrompt: (state) => switch (state) {
-          SpinnerStateType.inProgress =>
-            'Enabling custom devices and linux configs...',
-          SpinnerStateType.done => 'Configs enabled successfully!',
-          SpinnerStateType.failed =>
-            'Enabling custom devices and linux configs failed!',
-        },
+      spinner: interaction.spinner(
+        inProgressMessage: 'Enabling custom devices and linux configs...',
+        doneMessage: 'Configs enabled successfully!',
+        failedMessage: 'Enabling custom devices and linux configs failed!',
       ),
     );
   }
@@ -139,25 +132,20 @@ Stacktrace: $s
     if (isUpdateAvailable) {
       logger.printStatus('A new version of snapp_cli is available!');
 
-      final updateConfirmed = Confirm(
-        prompt: 'Do you want to update now?',
-        defaultValue: true, // this is optional
-        waitForNewLine: true, // optional and will be false by default
-      ).interact();
+      final updateConfirmed = interaction.confirm(
+        'Do you want to update now?',
+        defaultValue: true,
+      );
 
       logger.printSpaces();
 
       if (!updateConfirmed) return;
 
-      final spinner = Spinner(
-        icon: logger.icons.success,
-        failedIcon: logger.icons.failure,
-        rightPrompt: (done) => switch (done) {
-          SpinnerStateType.inProgress => 'Updating snapp_cli...',
-          SpinnerStateType.done => 'Update process completed!',
-          SpinnerStateType.failed => 'snapp_cli update failed!',
-        },
-      ).interact();
+      final spinner = interaction.runSpinner(
+        inProgressMessage: 'Updating snapp_cli...',
+        doneMessage: 'Update process completed!',
+        failedMessage: 'snapp_cli update failed!',
+      );
 
       final result = await updateController.update();
 

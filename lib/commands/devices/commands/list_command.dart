@@ -1,6 +1,5 @@
 // ignore_for_file: implementation_imports
 
-import 'package:interact/interact.dart';
 import 'package:snapp_cli/commands/base_command.dart';
 import 'package:snapp_cli/utils/process.dart';
 
@@ -22,17 +21,11 @@ class ListCommand extends BaseSnappCommand {
     final result = await processRunner.runCommand(
       ['flutter', 'custom-devices', 'list'],
       parseResult: (result) => result,
-      spinner: Spinner(
-          icon: logger.icons.search,
-          failedIcon: logger.icons.failure,
-          rightPrompt: (state) => switch (state) {
-                SpinnerStateType.inProgress =>
-                  'Searching for custom devices...',
-                SpinnerStateType.done =>
-                  'Searching for custom devices completed!',
-                SpinnerStateType.failed =>
-                  'Searching for custom devices failed!',
-              }),
+      spinner: interaction.spinner(
+        inProgressMessage: 'Searching for custom devices...',
+        doneMessage: 'Searching for custom devices completed!',
+        failedMessage: 'Searching for custom devices failed!',
+      ),
     );
 
     logger.printSpaces();
