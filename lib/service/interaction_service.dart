@@ -8,6 +8,7 @@ import 'package:snapp_cli/utils/common.dart';
 import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
 import 'package:snapp_cli/utils/custom_device.dart';
+import 'package:tint/tint.dart';
 
 const interaction = InteractionService._();
 
@@ -34,8 +35,8 @@ class InteractionService {
     String? failedIcon,
   }) {
     return Spinner(
-      icon: doneIcon ?? logger.icons.success,
-      failedIcon: failedIcon ?? logger.icons.failure,
+      icon: doneIcon ?? logger.icons.success.padRight(2).green(),
+      failedIcon: failedIcon ?? logger.icons.failure.padRight(2).red(),
       rightPrompt: (state) => switch (state) {
         SpinnerStateType.inProgress => inProgressMessage,
         SpinnerStateType.done => doneMessage,

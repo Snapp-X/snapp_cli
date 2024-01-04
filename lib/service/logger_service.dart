@@ -2,7 +2,7 @@ import 'package:mason_logger/mason_logger.dart';
 import 'package:tint/tint.dart';
 
 /// Sets default logger mode
-LoggerService get logger => LoggerService._();
+final LoggerService logger = LoggerService._();
 
 class LoggerService {
   final Logger _logger;
@@ -18,7 +18,7 @@ class LoggerService {
 
   bool get isVerbose => _logger.level == Level.verbose;
 
-  set level(Level level) => _logger.level = level;
+  set level(Level newLevel) => _logger.level = newLevel;
 
   Level get level => _logger.level;
 

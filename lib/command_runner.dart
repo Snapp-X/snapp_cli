@@ -5,6 +5,7 @@ import 'package:flutter_tools/src/runner/flutter_command_runner.dart';
 import 'package:flutter_tools/src/base/common.dart';
 
 import 'package:args/command_runner.dart';
+import 'package:mason_logger/mason_logger.dart';
 import 'package:snapp_cli/commands/devices/devices_command.dart';
 import 'package:snapp_cli/commands/ssh/ssh_command.dart';
 import 'package:snapp_cli/flutter_sdk.dart';
@@ -22,12 +23,18 @@ class SnappCliCommandRunner extends CommandRunner<int> {
           'A command-line tool to manage custom devices for flutter',
         ) {
     // Add the device id option to all commands
-    argParser.addFlag('verbose', abbr: 'v', negatable: false);
-    argParser.addOption(
-      deviceIdOption,
-      abbr: 'd',
-      help: 'Target device id or name (prefixes allowed).',
-    );
+    argParser
+      ..addFlag(
+        'verbose',
+        abbr: 'v',
+        help: 'Print verbose output.',
+        negatable: false,
+      )
+      ..addOption(
+        deviceIdOption,
+        abbr: 'd',
+        help: 'Target device id or name (prefixes allowed).',
+      );
 
     // Add the devices command to the command runner
     addCommand(DevicesCommand(flutterSdkManager: flutterSdkManager));
@@ -42,6 +49,16 @@ class SnappCliCommandRunner extends CommandRunner<int> {
 
   @override
   Future<int?> run(Iterable<String> args) async {
+    final argResults = parse(args);
+
+    if (argResults['verbose'] == true) {
+      logger.level = Level.verbose;
+
+      logger.detail('Verbose mode enabled');
+    }
+
+    logger.spacer;
+
     final areCustomDevicesEnabled = flutterSdkManager.areCustomDevicesEnabled;
 
     final isLinuxEnabled = flutterSdkManager.isLinuxEnabled;
@@ -81,7 +98,7 @@ flutter config --enable-custom-devices --enable-linux-desktop
 
     logger.printSpaces();
 
-    return super.run(args);
+    return runCommand(argResults);
   }
 
   Future<void> _enableConfigs() async {
