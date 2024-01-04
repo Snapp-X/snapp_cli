@@ -6,10 +6,10 @@ import 'dart:math';
 
 import 'package:dartssh2/dartssh2.dart';
 import 'package:interact/interact.dart';
-import 'package:flutter_tools/src/base/logger.dart';
 import 'package:flutter_tools/src/base/common.dart';
 import 'package:flutter_tools/src/base/process.dart';
 import 'package:snapp_cli/host_runner/host_runner_platform.dart';
+import 'package:snapp_cli/service/logger_service.dart';
 import 'package:snapp_cli/snapp_cli.dart';
 import 'package:snapp_cli/utils/common.dart';
 import 'package:snapp_cli/utils/process.dart';
@@ -17,14 +17,11 @@ import 'package:snapp_cli/utils/process.dart';
 class SshService {
   SshService({
     required FlutterSdkManager flutterSdkManager,
-  })  : logger = flutterSdkManager.logger,
-        hostPlatform = HostRunnerPlatform.build(flutterSdkManager.platform),
+  })  : hostPlatform = HostRunnerPlatform.build(flutterSdkManager.platform),
         processRunner = ProcessUtils(
           processManager: flutterSdkManager.processManager,
           logger: flutterSdkManager.logger,
         );
-
-  final Logger logger;
 
   final HostRunnerPlatform hostPlatform;
 
@@ -32,8 +29,8 @@ class SshService {
 
   Future<bool> tryPingDevice(String pingTarget, bool ipv6) async {
     final spinner = Spinner(
-      icon: logger.successIcon,
-      failedIcon: logger.errorIcon,
+      icon: logger.icons.success,
+      failedIcon: logger.icons.failure,
       rightPrompt: (state) => switch (state) {
         SpinnerStateType.inProgress =>
           'Pinging device to check if it is reachable',
@@ -198,8 +195,8 @@ class SshService {
     logger.printSpaces();
 
     final spinner = Spinner(
-      icon: logger.searchIcon,
-      failedIcon: logger.errorIcon,
+      icon: logger.icons.success,
+      failedIcon: logger.icons.failure,
       rightPrompt: (done) => switch (done) {
         SpinnerStateType.inProgress => 'Preparing SSH connection',
         SpinnerStateType.done => 'Preparing SSH connection completed',
@@ -236,8 +233,8 @@ class SshService {
     final String sshTarget = ip.sshTarget(username);
 
     final spinner = Spinner(
-      icon: logger.searchIcon,
-      failedIcon: logger.errorIcon,
+      icon: logger.icons.success,
+      failedIcon: logger.icons.failure,
       rightPrompt: (done) => switch (done) {
         SpinnerStateType.inProgress => 'Testing SSH connection',
         SpinnerStateType.done => 'Testing SSH connection completed',

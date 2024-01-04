@@ -1,8 +1,6 @@
 // ignore_for_file: implementation_imports
 
 import 'dart:io';
-import 'package:flutter_tools/src/base/logger.dart';
-import 'package:interact/interact.dart';
 import 'package:flutter_tools/src/base/io.dart';
 
 final RegExp hostnameRegex = RegExp(
@@ -16,30 +14,6 @@ extension StringExt on String {
   bool get isValidHostname => hostnameRegex.hasMatch(this);
 
   bool get isValidPath => pathRegex.hasMatch(this);
-}
-
-extension LoggerExt on Logger {
-  String get searchIcon => '🔎';
-  String get successIcon => Theme.colorfulTheme.successPrefix;
-  String get errorIcon => Theme.colorfulTheme.errorPrefix;
-
-  void printSpaces([int count = 1]) {
-    for (var i = 0; i < count; i++) {
-      print('');
-    }
-  }
-
-  void printSuccess(String message) {
-    printStatus(
-      successIcon + Theme.colorfulTheme.messageStyle(message),
-    );
-  }
-
-  void printFail(String message) {
-    printStatus(
-      errorIcon + Theme.colorfulTheme.messageStyle(message),
-    );
-  }
 }
 
 extension IpExt on InternetAddress {

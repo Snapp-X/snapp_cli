@@ -5,10 +5,10 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:interact/interact.dart';
-import 'package:flutter_tools/src/base/logger.dart';
 import 'package:flutter_tools/src/base/process.dart';
 import 'package:process/process.dart';
 import 'package:snapp_cli/host_runner/host_runner_platform.dart';
+import 'package:snapp_cli/service/logger_service.dart';
 import 'package:snapp_cli/snapp_cli.dart';
 import 'package:snapp_cli/utils/common.dart';
 import 'package:snapp_cli/utils/process.dart';
@@ -16,15 +16,12 @@ import 'package:snapp_cli/utils/process.dart';
 class RemoteControllerService {
   RemoteControllerService({
     required FlutterSdkManager flutterSdkManager,
-  })  : logger = flutterSdkManager.logger,
-        hostPlatform = HostRunnerPlatform.build(flutterSdkManager.platform),
+  })  : hostPlatform = HostRunnerPlatform.build(flutterSdkManager.platform),
         processManager = flutterSdkManager.processManager,
         processRunner = ProcessUtils(
           processManager: flutterSdkManager.processManager,
           logger: flutterSdkManager.logger,
         );
-
-  final Logger logger;
 
   final HostRunnerPlatform hostPlatform;
 
@@ -40,8 +37,8 @@ class RemoteControllerService {
     bool addHostToKnownHosts = true,
   }) async {
     final spinner = Spinner(
-      icon: logger.successIcon,
-      failedIcon: logger.errorIcon,
+      icon: logger.icons.success,
+      failedIcon: logger.icons.failure,
       rightPrompt: (state) => switch (state) {
         SpinnerStateType.inProgress =>
           'search for flutter path on remote device.',
@@ -171,7 +168,8 @@ class RemoteControllerService {
     bool addHostToKnownHosts = true,
   }) async {
     final spinner = Spinner(
-      icon: logger.successIcon,
+      icon: logger.icons.success,
+      failedIcon: logger.icons.failure,
       rightPrompt: (done) => switch (done) {
         SpinnerStateType.inProgress =>
           'search for snapp_installer path on remote device.',

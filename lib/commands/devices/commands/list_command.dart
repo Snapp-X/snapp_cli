@@ -2,7 +2,6 @@
 
 import 'package:interact/interact.dart';
 import 'package:snapp_cli/commands/base_command.dart';
-import 'package:snapp_cli/utils/common.dart';
 import 'package:snapp_cli/utils/process.dart';
 
 /// List all custom devices added to the Flutter SDK with custom-devices command
@@ -24,8 +23,8 @@ class ListCommand extends BaseSnappCommand {
       ['flutter', 'custom-devices', 'list'],
       parseResult: (result) => result,
       spinner: Spinner(
-          icon: logger.searchIcon,
-          failedIcon: logger.errorIcon,
+          icon: logger.icons.search,
+          failedIcon: logger.icons.failure,
           rightPrompt: (state) => switch (state) {
                 SpinnerStateType.inProgress =>
                   'Searching for custom devices...',

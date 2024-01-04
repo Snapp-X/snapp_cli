@@ -2,7 +2,6 @@
 
 import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
-import 'package:flutter_tools/src/base/logger.dart';
 import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
 import 'package:snapp_cli/host_runner/host_runner_platform.dart';
 import 'package:snapp_cli/flutter_sdk.dart';
@@ -10,6 +9,7 @@ import 'package:snapp_cli/utils/interact.dart';
 import 'package:flutter_tools/src/base/process.dart';
 
 export 'package:flutter_tools/src/base/common.dart';
+export 'package:snapp_cli/service/logger_service.dart';
 
 abstract class BaseSnappCommand extends Command<int> {
   BaseSnappCommand({
@@ -18,7 +18,7 @@ abstract class BaseSnappCommand extends Command<int> {
         processRunner = ProcessUtils(
             processManager: flutterSdkManager.processManager,
             logger: flutterSdkManager.logger),
-        interaction = Interaction(logger: flutterSdkManager.logger);
+        interaction = Interaction();
 
   final FlutterSdkManager flutterSdkManager;
   final ProcessUtils processRunner;
@@ -33,8 +33,6 @@ abstract class BaseSnappCommand extends Command<int> {
 
   CustomDevicesConfig get customDevicesConfig =>
       flutterSdkManager.customDeviceConfig;
-
-  Logger get logger => flutterSdkManager.logger;
 }
 
 extension ArgResultsExtension on ArgResults {

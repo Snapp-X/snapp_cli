@@ -2,7 +2,6 @@
 
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter_tools/src/base/logger.dart';
 import 'package:flutter_tools/src/base/io.dart';
 
 import 'package:flutter_tools/src/base/process.dart';
@@ -17,7 +16,7 @@ extension ProcessUtilsExt on ProcessUtils {
     T? Function(dynamic error, StackTrace stack)? parseFail,
     Spinner? spinner,
     bool throwOnError = true,
-    Logger? logger,
+    LoggerService? logger,
     Duration? timeout = const Duration(seconds: 10),
     String label = 'commandRunner',
   }) async {
@@ -56,7 +55,7 @@ ${result.stderr.trim()}
   Future<RunResult> runWithOutput(
     List<String> cmd, {
     required ProcessManager processManager,
-    required Logger logger,
+    required LoggerService logger,
     Duration? timeout,
     bool showStderr = false,
   }) async {

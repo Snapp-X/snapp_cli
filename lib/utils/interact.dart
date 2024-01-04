@@ -5,14 +5,43 @@ import 'dart:io';
 import 'package:interact/interact.dart';
 import 'package:snapp_cli/commands/base_command.dart';
 import 'package:snapp_cli/utils/common.dart';
-import 'package:flutter_tools/src/base/logger.dart';
 import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
+import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
 import 'package:snapp_cli/utils/custom_device.dart';
 
 class Interaction {
-  const Interaction({required this.logger});
+  const Interaction();
 
-  final Logger logger;
+  bool confirm(String? message, {bool? defaultValue}) {
+    return Confirm(prompt: message ?? '', defaultValue: defaultValue)
+        .interact();
+  }
+
+  String select(
+    String? message, {
+    required List<String> options,
+  }) {
+    final selection = Select(
+      prompt: message ?? '',
+      options: options,
+      initialIndex: 0,
+    ).interact();
+
+    return options[selection];
+  }
+
+  int selectIndex(
+    String? message, {
+    required List<String> options,
+  }) {
+    final selection = Select(
+      prompt: message ?? '',
+      options: options,
+      initialIndex: 0,
+    ).interact();
+
+    return selection;
+  }
 
   (InternetAddress ip, String username) getDeviceInfoInteractively(
     CustomDevicesConfig customDevicesConfig,
@@ -45,7 +74,12 @@ class Interaction {
       logger.printStatus("Please enter the device info:");
       deviceInfo = (readDeviceIp(), readDeviceUsername());
     } else {
-      deviceInfo = selectDeviceIpAndUsername(customDevicesConfig);
+      final selectedDevice = selectDevice(customDevicesConfig);
+
+      deviceInfo = (
+        InternetAddress.tryParse(selectedDevice.deviceIp)!,
+        selectedDevice.deviceUsername
+      );
     }
 
     if (printSelectedDeviceInfo) {
@@ -61,9 +95,7 @@ Username: ${deviceInfo.$2}
     return deviceInfo;
   }
 
-  (InternetAddress ip, String username) selectDeviceIpAndUsername(
-    CustomDevicesConfig customDevicesConfig,
-  ) {
+  CustomDeviceConfig selectDevice(CustomDevicesConfig customDevicesConfig) {
     if (customDevicesConfig.devices.isEmpty) {
       throwToolExit(
         '''
@@ -78,33 +110,21 @@ Before you can install flutter on a device, you need to add one first.
       for (var e in customDevicesConfig.devices) '${e.id} : ${e.label}': e
     };
 
-    final selectedDevice = Select(
+    final selectedTarget = Select(
       prompt: 'Select a target device',
       options: devices.keys.toList(),
     ).interact();
 
-    final deviceKey = devices.keys.elementAt(selectedDevice);
+    final deviceKey = devices.keys.elementAt(selectedTarget);
 
-    final targetDevice = devices[deviceKey];
+    final selectedDevice = devices[deviceKey];
 
-    if (targetDevice == null) {
+    if (selectedDevice == null) {
       throwToolExit(
-          'Couldn\'t find device with id "${targetDevice!.id}" in config at "${customDevicesConfig.configPath}"');
+          'Couldn\'t find device with id "${selectedDevice!.id}" in config at "${customDevicesConfig.configPath}"');
     }
 
-    final deviceIp = targetDevice.tryFindDeviceIp;
-
-    if (deviceIp == null) {
-      throwToolExit(
-        'Couldn\'t find device ip address in ping command for device with id "${targetDevice.id}" in config at "${customDevicesConfig.configPath}"',
-      );
-    }
-
-    final username = targetDevice.deviceUsername;
-
-    logger.printSpaces();
-
-    return (InternetAddress.tryParse(deviceIp)!, username);
+    return selectedDevice;
   }
 
   InternetAddress readDeviceIp({String? description, String? title}) {

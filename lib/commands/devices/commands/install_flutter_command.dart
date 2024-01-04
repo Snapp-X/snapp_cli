@@ -7,7 +7,6 @@ import 'package:interact/interact.dart';
 import 'package:snapp_cli/commands/base_command.dart';
 import 'package:snapp_cli/service/remote_controller_service.dart';
 import 'package:snapp_cli/service/ssh_service.dart';
-import 'package:snapp_cli/utils/common.dart';
 
 /// Add a new raspberry device to the Flutter SDK custom devices
 class InstallFlutterCommand extends BaseSnappCommand {

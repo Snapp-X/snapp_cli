@@ -3,15 +3,13 @@ import 'dart:io';
 
 import 'package:flutter_tools/src/runner/flutter_command_runner.dart';
 import 'package:flutter_tools/src/base/common.dart';
-import 'package:flutter_tools/src/base/process.dart';
-import 'package:flutter_tools/src/base/logger.dart';
 
 import 'package:args/command_runner.dart';
 import 'package:interact/interact.dart';
 import 'package:snapp_cli/commands/devices/devices_command.dart';
 import 'package:snapp_cli/commands/ssh/ssh_command.dart';
-import 'package:snapp_cli/utils/common.dart';
 import 'package:snapp_cli/flutter_sdk.dart';
+import 'package:snapp_cli/service/logger_service.dart';
 import 'package:snapp_cli/utils/process.dart';
 import 'package:snapp_cli/utils/update.dart';
 
@@ -41,8 +39,6 @@ class SnappCliCommandRunner extends CommandRunner<int> {
   final FlutterSdkManager flutterSdkManager;
 
   final UpdateController updateController = UpdateController();
-
-  Logger get logger => flutterSdkManager.logger;
 
   @override
   Future<int?> run(Iterable<String> args) async {
@@ -90,10 +86,7 @@ flutter config --enable-custom-devices --enable-linux-desktop
   }
 
   Future<void> _enableConfigs() async {
-    final processRunner = ProcessUtils(
-      processManager: flutterSdkManager.processManager,
-      logger: logger,
-    );
+    final processRunner = flutterSdkManager.processRunner;
 
     await processRunner.runCommand(
       <String>[
@@ -116,15 +109,16 @@ Stacktrace: $s
 ''');
       },
       spinner: Spinner(
-          icon: logger.successIcon,
-          failedIcon: logger.errorIcon,
-          rightPrompt: (state) => switch (state) {
-                SpinnerStateType.inProgress =>
-                  'Enabling custom devices and linux configs...',
-                SpinnerStateType.done => 'Configs enabled successfully!',
-                SpinnerStateType.failed =>
-                  'Enabling custom devices and linux configs failed!',
-              }),
+        icon: logger.icons.success,
+        failedIcon: logger.icons.failure,
+        rightPrompt: (state) => switch (state) {
+          SpinnerStateType.inProgress =>
+            'Enabling custom devices and linux configs...',
+          SpinnerStateType.done => 'Configs enabled successfully!',
+          SpinnerStateType.failed =>
+            'Enabling custom devices and linux configs failed!',
+        },
+      ),
     );
   }
 
@@ -156,8 +150,8 @@ Stacktrace: $s
       if (!updateConfirmed) return;
 
       final spinner = Spinner(
-        icon: logger.successIcon,
-        failedIcon: logger.errorIcon,
+        icon: logger.icons.success,
+        failedIcon: logger.icons.failure,
         rightPrompt: (done) => switch (done) {
           SpinnerStateType.inProgress => 'Updating snapp_cli...',
           SpinnerStateType.done => 'Update process completed!',

@@ -4,7 +4,6 @@ import 'dart:async';
 
 import 'package:snapp_cli/commands/base_command.dart';
 import 'package:snapp_cli/service/ssh_service.dart';
-import 'package:snapp_cli/utils/common.dart';
 
 /// This command will create a PasswordLess SSH connection to the remote device.
 ///
