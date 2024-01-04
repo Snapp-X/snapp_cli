@@ -12,7 +12,7 @@ import 'package:snapp_cli/flutter_sdk.dart';
 import 'package:snapp_cli/service/logger_service.dart';
 import 'package:snapp_cli/service/interaction_service.dart';
 import 'package:snapp_cli/utils/process.dart';
-import 'package:snapp_cli/utils/update.dart';
+import 'package:snapp_cli/service/update_service.dart';
 
 const deviceIdOption = FlutterGlobalOptions.kDeviceIdOption;
 
@@ -45,7 +45,7 @@ class SnappCliCommandRunner extends CommandRunner<int> {
 
   final FlutterSdkManager flutterSdkManager;
 
-  final UpdateController updateController = UpdateController();
+  final UpdateService updateService = UpdateService();
 
   @override
   Future<int?> run(Iterable<String> args) async {
@@ -135,7 +135,7 @@ Stacktrace: $s
   Future<void> _checkForUpdates() async {
     final bool isUpdateAvailable;
     try {
-      isUpdateAvailable = await updateController.isUpdateAvailable();
+      isUpdateAvailable = await updateService.isUpdateAvailable();
     } catch (e, s) {
       logger.detail(
         'Something went wrong. During checking for updates. \n $e \n $s',
@@ -164,7 +164,7 @@ Stacktrace: $s
         failedMessage: 'snapp_cli update failed!',
       );
 
-      final result = await updateController.update();
+      final result = await updateService.update();
 
       if (result.exitCode != 0) {
         spinner.failed();
