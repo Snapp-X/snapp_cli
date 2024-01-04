@@ -24,13 +24,10 @@ class TestConnectionCommand extends BaseSnappCommand {
   FutureOr<int>? run() async {
     logger.printSpaces();
 
-    logger.printStatus(
-      'to test an SSH connection to the remote device, we need an IP address and a username',
+    final (ip, username) = interaction.getDeviceInfoInteractively(
+      customDevicesConfig,
+      'To test an SSH connection to the remote device, we need an IP address and a username',
     );
-
-    final ip = interaction.readDeviceIp();
-
-    final username = interaction.readDeviceUsername();
 
     final sshConnectionCreated = await sshService.testPasswordLessSshConnection(
       username,

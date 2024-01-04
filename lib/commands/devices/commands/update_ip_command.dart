@@ -92,7 +92,7 @@ Before you can update a device, you need to add one first.
             'Please enter the new IP-address of the device. (example: 192.168.1.101)',
         title: 'New IP-address:',
       );
-      
+
       ip = newIp.address;
     }
 

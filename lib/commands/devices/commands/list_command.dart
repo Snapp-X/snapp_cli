@@ -1,8 +1,9 @@
 // ignore_for_file: implementation_imports
 
+import 'package:interact/interact.dart';
 import 'package:snapp_cli/commands/base_command.dart';
-import 'package:flutter_tools/src/base/process.dart';
 import 'package:snapp_cli/utils/common.dart';
+import 'package:snapp_cli/utils/process.dart';
 
 /// List all custom devices added to the Flutter SDK with custom-devices command
 /// it will utilize the `flutter custom-devices list` command to show the list
@@ -19,21 +20,25 @@ class ListCommand extends BaseSnappCommand {
 
   @override
   Future<int> run() async {
-    final processRunner = ProcessUtils(
-      processManager: flutterSdkManager.processManager,
-      logger: logger,
-    );
-
-    await Future.delayed(Duration(seconds: 2));
-
-    final result = await processRunner.run(
+    final result = await processRunner.runCommand(
       ['flutter', 'custom-devices', 'list'],
-      timeout: Duration(seconds: 10),
+      parseResult: (result) => result,
+      spinner: Spinner(
+          icon: logger.searchIcon,
+          failedIcon: logger.errorIcon,
+          rightPrompt: (state) => switch (state) {
+                SpinnerStateType.inProgress =>
+                  'Searching for custom devices...',
+                SpinnerStateType.done =>
+                  'Searching for custom devices completed!',
+                SpinnerStateType.failed =>
+                  'Searching for custom devices failed!',
+              }),
     );
 
     logger.printSpaces();
 
-    logger.printStatus(result.stdout);
+    logger.printStatus(result!.stdout);
 
     return result.exitCode;
   }

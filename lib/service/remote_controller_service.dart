@@ -11,6 +11,7 @@ import 'package:process/process.dart';
 import 'package:snapp_cli/host_runner/host_runner_platform.dart';
 import 'package:snapp_cli/snapp_cli.dart';
 import 'package:snapp_cli/utils/common.dart';
+import 'package:snapp_cli/utils/process.dart';
 
 class RemoteControllerService {
   RemoteControllerService({
@@ -47,47 +48,47 @@ class RemoteControllerService {
         SpinnerStateType.done => 'search for flutter path completed',
         SpinnerStateType.failed => 'search for flutter path failed',
       },
-    ).interact();
+    );
 
-    final RunResult result;
-    try {
-      result = await processRunner.run(
-        hostPlatform.sshCommand(
-          ipv6: ip.type == InternetAddressType.IPv6,
-          sshTarget: ip.sshTarget(username),
-          command:
-              'find / -type f -name "flutter" -path "*/flutter/bin/*" 2>/dev/null',
-          addHostToKnownHosts: addHostToKnownHosts,
-        ),
-        timeout: Duration(seconds: 10),
-      );
-    } catch (e, s) {
-      spinner.failed();
-      logger.printTrace(
-        'Something went wrong while trying to find flutter. \n $e \n $s',
-      );
+    final output = await processRunner.runCommand(
+      hostPlatform.sshCommand(
+        ipv6: ip.type == InternetAddressType.IPv6,
+        sshTarget: ip.sshTarget(username),
+        command:
+            'find / -type f -name "flutter" -path "*/flutter/bin/*" 2>/dev/null',
+        addHostToKnownHosts: addHostToKnownHosts,
+      ),
+      throwOnError: false,
+      parseResult: (runResult) {
+        final output = runResult.stdout.trim();
 
-      logger.printSpaces();
+        if (runResult.exitCode != 0 && output.isEmpty) {
+          logger.printSpaces();
 
-      return null;
-    }
+          return null;
+        }
 
-    logger.printTrace('Find Flutter ExitCode: ${result.exitCode}');
-    logger.printTrace('Find Flutter Stdout: ${result.stdout.trim()}');
-    logger.printTrace('Find Flutter Stderr: ${result.stderr}');
+        return output;
+      },
+      parseFail: (e, s) {
+        logger.printTrace(
+          'Something went wrong while trying to find flutter. \n $e \n $s',
+        );
 
-    final output = result.stdout.trim();
+        logger.printSpaces();
 
-    if (result.exitCode != 0 && output.isEmpty) {
-      spinner.failed();
-      logger.printSpaces();
+        return null;
+      },
+      spinner: spinner,
+      label: 'Find Flutter',
+      logger: logger,
+    );
 
-      return null;
-    }
-
-    spinner.done();
+    logger.printTrace('Find Flutter output: $output');
 
     logger.printSpaces();
+
+    if (output == null) return null;
 
     final outputLinesLength = output.split('\n').length;
     final isOutputMultipleLines = outputLinesLength > 1;
@@ -127,42 +128,38 @@ class RemoteControllerService {
     InternetAddress ip, {
     bool addHostToKnownHosts = true,
   }) async {
-    final RunResult result;
-    try {
-      result = await processRunner.run(
-        hostPlatform.sshCommand(
-          ipv6: ip.type == InternetAddressType.IPv6,
-          sshTarget: ip.sshTarget(username),
-          command:
-              'find / -type f -name "flutter" -path "*/flutter/bin/*" 2>/dev/null',
-          addHostToKnownHosts: addHostToKnownHosts,
-        ),
-        timeout: Duration(seconds: 10),
-      );
-    } catch (e, s) {
-      logger.printTrace(
-        'Something went wrong while trying to find flutter. \n $e \n $s',
-      );
+    return processRunner.runCommand<String>(
+      hostPlatform.sshCommand(
+        ipv6: ip.type == InternetAddressType.IPv6,
+        sshTarget: ip.sshTarget(username),
+        command:
+            'find / -type f -name "flutter" -path "*/flutter/bin/*" 2>/dev/null',
+        addHostToKnownHosts: addHostToKnownHosts,
+      ),
+      throwOnError: false,
+      parseResult: (runResult) {
+        final output = runResult.stdout.trim();
 
-      return null;
-    } finally {
-      logger.printSpaces();
-    }
+        if (runResult.exitCode != 0 && output.isEmpty) {
+          return null;
+        }
 
-    logger.printTrace('Find Flutter ExitCode: ${result.exitCode}');
-    logger.printTrace('Find Flutter Stdout: ${result.stdout.trim()}');
-    logger.printTrace('Find Flutter Stderr: ${result.stderr}');
+        final outputLines = output.split('\n').map((e) => e.trim()).toList();
+        final outputLinesLength = outputLines.length;
+        final isOutputMultipleLines = outputLinesLength > 1;
 
-    final output = result.stdout.trim();
+        return isOutputMultipleLines ? outputLines.first : output;
+      },
+      parseFail: (e, s) {
+        logger.printTrace(
+          'Something went wrong while trying to find flutter. \n $e \n $s',
+        );
 
-    if (result.exitCode != 0 && output.isEmpty) {
-      return null;
-    }
-    final outputLines = output.split('\n').map((e) => e.trim()).toList();
-    final outputLinesLength = outputLines.length;
-    final isOutputMultipleLines = outputLinesLength > 1;
-
-    return isOutputMultipleLines ? outputLines.first : output;
+        return null;
+      },
+      label: 'Find Flutter',
+      logger: logger,
+    );
   }
 
   /// finds snapp_installer in the remote machine using ssh connection
@@ -181,49 +178,45 @@ class RemoteControllerService {
         SpinnerStateType.done => 'search for snapp_installer path completed',
         SpinnerStateType.failed => 'search for snapp_installer path failed',
       },
-    ).interact();
+    );
 
-    final RunResult result;
-    try {
-      result = await processRunner.run(
-        hostPlatform.sshCommand(
-          ipv6: ip.type == InternetAddressType.IPv6,
-          sshTarget: ip.sshTarget(username),
-          command:
-              'find / -type f -name "snapp_installer" -path "*/snapp_installer/bin/*" 2>/dev/null',
-          addHostToKnownHosts: addHostToKnownHosts,
-        ),
-        timeout: Duration(seconds: 10),
-      );
-    } catch (e, s) {
-      spinner.failed();
+    final output = await processRunner.runCommand(
+      hostPlatform.sshCommand(
+        ipv6: ip.type == InternetAddressType.IPv6,
+        sshTarget: ip.sshTarget(username),
+        command:
+            'find / -type f -name "snapp_installer" -path "*/snapp_installer/bin/*" 2>/dev/null',
+        addHostToKnownHosts: addHostToKnownHosts,
+      ),
+      throwOnError: false,
+      parseResult: (runResult) {
+        final output = runResult.stdout.trim();
 
-      logger.printTrace(
-        'Something went wrong while trying to find snapp_installer. \n $e \n $s',
-      );
+        if (runResult.exitCode != 0 && output.isEmpty) {
+          logger.printSpaces();
 
-      logger.printSpaces();
+          return null;
+        }
 
-      return null;
-    }
+        return output;
+      },
+      parseFail: (e, s) {
+        logger.printTrace(
+          'Something went wrong while trying to find flutter. \n $e \n $s',
+        );
 
-    logger.printTrace('Find snapp_installer ExitCode: ${result.exitCode}');
-    logger.printTrace('Find snapp_installer Stdout: ${result.stdout.trim()}');
-    logger.printTrace('Find snapp_installer Stderr: ${result.stderr}');
+        logger.printSpaces();
 
-    final output = result.stdout.trim();
-
-    if (result.exitCode != 0 && output.isEmpty) {
-      spinner.failed();
-
-      logger.printSpaces();
-
-      return null;
-    }
-
-    spinner.done();
+        return null;
+      },
+      spinner: spinner,
+      label: 'Find Snapp Installer',
+      logger: logger,
+    );
 
     logger.printSpaces();
+
+    if (output == null) return null;
 
     final outputLinesLength = output.split('\n').length;
     final isOutputMultipleLines = outputLinesLength > 1;
@@ -252,42 +245,38 @@ class RemoteControllerService {
     InternetAddress ip, {
     bool addHostToKnownHosts = true,
   }) async {
-    final RunResult result;
-    try {
-      result = await processRunner.run(
-        hostPlatform.sshCommand(
-          ipv6: ip.type == InternetAddressType.IPv6,
-          sshTarget: ip.sshTarget(username),
-          command:
-              'find / -type f -name "snapp_installer" -path "*/snapp_installer/bin/*" 2>/dev/null',
-          addHostToKnownHosts: addHostToKnownHosts,
-        ),
-        timeout: Duration(seconds: 10),
-      );
-    } catch (e, s) {
-      logger.printTrace(
-        'Something went wrong while trying to find snapp_installer. \n $e \n $s',
-      );
+    return processRunner.runCommand<String>(
+      hostPlatform.sshCommand(
+        ipv6: ip.type == InternetAddressType.IPv6,
+        sshTarget: ip.sshTarget(username),
+        command:
+            'find / -type f -name "snapp_installer" -path "*/snapp_installer/bin/*" 2>/dev/null',
+        addHostToKnownHosts: addHostToKnownHosts,
+      ),
+      throwOnError: false,
+      parseResult: (runResult) {
+        final output = runResult.stdout.trim();
 
-      return null;
-    } finally {
-      logger.printSpaces();
-    }
+        if (runResult.exitCode != 0 && output.isEmpty) {
+          return null;
+        }
 
-    logger.printTrace('Find snapp_installer ExitCode: ${result.exitCode}');
-    logger.printTrace('Find snapp_installer Stdout: ${result.stdout.trim()}');
-    logger.printTrace('Find snapp_installer Stderr: ${result.stderr}');
+        final outputLines = output.split('\n').map((e) => e.trim()).toList();
+        final outputLinesLength = outputLines.length;
+        final isOutputMultipleLines = outputLinesLength > 1;
 
-    final output = result.stdout.trim();
+        return isOutputMultipleLines ? outputLines.first : output;
+      },
+      parseFail: (e, s) {
+        logger.printTrace(
+          'Something went wrong while trying to find snapp_installer. \n $e \n $s',
+        );
 
-    if (result.exitCode != 0 && output.isEmpty) {
-      return null;
-    }
-
-    final outputLinesLength = output.split('\n').length;
-    final isOutputMultipleLines = outputLinesLength > 1;
-
-    return isOutputMultipleLines ? null : output;
+        return null;
+      },
+      logger: logger,
+      label: 'Find Snapp Installer',
+    );
   }
 
   /// install snapp_installer in the remote machine using ssh connection

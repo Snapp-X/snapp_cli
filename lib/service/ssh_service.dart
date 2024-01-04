@@ -12,6 +12,7 @@ import 'package:flutter_tools/src/base/process.dart';
 import 'package:snapp_cli/host_runner/host_runner_platform.dart';
 import 'package:snapp_cli/snapp_cli.dart';
 import 'package:snapp_cli/utils/common.dart';
+import 'package:snapp_cli/utils/process.dart';
 
 class SshService {
   SshService({
@@ -39,37 +40,32 @@ class SshService {
         SpinnerStateType.done => 'Pinging device completed',
         SpinnerStateType.failed => 'Pinging device failed',
       },
-    ).interact();
+    );
 
     await Future.delayed(Duration(seconds: 2));
-    final RunResult result;
-    try {
-      result = await processRunner.run(
-        hostPlatform.pingCommand(ipv6: ipv6, pingTarget: pingTarget),
-        timeout: Duration(seconds: 10),
-      );
-    } catch (e, s) {
-      spinner.failed();
-      logger.printTrace(
-        'Something went wrong while pinging the device. \nException: $e \nStack: $s',
-      );
 
+    final RunResult? result = await processRunner.runCommand(
+      hostPlatform.pingCommand(ipv6: ipv6, pingTarget: pingTarget),
+      parseResult: (result) => result,
+      parseFail: (e, s) {
+        logger.printStatus(
+          'Something went wrong while pinging the device.',
+        );
+        logger.printTrace(
+          'Exception: $e \nStack: $s',
+        );
+
+        return null;
+      },
+      spinner: spinner,
+      label: 'pingCommand',
+      logger: logger,
+    );
+
+    if (result == null || result.exitCode != 0) {
       return false;
     }
 
-    logger.printTrace('Ping Command ExitCode: ${result.exitCode}');
-    logger.printTrace('Ping Command Stdout: ${result.stdout.trim()}');
-    logger.printTrace('Ping Command Stderr: ${result.stderr}');
-
-    if (result.exitCode != 0) {
-      spinner.failed();
-
-      return false;
-    }
-
-    spinner.done();
-
-    logger.printSpaces();
     // If the user doesn't configure a ping success regex, any ping with exitCode zero
     // is good enough. Otherwise we check if either stdout or stderr have a match of
     // the pingSuccessRegex.
@@ -105,24 +101,18 @@ class SshService {
 
     final keyFile = File('${snappCliDir.path}/id_rsa_$randomNumber');
 
-    final RunResult result;
-    try {
-      result = await processRunner.run(
-        hostPlatform.generateSshKeyCommand(
-          filePath: keyFile.path,
-        ),
-        timeout: Duration(seconds: 10),
-      );
-    } catch (e, s) {
-      throwToolExit(
-          'Something went wrong while generating the ssh key. \nException: $e \nStack: $s');
-    }
+    final RunResult? result = await processRunner.runCommand(
+      hostPlatform.generateSshKeyCommand(filePath: keyFile.path),
+      parseResult: (result) => result,
+      parseFail: (e, s) {
+        throwToolExit(
+            'Something went wrong while generating the ssh key. \nException: $e \nStack: $s');
+      },
+      label: 'generateSshKeyCommand',
+      logger: logger,
+    );
 
-    logger.printTrace('SSH Command ExitCode: ${result.exitCode}');
-    logger.printTrace('SSH Command Stdout: ${result.stdout.trim()}');
-    logger.printTrace('SSH Command Stderr: ${result.stderr}');
-
-    if (result.exitCode != 0) {
+    if (result?.exitCode != 0) {
       throwToolExit('Something went wrong while generating the ssh key.');
     }
 
@@ -131,24 +121,13 @@ class SshService {
 
   /// Adds the ssh key to the ssh-agent
   Future<void> addSshKeyToAgent(File sshKey) async {
-    final RunResult result;
-    try {
-      result = await processRunner.run(
-        hostPlatform.addSshKeyToAgent(filePath: sshKey.path),
-        timeout: Duration(seconds: 10),
-      );
-    } catch (e, s) {
-      throwToolExit(
-          'Something went wrong while adding the key to ssh-agent. \nException: $e \nStack: $s');
-    }
-
-    logger.printTrace('ssh-add Command ExitCode: ${result.exitCode}');
-    logger.printTrace('ssh-add Command Stdout: ${result.stdout.trim()}');
-    logger.printTrace('ssh-add Command Stderr: ${result.stderr}');
-
-    if (result.exitCode != 0) {
-      throwToolExit('Something went wrong while adding the key to ssh-agent.');
-    }
+    await processRunner.runCommand(
+      hostPlatform.addSshKeyToAgent(filePath: sshKey.path),
+      parseFail: (e, s) {
+        throwToolExit(
+            'Something went wrong while adding the key to ssh-agent. \nException: $e \nStack: $s');
+      },
+    );
   }
 
   Future<void> copySshKeyToRemote(
@@ -264,45 +243,32 @@ class SshService {
         SpinnerStateType.done => 'Testing SSH connection completed',
         SpinnerStateType.failed => 'Testing SSH connection failed',
       },
-    ).interact();
+    );
 
-    final RunResult result;
-    try {
-      result = await processRunner.run(
-        hostPlatform.sshCommand(
-          ipv6: ip.type == InternetAddressType.IPv6,
-          sshTarget: sshTarget,
-          command: 'echo "Test SSH Connection"',
-          addHostToKnownHosts: addHostToKnownHosts,
-          lastCommand: true,
-        ),
-        timeout: Duration(seconds: 10),
-      );
-    } catch (e, s) {
-      spinner.failed();
+    final result = await processRunner.runCommand(
+      hostPlatform.sshCommand(
+        ipv6: ip.type == InternetAddressType.IPv6,
+        sshTarget: sshTarget,
+        command: 'echo "Test SSH Connection"',
+        addHostToKnownHosts: addHostToKnownHosts,
+        lastCommand: true,
+      ),
+      parseResult: (result) {
+        return true;
+      },
+      parseFail: (e, s) {
+        logger.printStatus(
+            'Something went wrong while trying to connect to the device via ssh.');
+        logger.printTrace(
+          'Exception: $e \nStack: $s',
+        );
+        return false;
+      },
+      spinner: spinner,
+      label: 'testPasswordLessSshConnection',
+      logger: logger,
+    );
 
-      logger.printStatus(
-        'Something went wrong while trying to connect to the device via ssh. \nException: $e',
-      );
-      logger.printTrace('Stack: $s');
-
-      return false;
-    }
-
-    logger.printTrace('SSH Test Command ExitCode: ${result.exitCode}');
-    logger.printTrace('SSH Test Command Stdout: ${result.stdout.trim()}');
-    logger.printTrace('SSH Test Command Stderr: ${result.stderr}');
-
-    if (result.exitCode != 0) {
-      spinner.failed();
-
-      return false;
-    }
-
-    spinner.done();
-
-    logger.printSpaces();
-
-    return true;
+    return result ?? false;
   }
 }
