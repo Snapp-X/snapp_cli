@@ -4,7 +4,6 @@ import 'dart:async';
 
 import 'package:snapp_cli/commands/base_command.dart';
 import 'package:snapp_cli/service/ssh_service.dart';
-import 'package:snapp_cli/utils/common.dart';
 
 /// This command will create a PasswordLess SSH connection to the remote device.
 ///
@@ -26,10 +25,15 @@ class CreateConnectionCommand extends BaseSnappCommand {
 
   @override
   FutureOr<int>? run() async {
-    final (ip, username) = getRemoteIpAndUsername(
-      message:
-          'to create an SSH connection to the remote device, we need an IP address and a username',
+    logger.spaces();
+
+    logger.info(
+      'to create an SSH connection to the remote device, we need an IP address and a username',
     );
+
+    final ip = interaction.readDeviceIp();
+
+    final username = interaction.readDeviceUsername();
 
     final sshConnectionCreated =
         await sshService.createPasswordLessSshConnection(
@@ -38,10 +42,10 @@ class CreateConnectionCommand extends BaseSnappCommand {
     );
 
     if (sshConnectionCreated) {
-      logger.printSuccess('SSH connection to the remote device is created!');
+      logger.success('SSH connection to the remote device is created!');
       return 0;
     } else {
-      logger.printFail('Could not create SSH connection to the remote device!');
+      logger.fail('Could not create SSH connection to the remote device!');
       return 1;
     }
   }

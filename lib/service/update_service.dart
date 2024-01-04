@@ -5,7 +5,7 @@ import 'package:pub_updater/pub_updater.dart';
 import 'package:snapp_cli/utils/const.dart';
 import 'package:yaml/yaml.dart';
 
-class UpdateController {
+class UpdateService {
   final PubUpdater pubUpdater = PubUpdater();
 
   Future<String> currentVersion() async {

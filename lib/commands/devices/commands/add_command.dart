@@ -4,7 +4,6 @@ import 'dart:async';
 
 import 'package:flutter_tools/src/base/io.dart';
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
-import 'package:interact/interact.dart';
 import 'package:snapp_cli/commands/base_command.dart';
 import 'package:snapp_cli/configs/predefined_devices.dart';
 import 'package:snapp_cli/host_runner/host_runner_platform.dart';
@@ -15,13 +14,13 @@ import 'package:snapp_cli/utils/common.dart';
 /// Add a new raspberry device to the Flutter SDK custom devices
 ///
 ///
-// TODO: add get platform for example: x64 or arm64
 class AddCommand extends BaseSnappCommand {
   AddCommand({
     required super.flutterSdkManager,
   })  : sshService = SshService(flutterSdkManager: flutterSdkManager),
-        remoteControllerService =
-            RemoteControllerService(flutterSdkManager: flutterSdkManager);
+        remoteControllerService = RemoteControllerService(
+          flutterSdkManager: flutterSdkManager,
+        );
 
   final SshService sshService;
   final RemoteControllerService remoteControllerService;
@@ -34,17 +33,17 @@ class AddCommand extends BaseSnappCommand {
 
   @override
   Future<int> run() async {
-    logger.printSpaces();
+    logger.spaces();
 
     final addCommandOptions = [
       'Express (recommended)',
       'Custom',
     ];
 
-    final commandIndex = Select(
-      prompt: 'Please select the type of device you want to add.',
+    final commandIndex = interaction.selectIndex(
+      'Please select the type of device you want to add.',
       options: addCommandOptions,
-    ).interact();
+    );
 
     if (commandIndex == 0) {
       return _addPredefinedDevice();
@@ -54,15 +53,12 @@ class AddCommand extends BaseSnappCommand {
   }
 
   Future<int> _addPredefinedDevice() async {
-    logger.printSpaces();
+    logger.spaces();
 
-    final selectedPredefinedDevice = Select(
-      prompt: 'Select your device',
+    final deviceKey = interaction.select(
+      'Select your device',
       options: predefinedDevices.keys.toList(),
-    ).interact();
-
-    final deviceKey =
-        predefinedDevices.keys.elementAt(selectedPredefinedDevice);
+    );
 
     var predefinedDeviceConfig = predefinedDevices[deviceKey];
 
@@ -82,20 +78,29 @@ class AddCommand extends BaseSnappCommand {
     return _addCustomDevice(predefinedConfig: predefinedDeviceConfig);
   }
 
-  Future<int> _addCustomDevice({
-    CustomDeviceConfig? predefinedConfig,
-  }) async {
-    logger.printSpaces();
+  Future<int> _addCustomDevice({CustomDeviceConfig? predefinedConfig}) async {
+    logger.spaces();
 
     // get remote device id and label from the user
-    final (id, label) = getRemoteDeviceIdAndLabel(predefinedConfig);
+    final id = predefinedConfig?.id.isNotEmpty == true
+        ? predefinedConfig!.id
+        : interaction.readDeviceId(customDevicesConfig);
+
+    final label = predefinedConfig?.label.isNotEmpty == true
+        ? predefinedConfig!.label
+        : interaction.readDeviceLabel();
 
     // get remote device ip and username from the user
-    final (targetIp, username) = getRemoteIpAndUsername(
-      message: 'to add a new device, we need an IP address and a username.',
-      getIpDescription:
-          'Please enter the IP-address of the device. (example: 192.168.1.101)',
-      getUsernameDescription:
+    logger.spaces();
+
+    logger.info('to add a new device, we need an IP address and a username.');
+
+    final targetIp = interaction.readDeviceIp(
+        description:
+            'Please enter the IP-address of the device. (example: 192.168.1.101)');
+
+    final username = interaction.readDeviceUsername(
+      description:
           'Please enter the username used for ssh-ing into the remote device. (example: pi)',
     );
 
@@ -111,50 +116,48 @@ class AddCommand extends BaseSnappCommand {
     final String formattedLoopbackIp =
         ipv6 ? '[${loopbackIp.address}]' : loopbackIp.address;
 
-    logger.printSpaces();
+    logger.spaces();
 
     bool remoteHasSshConnection =
         await sshService.testPasswordLessSshConnection(username, targetIp);
 
     if (!remoteHasSshConnection) {
-      logger.printFail(
+      logger.fail(
         'could not establish a password-less ssh connection to the remote device. \n',
       );
 
-      logger.printStatus(
+      logger.info(
           'We can create a ssh connection with the remote device, do you want to try it?');
 
-      final continueWithoutPing = Confirm(
-        prompt: 'Create a ssh connection?',
-        defaultValue: true, // this is optional
-        waitForNewLine: true, // optional and will be false by default
-      ).interact();
+      final continueWithoutPing = interaction.confirm(
+        'Create a ssh connection?',
+        defaultValue: true,
+      );
 
       if (!continueWithoutPing) {
-        logger.printSpaces();
-        logger.printStatus(
+        logger.spaces();
+        logger.info(
             'Check your ssh connection with the remote device and try again.');
         return 1;
       }
 
-      logger.printSpaces();
+      logger.spaces();
 
       final sshConnectionCreated =
           await sshService.createPasswordLessSshConnection(username, targetIp);
 
       if (sshConnectionCreated) {
-        logger.printSuccess('SSH connection to the remote device is created!');
+        logger.success('SSH connection to the remote device is created!');
         remoteHasSshConnection = true;
       } else {
-        logger
-            .printFail('Could not create SSH connection to the remote device!');
+        logger.fail('Could not create SSH connection to the remote device!');
         return 1;
       }
     }
 
-    logger.printSpaces();
+    logger.spaces();
 
-    logger.printStatus(
+    logger.info(
       'We need the exact path of your flutter command line tools on the remote device. '
       'We will use this path to run flutter commands on the remote device like "flutter build linux --debug". \n',
     );
@@ -273,61 +276,15 @@ class AddCommand extends BaseSnappCommand {
 
     customDevicesConfig.add(config);
 
-    logger.printSpaces();
+    logger.spaces();
 
-    logger.printSuccess(
+    logger.success(
       'Successfully added custom device to config file at "${customDevicesConfig.configPath}".',
     );
 
-    logger.printSpaces();
+    logger.spaces();
 
     return 0;
-  }
-
-  (String id, String label) getRemoteDeviceIdAndLabel(
-    CustomDeviceConfig? predefinedConfig,
-  ) {
-    String id = predefinedConfig?.id ?? '';
-    String label = predefinedConfig?.label ?? '';
-
-    if (id.isEmpty) {
-      logger.printStatus(
-        'Please enter the id you want to device to have. Must contain only alphanumeric or underscore characters. (example: pi)',
-      );
-
-      id = Input(
-        prompt: 'Device Id:',
-        validator: (s) {
-          if (!RegExp(r'^\w+$').hasMatch(s.trim())) {
-            throw ValidationError('Invalid input. Please try again.');
-          } else if (_isDuplicatedDeviceId(s.trim())) {
-            throw ValidationError('Device with this id already exists.');
-          }
-          return true;
-        },
-      ).interact().trim();
-
-      logger.printSpaces();
-    }
-
-    if (label.isEmpty) {
-      logger.printStatus(
-        'Please enter the label of the device, which is a slightly more verbose name for the device. (example: Raspberry Pi Model 4B)',
-      );
-      label = Input(
-        prompt: 'Device label:',
-        validator: (s) {
-          if (s.trim().isNotEmpty) {
-            return true;
-          }
-          throw ValidationError('Input is empty. Please try again.');
-        },
-      ).interact();
-
-      logger.printSpaces();
-    }
-
-    return (id, label);
   }
 
   bool _isDuplicatedDeviceId(String s) {
@@ -358,73 +315,48 @@ class AddCommand extends BaseSnappCommand {
 
     if (possibleFlutterPath != null) return possibleFlutterPath;
 
-    logger.printStatus(
+    logger.info(
         'Could not find flutter in the remote machine automatically. \n\n'
         'We need the exact path of your flutter command line tools on the remote device. \n'
         'Now you have two options: \n'
         '1. You can enter the path to flutter manually. \n'
         '2. We can install flutter on the remote machine for you. \n');
 
-    logger.printSpaces();
+    logger.spaces();
 
-    final provideFlutterPathOption = Select(
-      prompt: 'Please select one of the options:',
+    final provideFlutterPathOption = interaction.selectIndex(
+      'Please select one of the options:',
       options: [
         'Enter the path to flutter manually',
         'Install flutter on the remote machine',
       ],
-    ).interact();
-
-    logger.printSpaces();
-
-    if (provideFlutterPathOption == 0) return _provideFlutterPathManually();
-
-    return _installFlutterOnRemote(username, targetIp);
-  }
-
-  Future<String> _provideFlutterPathManually() async {
-    logger.printStatus(
-      'You can use which command to find it in your remote machine: "which flutter" \n'
-      '*NOTE: if you added flutter to one of directories in \$PATH variables, you can just enter "flutter" here. \n'
-      '(example: /home/pi/sdk/flutter/bin/flutter)',
     );
 
-    final manualFlutterPath = Input(
-      prompt: 'Flutter path on device:',
-      validator: (s) {
-        if (s.isValidPath) {
-          return true;
-        }
-        throw ValidationError('Invalid Path to flutter. Please try again.');
-      },
-    ).interact();
+    logger.spaces();
 
-    /// check if [manualFlutterPath] is a valid file path
-    if (!manualFlutterPath.isValidPath) {
-      throwToolExit(
-          'Invalid Path to flutter. Please make sure about flutter path on the remote machine and try again.');
+    if (provideFlutterPathOption == 0) {
+      return interaction.readFlutterManualPath();
     }
 
-    return manualFlutterPath;
+    return _installFlutterOnRemote(username, targetIp);
   }
 
   Future<String> _installFlutterOnRemote(
     String username,
     InternetAddress ip,
   ) async {
-    // 5. If not, install snapp_installer on the device
     final snappInstallerPath = await remoteControllerService
         .findSnappInstallerPathInteractive(username, ip);
 
     if (snappInstallerPath == null) {
-      logger.printStatus(
+      logger.info(
         '''
 snapp_installer is not installed on the device
 but don't worry, we will install it for you.
 ''',
       );
 
-      logger.printSpaces();
+      logger.spaces();
 
       final snappInstallerInstalled = await remoteControllerService
           .installSnappInstallerOnRemote(username, ip);
@@ -433,7 +365,7 @@ but don't worry, we will install it for you.
         throwToolExit('Could not install snapp_installer on the device!');
       }
 
-      logger.printSuccess(
+      logger.success(
         '''
 snapp_installer is installed on the device!
 Now we can install flutter on the device with the help of snapp_installer.
@@ -441,9 +373,8 @@ Now we can install flutter on the device with the help of snapp_installer.
       );
     }
 
-    logger.printSpaces();
+    logger.spaces();
 
-    // 6. Install flutter on the device with snapp_installer
     final flutterInstalled =
         await remoteControllerService.installFlutterOnRemote(username, ip);
 
@@ -451,7 +382,7 @@ Now we can install flutter on the device with the help of snapp_installer.
       throwToolExit('Could not install flutter on the device!');
     }
 
-    logger.printSuccess('Flutter is installed on the device!');
+    logger.success('Flutter is installed on the device!');
 
     return (await remoteControllerService.findFlutterPathInteractive(
       username,

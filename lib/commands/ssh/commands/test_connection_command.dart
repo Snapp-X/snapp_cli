@@ -4,7 +4,6 @@ import 'dart:async';
 
 import 'package:snapp_cli/commands/base_command.dart';
 import 'package:snapp_cli/service/ssh_service.dart';
-import 'package:snapp_cli/utils/common.dart';
 
 class TestConnectionCommand extends BaseSnappCommand {
   TestConnectionCommand({
@@ -22,9 +21,11 @@ class TestConnectionCommand extends BaseSnappCommand {
 
   @override
   FutureOr<int>? run() async {
-    final (ip, username) = getRemoteIpAndUsername(
-      message:
-          'to test an SSH connection to the remote device, we need an IP address and a username',
+    logger.spaces();
+
+    final (ip, username) = interaction.getDeviceInfoInteractively(
+      customDevicesConfig,
+      'To test an SSH connection to the remote device, we need an IP address and a username',
     );
 
     final sshConnectionCreated = await sshService.testPasswordLessSshConnection(
@@ -33,10 +34,10 @@ class TestConnectionCommand extends BaseSnappCommand {
     );
 
     if (sshConnectionCreated) {
-      logger.printSuccess('SSH connection to the remote device is working!');
+      logger.success('SSH connection to the remote device is working!');
       return 0;
     } else {
-      logger.printFail('SSH connection to the remote device is not working!');
+      logger.fail('SSH connection to the remote device is not working!');
       return 1;
     }
   }

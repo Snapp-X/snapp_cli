@@ -5,73 +5,59 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:dartssh2/dartssh2.dart';
-import 'package:interact/interact.dart';
-import 'package:flutter_tools/src/base/logger.dart';
 import 'package:flutter_tools/src/base/common.dart';
 import 'package:flutter_tools/src/base/process.dart';
 import 'package:snapp_cli/host_runner/host_runner_platform.dart';
+import 'package:snapp_cli/service/logger_service.dart';
 import 'package:snapp_cli/snapp_cli.dart';
 import 'package:snapp_cli/utils/common.dart';
+import 'package:snapp_cli/service/interaction_service.dart';
+import 'package:snapp_cli/utils/process.dart';
 
 class SshService {
   SshService({
     required FlutterSdkManager flutterSdkManager,
-  })  : logger = flutterSdkManager.logger,
-        hostPlatform = HostRunnerPlatform.build(flutterSdkManager.platform),
+  })  : hostPlatform = HostRunnerPlatform.build(flutterSdkManager.platform),
         processRunner = ProcessUtils(
           processManager: flutterSdkManager.processManager,
           logger: flutterSdkManager.logger,
         );
-
-  final Logger logger;
 
   final HostRunnerPlatform hostPlatform;
 
   final ProcessUtils processRunner;
 
   Future<bool> tryPingDevice(String pingTarget, bool ipv6) async {
-    final spinner = Spinner(
-      icon: logger.successIcon,
-      failedIcon: logger.errorIcon,
-      rightPrompt: (state) => switch (state) {
-        SpinnerStateType.inProgress =>
-          'Pinging device to check if it is reachable',
-        SpinnerStateType.done => 'Pinging device completed',
-        SpinnerStateType.failed => 'Pinging device failed',
-      },
-    ).interact();
+    final spinner = interaction.spinner(
+      inProgressMessage: 'Pinging device to check if it is reachable',
+      doneMessage: 'Pinging device completed',
+      failedMessage: 'Pinging device failed',
+    );
 
     await Future.delayed(Duration(seconds: 2));
-    final RunResult result;
-    try {
-      result = await processRunner.run(
-        hostPlatform.pingCommand(ipv6: ipv6, pingTarget: pingTarget),
-        timeout: Duration(seconds: 10),
-      );
-    } catch (e, s) {
-      spinner.failed();
-      logger.printTrace(
-        'Something went wrong while pinging the device. \nException: $e \nStack: $s',
-      );
 
-      return false;
-    } finally {
-      logger.printSpaces();
-    }
+    final RunResult? result = await processRunner.runCommand(
+      hostPlatform.pingCommand(ipv6: ipv6, pingTarget: pingTarget),
+      parseResult: (result) => result,
+      parseFail: (e, s) {
+        logger.info(
+          'Something went wrong while pinging the device.',
+        );
+        logger.detail(
+          'Exception: $e \nStack: $s',
+        );
 
-    logger.printTrace('Ping Command ExitCode: ${result.exitCode}');
-    logger.printTrace('Ping Command Stdout: ${result.stdout.trim()}');
-    logger.printTrace('Ping Command Stderr: ${result.stderr}');
+        return null;
+      },
+      spinner: spinner,
+      label: 'pingCommand',
+      logger: logger,
+    );
 
-    logger.printSpaces();
-
-    if (result.exitCode != 0) {
-      spinner.failed();
-      
+    if (result == null || result.exitCode != 0) {
       return false;
     }
 
-    spinner.done();
     // If the user doesn't configure a ping success regex, any ping with exitCode zero
     // is good enough. Otherwise we check if either stdout or stderr have a match of
     // the pingSuccessRegex.
@@ -107,24 +93,18 @@ class SshService {
 
     final keyFile = File('${snappCliDir.path}/id_rsa_$randomNumber');
 
-    final RunResult result;
-    try {
-      result = await processRunner.run(
-        hostPlatform.generateSshKeyCommand(
-          filePath: keyFile.path,
-        ),
-        timeout: Duration(seconds: 10),
-      );
-    } catch (e, s) {
-      throwToolExit(
-          'Something went wrong while generating the ssh key. \nException: $e \nStack: $s');
-    }
+    final RunResult? result = await processRunner.runCommand(
+      hostPlatform.generateSshKeyCommand(filePath: keyFile.path),
+      parseResult: (result) => result,
+      parseFail: (e, s) {
+        throwToolExit(
+            'Something went wrong while generating the ssh key. \nException: $e \nStack: $s');
+      },
+      label: 'generateSshKeyCommand',
+      logger: logger,
+    );
 
-    logger.printTrace('SSH Command ExitCode: ${result.exitCode}');
-    logger.printTrace('SSH Command Stdout: ${result.stdout.trim()}');
-    logger.printTrace('SSH Command Stderr: ${result.stderr}');
-
-    if (result.exitCode != 0) {
+    if (result?.exitCode != 0) {
       throwToolExit('Something went wrong while generating the ssh key.');
     }
 
@@ -133,24 +113,13 @@ class SshService {
 
   /// Adds the ssh key to the ssh-agent
   Future<void> addSshKeyToAgent(File sshKey) async {
-    final RunResult result;
-    try {
-      result = await processRunner.run(
-        hostPlatform.addSshKeyToAgent(filePath: sshKey.path),
-        timeout: Duration(seconds: 10),
-      );
-    } catch (e, s) {
-      throwToolExit(
-          'Something went wrong while adding the key to ssh-agent. \nException: $e \nStack: $s');
-    }
-
-    logger.printTrace('ssh-add Command ExitCode: ${result.exitCode}');
-    logger.printTrace('ssh-add Command Stdout: ${result.stdout.trim()}');
-    logger.printTrace('ssh-add Command Stderr: ${result.stderr}');
-
-    if (result.exitCode != 0) {
-      throwToolExit('Something went wrong while adding the key to ssh-agent.');
-    }
+    await processRunner.runCommand(
+      hostPlatform.addSshKeyToAgent(filePath: sshKey.path),
+      parseFail: (e, s) {
+        throwToolExit(
+            'Something went wrong while adding the key to ssh-agent. \nException: $e \nStack: $s');
+      },
+    );
   }
 
   Future<void> copySshKeyToRemote(
@@ -184,9 +153,9 @@ class SshService {
     client.close();
 
     // You can get the exit code after the session is done
-    logger.printTrace('SSH Session ExitCode: ${session.exitCode}');
-    logger.printTrace('SSH Session stdout: ${session.stdout}');
-    logger.printTrace('SSH Session stderr: ${session.stderr}');
+    logger.detail('SSH Session ExitCode: ${session.exitCode}');
+    logger.detail('SSH Session stdout: ${session.stdout}');
+    logger.detail('SSH Session stderr: ${session.stderr}');
   }
 
   Future<bool> createPasswordLessSshConnection(
@@ -200,35 +169,30 @@ class SshService {
     );
 
     if (!isDeviceReachable) {
-      logger.printStatus(
+      logger.info(
         'Could not reach the device with the given IP-address.',
       );
 
-      final continueWithoutPing = Confirm(
-        prompt: 'Do you want to continue anyway?',
+      final continueWithoutPing = interaction.confirm(
+        'Do you want to continue anyway?',
         defaultValue: true, // this is optional
-        waitForNewLine: true, // optional and will be false by default
-      ).interact();
+      );
 
       if (!continueWithoutPing) {
-        logger.printSpaces();
-        logger.printStatus('Check your device IP-address and try again.');
+        logger.spaces();
+        logger.info('Check your device IP-address and try again.');
 
         return false;
       }
     }
 
-    logger.printSpaces();
+    logger.spaces();
 
-    final spinner = Spinner(
-      icon: logger.searchIcon,
-      failedIcon: logger.errorIcon,
-      rightPrompt: (done) => switch (done) {
-        SpinnerStateType.inProgress => 'Preparing SSH connection',
-        SpinnerStateType.done => 'Preparing SSH connection completed',
-        SpinnerStateType.failed => 'Preparing SSH connection failed',
-      },
-    ).interact();
+    final spinner = interaction.runSpinner(
+      inProgressMessage: 'Preparing SSH connection',
+      doneMessage: 'Preparing SSH connection completed',
+      failedMessage: 'Preparing SSH connection failed',
+    );
 
     // create a directory in the user's home directory
     final snappCliDirectory = await createSnappCliDirectory();
@@ -245,7 +209,7 @@ class SshService {
       ip,
     );
 
-    logger.printSpaces();
+    logger.spaces();
 
     return true;
   }
@@ -258,52 +222,36 @@ class SshService {
   }) async {
     final String sshTarget = ip.sshTarget(username);
 
-    final spinner = Spinner(
-      icon: logger.searchIcon,
-      failedIcon: logger.errorIcon,
-      rightPrompt: (done) => switch (done) {
-        SpinnerStateType.inProgress => 'Testing SSH connection',
-        SpinnerStateType.done => 'Testing SSH connection completed',
-        SpinnerStateType.failed => 'Testing SSH connection failed',
+    final spinner = interaction.spinner(
+      inProgressMessage: 'Testing SSH connection',
+      doneMessage: 'Testing SSH connection completed',
+      failedMessage: 'Testing SSH connection failed',
+    );
+
+    final result = await processRunner.runCommand(
+      hostPlatform.sshCommand(
+        ipv6: ip.type == InternetAddressType.IPv6,
+        sshTarget: sshTarget,
+        command: 'echo "Test SSH Connection"',
+        addHostToKnownHosts: addHostToKnownHosts,
+        lastCommand: true,
+      ),
+      parseResult: (result) {
+        return true;
       },
-    ).interact();
+      parseFail: (e, s) {
+        logger.info(
+            'Something went wrong while trying to connect to the device via ssh.');
+        logger.detail(
+          'Exception: $e \nStack: $s',
+        );
+        return false;
+      },
+      spinner: spinner,
+      label: 'testPasswordLessSshConnection',
+      logger: logger,
+    );
 
-    final RunResult result;
-    try {
-      result = await processRunner.run(
-        hostPlatform.sshCommand(
-          ipv6: ip.type == InternetAddressType.IPv6,
-          sshTarget: sshTarget,
-          command: 'echo "Test SSH Connection"',
-          addHostToKnownHosts: addHostToKnownHosts,
-          lastCommand: true,
-        ),
-        timeout: Duration(seconds: 10),
-      );
-    } catch (e, s) {
-      spinner.failed();
-
-      logger.printStatus(
-        'Something went wrong while trying to connect to the device via ssh. \nException: $e',
-      );
-      logger.printTrace('Stack: $s');
-
-      return false;
-    } finally {
-      logger.printSpaces();
-    }
-
-    logger.printTrace('SSH Test Command ExitCode: ${result.exitCode}');
-    logger.printTrace('SSH Test Command Stdout: ${result.stdout.trim()}');
-    logger.printTrace('SSH Test Command Stderr: ${result.stderr}');
-    if (result.exitCode != 0) {
-      spinner.failed();
-
-      return false;
-    }
-
-    spinner.done();
-
-    return true;
+    return result ?? false;
   }
 }
