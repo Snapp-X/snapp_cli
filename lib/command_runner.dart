@@ -7,6 +7,7 @@ import 'package:flutter_tools/src/base/common.dart';
 import 'package:args/command_runner.dart';
 import 'package:mason_logger/mason_logger.dart';
 import 'package:snapp_cli/commands/devices/devices_command.dart';
+import 'package:snapp_cli/commands/bootstrap/bootstarp_command.dart';
 import 'package:snapp_cli/commands/ssh/ssh_command.dart';
 import 'package:snapp_cli/flutter_sdk.dart';
 import 'package:snapp_cli/service/logger_service.dart';
@@ -35,6 +36,9 @@ class SnappCliCommandRunner extends CommandRunner<int> {
         abbr: 'd',
         help: 'Target device id or name (prefixes allowed).',
       );
+
+    // Add the setup command to the command runner
+    addCommand(BootstrapCommand(flutterSdkManager: flutterSdkManager));
 
     // Add the devices command to the command runner
     addCommand(DevicesCommand(flutterSdkManager: flutterSdkManager));

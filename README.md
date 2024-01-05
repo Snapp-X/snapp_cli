@@ -41,12 +41,14 @@ Make sure that system cache bin directory is added to your system's PATH to use 
 
 ## Usage
 
-### Single Command Setup
+#### Single Command Setup - **Bootstrap**
 
-To perform a comprehensive setup for a device (add to Flutter, establish SSH, install Flutter, and run an app):
+Bootstrap command is a way to setup a device from scratch.
+It will add a new device to custom devices, create a ssh connection to the device,
+install flutter on the device and finally help you to run your app on the device.
 
 ```bash
-$ snapp_cli devices add
+$ snapp_cli bootstrap
 ```
 
 #### Device Management
