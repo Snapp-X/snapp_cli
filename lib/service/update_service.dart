@@ -2,19 +2,18 @@ import 'dart:io';
 
 import 'package:package_config/package_config.dart';
 import 'package:pub_updater/pub_updater.dart';
+import 'package:snapp_cli/service/logger_service.dart';
 import 'package:snapp_cli/utils/const.dart';
 import 'package:yaml/yaml.dart';
+import 'package:pub_semver/pub_semver.dart';
 
-class UpdateController {
+class UpdateService {
   final PubUpdater pubUpdater = PubUpdater();
 
   Future<String> currentVersion() async {
     final pkgConfig = (await findPackageConfigUri(Platform.script))!;
 
     final path = pkgConfig.resolve(Uri.parse('package:$kPackageName/'));
-
-    print('script: ${Platform.script}');
-    print('path: $path');
 
     final pubspecPath = path!.resolve('../pubspec.yaml').toFilePath();
 
@@ -26,18 +25,23 @@ class UpdateController {
 
     final versionString = pubspec['version'] as String?;
 
-    print('versionString: $versionString');
-
     return versionString!;
   }
 
   Future<bool> isUpdateAvailable() async {
     final currentPackageVersion = await currentVersion();
+    final latestVersion = await pubUpdater.getLatestVersion(kPackageName);
 
-    final isPackageUpToDate = await pubUpdater.isUpToDate(
-        packageName: kPackageName, currentVersion: currentPackageVersion);
+    logger.detail('Snapp_cli Current version: $currentPackageVersion');
+    logger.detail('Snapp_cli Latest version: $latestVersion');
 
-    return !isPackageUpToDate;
+    final currentVersionDesc = Version.parse(currentPackageVersion);
+    final latestVersionDesc = Version.parse(latestVersion);
+    
+    logger.detail(
+        'Snapp_cli needs update: ${currentVersionDesc < latestVersionDesc}');
+
+    return currentVersionDesc < latestVersionDesc;
   }
 
   Future<ProcessResult> update() =>
