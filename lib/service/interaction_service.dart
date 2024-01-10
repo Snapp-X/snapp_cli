@@ -2,7 +2,7 @@
 
 import 'dart:io';
 
-import 'package:interact/interact.dart';
+import 'package:interact_cli/interact_cli.dart';
 import 'package:snapp_cli/commands/base_command.dart';
 import 'package:snapp_cli/utils/common.dart';
 import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';

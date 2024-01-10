@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:flutter_tools/src/base/io.dart';
 
 import 'package:flutter_tools/src/base/process.dart';
-import 'package:interact/interact.dart';
+import 'package:interact_cli/interact_cli.dart';
 import 'package:process/process.dart';
 import 'package:snapp_cli/commands/base_command.dart';
 

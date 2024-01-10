@@ -20,10 +20,6 @@ dependencies:
   file: ^6.1.4
   async: ^2.11.0
   collection: ^1.18.0
-  interact: 
-    git:
-      url: https://github.com/payam-zahedi/interact.git
-      ref: dev # branch name
   dartssh2: ^2.8.2
   pub_updater: ^0.3.0
   yaml: ^3.1.2
@@ -31,6 +27,7 @@ dependencies:
   tint: ^2.0.1
   process: ^4.2.4
   pub_semver: ^2.1.4
+  interact_cli: ^2.3.0
 
 dev_dependencies:
   lints: ^2.0.0
