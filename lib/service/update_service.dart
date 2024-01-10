@@ -2,8 +2,10 @@ import 'dart:io';
 
 import 'package:package_config/package_config.dart';
 import 'package:pub_updater/pub_updater.dart';
+import 'package:snapp_cli/service/logger_service.dart';
 import 'package:snapp_cli/utils/const.dart';
 import 'package:yaml/yaml.dart';
+import 'package:pub_semver/pub_semver.dart';
 
 class UpdateService {
   final PubUpdater pubUpdater = PubUpdater();
@@ -28,11 +30,18 @@ class UpdateService {
 
   Future<bool> isUpdateAvailable() async {
     final currentPackageVersion = await currentVersion();
+    final latestVersion = await pubUpdater.getLatestVersion(kPackageName);
 
-    final isPackageUpToDate = await pubUpdater.isUpToDate(
-        packageName: kPackageName, currentVersion: currentPackageVersion);
+    logger.detail('Snapp_cli Current version: $currentPackageVersion');
+    logger.detail('Snapp_cli Latest version: $latestVersion');
 
-    return !isPackageUpToDate;
+    final currentVersionDesc = Version.parse(currentPackageVersion);
+    final latestVersionDesc = Version.parse(latestVersion);
+    
+    logger.detail(
+        'Snapp_cli needs update: ${currentVersionDesc < latestVersionDesc}');
+
+    return currentVersionDesc < latestVersionDesc;
   }
 
   Future<ProcessResult> update() =>
