@@ -1,3 +1,7 @@
+## 0.4.1 BETA
+* fix bug in create ssh connection by @payam-zahedi 
+* update troubleshoot section in README.md by @payam-zahedi
+
 ## 0.4.0 BETA
 * add bootstrap command by @payam-zahedi
 * add automatic enable configs by @payam-zahedi in [#9](https://github.com/Snapp-Embedded/snapp_cli/pull/9) 
