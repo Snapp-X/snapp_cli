@@ -1,6 +1,7 @@
 // ignore_for_file: implementation_imports
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
@@ -71,14 +72,19 @@ class SshService {
   /// Creates a directory in the user's home directory
   /// to store the snapp_cli related files like ssh keys
   Future<Directory> createSnappCliDirectory() async {
+    logger.detail('try to create SnappCli directory');
+
     final String homePath = hostPlatform.homePath;
     final String snappCliDirectoryPath = '$homePath/.snapp_cli';
 
     final snappCliDirectory = Directory(snappCliDirectoryPath);
 
     if (!(await snappCliDirectory.exists())) {
-      await snappCliDirectory.create();
+      logger.detail('SnappCli directory does not exist, creating it now');
+      return await snappCliDirectory.create();
     }
+
+    logger.detail('SnappCli directory already exists');
 
     return snappCliDirectory;
   }
@@ -88,6 +94,8 @@ class SshService {
     ProcessUtils processRunner,
     Directory snappCliDir,
   ) async {
+    logger.detail('try to generate ssh key file');
+
     // generate random 6 digit file name
     final randomNumber = Random().nextInt(900000) + 100000;
 
@@ -105,6 +113,10 @@ class SshService {
     );
 
     if (result?.exitCode != 0) {
+      logger.detail('generateSshKeyCommand exitCode: ${result?.exitCode}');
+      logger.detail('generateSshKeyCommand stdout: ${result?.stdout}');
+      logger.detail('generateSshKeyCommand stderr: ${result?.stderr}');
+
       throwToolExit('Something went wrong while generating the ssh key.');
     }
 
@@ -113,13 +125,24 @@ class SshService {
 
   /// Adds the ssh key to the ssh-agent
   Future<void> addSshKeyToAgent(File sshKey) async {
-    await processRunner.runCommand(
+    logger.detail('try to add ssh key to ssh-agent');
+
+    final RunResult? result = await processRunner.runCommand(
       hostPlatform.addSshKeyToAgent(filePath: sshKey.path),
+      parseResult: (result) => result,
       parseFail: (e, s) {
         throwToolExit(
             'Something went wrong while adding the key to ssh-agent. \nException: $e \nStack: $s');
       },
     );
+
+    if (result?.exitCode != 0) {
+      logger.detail('addSshKeyToAgent exitCode: ${result?.exitCode}');
+      logger.detail('addSshKeyToAgent stdout: ${result?.stdout}');
+      logger.detail('addSshKeyToAgent stderr: ${result?.stderr}');
+
+      throwToolExit('Something went wrong while generating the ssh key.');
+    }
   }
 
   Future<void> copySshKeyToRemote(
@@ -127,6 +150,8 @@ class SshService {
     String username,
     InternetAddress ip,
   ) async {
+    logger.detail('try to copy ssh key to remote');
+
     final client = SSHClient(
       await SSHSocket.connect(
         ip.address,
@@ -141,7 +166,29 @@ class SshService {
       },
     );
 
+    logger.detail('creating ~/.ssh/authorized_keys');
+
+    final createAuthFile = await client.run(
+      '[ ! -d ~/.ssh ] && mkdir -p ~/.ssh; [ ! -f ~/.ssh/authorized_keys ] && touch ~/.ssh/authorized_keys',
+    );
+
+    logger.detail(
+        'creating ~/.ssh/authorized_keys: result is empty: ${createAuthFile.isEmpty}');
+    logger.detail(
+        'creating ~/.ssh/authorized_keys: ${utf8.decode(createAuthFile)}');
+
     final session = await client.execute('cat >> .ssh/authorized_keys');
+
+    session.stdout.listen((data) {
+      final String dataAsString = utf8.decode(data);
+      logger.detail('SSH Session stdout: $dataAsString');
+    });
+
+    session.stderr.listen((data) {
+      final String dataAsString = utf8.decode(data);
+      logger.detail('SSH Session stderr: $dataAsString');
+    });
+
     await session.stdin.addStream(sshKeyFile.openRead().cast());
 
     // Close the sink to send EOF to the remote process.
@@ -153,9 +200,13 @@ class SshService {
     client.close();
 
     // You can get the exit code after the session is done
-    logger.detail('SSH Session ExitCode: ${session.exitCode}');
-    logger.detail('SSH Session stdout: ${session.stdout}');
-    logger.detail('SSH Session stderr: ${session.stderr}');
+
+    if (session.exitCode != 0) {
+      logger.detail('SSH Session ExitCode: ${session.exitCode}');
+
+      throwToolExit(
+          'Something went wrong while copying the ssh key to the remote device.');
+    }
   }
 
   Future<bool> createPasswordLessSshConnection(
