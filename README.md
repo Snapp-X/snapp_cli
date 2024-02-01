@@ -91,6 +91,55 @@ Each command has specific options and usage, which you can explore further by ru
 
 ## Troubleshooting
 
+### Running Commands in Verbose Mode
+
+If you encounter any issues while using the `snapp_cli` tool, you can run the commands in verbose mode to obtain more detailed information about the error. To do this, simply add the `-v` flag to your command. For example:
+
+
+```bash
+$ snapp_cli bootstrap -v
+```
+
+### SSH Connection Issues
+
+Sometimes, you may face difficulties establishing an SSH connection to a device due to various reasons, such as an incorrect IP address, username, password, or SSH key. To verify whether the SSH connection is functioning correctly, you can execute the `snapp_cli ssh test-connection` command. If the connection fails, attempt to establish a new connection using the `snapp_cli ssh create-connection` command.
+
+If you still cannot establish an SSH connection, it may be necessary to review the SSH configurations on both your host (e.g., your PC) and the remote device (e.g., Raspberry Pi).
+
+However, be cautious: if you have any other SSH connections to your remote device or to other devices, using the following commands will remove them.
+
+
+#### Host Device - Your PC
+* Clear the `.snapp_cli` directory: 
+    ``` bash 
+    rm -r ~/.snapp_cli
+    ```
+* Clear the known hosts file: 
+    ``` bash 
+    ssh-keygen -R yourIpAddress
+    ```
+* Clear the ssh-agent saved keys:  
+    ``` bash 
+    ssh-add -D
+    ```
+
+#### Remote Device - Raspberry Pi
+Connect to your remote device via a simple SSH connection:
+
+``` bash 
+ssh [username]@[ipAddress]
+```
+
+After successfully connecting to your remote device, remove the `.ssh` folder that contains the SSH keys:
+
+``` bash 
+rm -r ~/.ssh
+```
+
+### Notes:
+* Ensure you replace yourIpAddress with the actual IP address of your device.
+* Be explicit about replacing placeholders like username@ipAddress with the appropriate user and IP address for the Raspberry Pi.
+
 ### Manually Editing `flutter_custom_devices.json`
 
 In some cases, you may need to manually edit the `flutter_custom_devices.json` file, which stores the configurations for custom devices. Here are the steps to follow if you encounter this situation:
