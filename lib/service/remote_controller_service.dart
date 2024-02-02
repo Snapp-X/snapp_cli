@@ -330,7 +330,7 @@ class RemoteControllerService {
           ipv6: ip.isIpv6,
           sshTarget: ip.sshTarget(username),
           lastCommand: true,
-          command: '$snappInstallerPath install',
+          command: '$snappInstallerPath install -q',
           addHostToKnownHosts: addHostToKnownHosts,
         ),
         processManager: processManager,
