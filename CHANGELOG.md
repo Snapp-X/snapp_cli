@@ -1,3 +1,6 @@
+## 0.4.2 BETA
+* add quiet mode on installer by @payam-zahedi
+
 ## 0.4.1 BETA
 * fix bug in create ssh connection by @payam-zahedi 
 * update troubleshoot section in README.md by @payam-zahedi
