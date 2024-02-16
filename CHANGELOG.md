@@ -1,4 +1,4 @@
-## 0.4.3 BETA
+## 0.4.4 BETA
 * fix the formatting issue by @payam-zahedi
 
 ## 0.4.3 BETA
