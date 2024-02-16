@@ -1,4 +1,7 @@
 ## 0.4.3 BETA
+* fix the formatting issue by @payam-zahedi
+
+## 0.4.3 BETA
 * fix platform support issue on pub.dev by @payam-zahedi
 
 ## 0.4.2 BETA

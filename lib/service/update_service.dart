@@ -37,7 +37,7 @@ class UpdateService {
 
     final currentVersionDesc = Version.parse(currentPackageVersion);
     final latestVersionDesc = Version.parse(latestVersion);
-    
+
     logger.detail(
         'Snapp_cli needs update: ${currentVersionDesc < latestVersionDesc}');
 
