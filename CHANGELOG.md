@@ -1,3 +1,6 @@
+## 0.4.6 BETA
+* fix dependency issue by @payam-zahedi
+
 ## 0.4.5 BETA
 * upgrade to flutter v3.19.0 by @payam-zahedi
 
