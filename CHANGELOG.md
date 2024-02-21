@@ -1,3 +1,6 @@
+## 0.4.7 BETA
+* add platform support in pubspec.yaml by @payam-zahedi
+
 ## 0.4.6 BETA
 * fix dependency issue by @payam-zahedi
 
