@@ -1,3 +1,6 @@
+## 0.4.5 BETA
+* upgrade to flutter v3.19.0 by @payam-zahedi
+
 ## 0.4.4 BETA
 * fix the formatting issue by @payam-zahedi
 
