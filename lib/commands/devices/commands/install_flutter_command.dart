@@ -92,7 +92,11 @@ Now we can install flutter on the device with the help of snapp_installer.
 
     // 6. Install flutter on the device with snapp_installer
     final flutterInstalled =
-        await remoteControllerService.installFlutterOnRemote(username, ip);
+        await remoteControllerService.installFlutterOnRemote(
+      username,
+      ip,
+      version: flutterSdkManager.flutterVersion.frameworkVersion,
+    );
 
     if (!flutterInstalled) {
       throwToolExit('Could not install flutter on the device!');
