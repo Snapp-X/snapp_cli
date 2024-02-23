@@ -1,3 +1,6 @@
+## 0.5.0 BETA
+* fix conflict version issue on remote and host machine by @payam-zahedi
+
 ## 0.4.7 BETA
 * add platform support in pubspec.yaml by @payam-zahedi
 
