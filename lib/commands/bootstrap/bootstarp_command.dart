@@ -319,10 +319,40 @@ let's start! \n
     String username,
     InternetAddress targetIp,
   ) async {
+    final hostFlutterVersion =
+        flutterSdkManager.flutterVersion.frameworkVersion;
+
     final possibleFlutterPath =
         await remoteControllerService.findFlutterPath(username, targetIp);
 
-    if (possibleFlutterPath != null) return possibleFlutterPath;
+    // if we found the flutter path on the remote machine
+    // then we need to check if the version of the remote flutter is the same as the host flutter
+    if (possibleFlutterPath != null) {
+      final remoteFlutterVersion =
+          await remoteControllerService.findFlutterVersion(
+        username,
+        targetIp,
+        possibleFlutterPath,
+      );
+
+      logger.detail('remote flutter version: $remoteFlutterVersion');
+      logger.detail('host flutter version: $hostFlutterVersion');
+
+      if (remoteFlutterVersion == hostFlutterVersion) {
+        logger.success(
+            'You have flutter installed on the remote machine with the same version as your host machine.');
+        logger.spaces();
+
+        return possibleFlutterPath;
+      } else {
+        return _fixConflictVersions(
+          username,
+          targetIp,
+          hostFlutterVersion,
+          remoteFlutterVersion!,
+        );
+      }
+    }
 
     logger.info(
         'Could not find flutter in the remote machine automatically. \n\n'
@@ -347,12 +377,52 @@ let's start! \n
       return interaction.readFlutterManualPath();
     }
 
-    return _installFlutterOnRemote(username, targetIp);
+    return _installFlutterOnRemote(username, targetIp, hostFlutterVersion);
+  }
+
+  Future<String> _fixConflictVersions(
+    String username,
+    InternetAddress targetIp,
+    String hostFlutterVersion,
+    String remoteFlutterVersion,
+  ) {
+    logger.info(
+      'To be able to run your app on the remote device, You need to have the same version of flutter on both machines. \n\n'
+      'Currently, you have a different version of flutter on the remote machine. \n'
+      'Remote flutter version: $remoteFlutterVersion \n'
+      'Host flutter version: $hostFlutterVersion \n\n'
+      'Now you have two options: \n'
+      '1. You can manually update your host machine to the same version as the remote machine. \n'
+      '2. We can install the same version of flutter on the remote machine for you. \n',
+    );
+
+    logger.spaces();
+
+    final provideFlutterPathOption = interaction.selectIndex(
+      'Please select one of the options:',
+      options: [
+        'Manually update your host',
+        'Install the same version on the remote',
+      ],
+    );
+
+    logger.spaces();
+
+    if (provideFlutterPathOption == 0) {
+      logger.info(
+        'Please update your host machine to the same version as the remote machine and try again.',
+      );
+
+      throwToolExit('Host flutter version is different from the remote.');
+    }
+
+    return _installFlutterOnRemote(username, targetIp, hostFlutterVersion);
   }
 
   Future<String> _installFlutterOnRemote(
     String username,
     InternetAddress ip,
+    String version,
   ) async {
     final snappInstallerPath = await remoteControllerService
         .findSnappInstallerPathInteractive(username, ip);
@@ -384,8 +454,8 @@ Now we can install flutter on the device with the help of snapp_installer.
 
     logger.spaces();
 
-    final flutterInstalled =
-        await remoteControllerService.installFlutterOnRemote(username, ip);
+    final flutterInstalled = await remoteControllerService
+        .installFlutterOnRemote(username, ip, version: version);
 
     if (!flutterInstalled) {
       throwToolExit('Could not install flutter on the device!');

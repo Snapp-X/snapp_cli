@@ -1,6 +1,7 @@
 // ignore_for_file: implementation_imports
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
@@ -44,12 +45,13 @@ class RemoteControllerService {
 
     final output = await processRunner.runCommand(
       hostPlatform.sshCommand(
-        ipv6: ip.type == InternetAddressType.IPv6,
+        ipv6: ip.isIpv6,
         sshTarget: ip.sshTarget(username),
         command:
             'find / -type f -name "flutter" -path "*/flutter/bin/*" 2>/dev/null',
         addHostToKnownHosts: addHostToKnownHosts,
       ),
+      timeout: const Duration(seconds: 30),
       throwOnError: false,
       parseResult: (runResult) {
         final output = runResult.stdout.trim();
@@ -110,6 +112,65 @@ class RemoteControllerService {
     }
   }
 
+  Future<String?> findFlutterVersion(
+    String username,
+    InternetAddress ip,
+    String flutterRunnerPath, {
+    bool addHostToKnownHosts = true,
+  }) async {
+    final spinner = interaction.spinner(
+      inProgressMessage: 'Search for flutter version on remote device.',
+      doneMessage: 'Search for flutter version completed',
+      failedMessage: 'Search for flutter version failed',
+    );
+
+    final output = await processRunner.runCommand(
+      hostPlatform.sshCommand(
+        ipv6: ip.isIpv6,
+        sshTarget: ip.sshTarget(username),
+        command: '$flutterRunnerPath --version --machine',
+        addHostToKnownHosts: addHostToKnownHosts,
+      ),
+      throwOnError: false,
+      parseResult: (runResult) {
+        final output = runResult.stdout.trim();
+
+        if (runResult.exitCode != 0 && output.isEmpty) {
+          logger.spaces();
+
+          return null;
+        }
+
+        final jsonOutput = jsonDecode(output);
+
+        logger.detail('Find Flutter Version jsonOutput: $jsonOutput');
+
+        logger.detail(
+            'Find Flutter Version jsonOutput[flutterVersion]: ${jsonOutput['flutterVersion']}');
+
+        return jsonOutput['flutterVersion'] as String;
+      },
+      parseFail: (e, s) {
+        logger.detail(
+          'Something went wrong while trying to find flutter version. \n $e \n $s',
+        );
+
+        logger.spaces();
+
+        return null;
+      },
+      spinner: spinner,
+      label: 'Find Flutter Version',
+      logger: logger,
+    );
+
+    logger.detail('Find Flutter Version output: $output');
+
+    logger.spaces();
+
+    return output;
+  }
+
   Future<String?> findFlutterPathInteractive(
     String username,
     InternetAddress ip, {
@@ -117,7 +178,7 @@ class RemoteControllerService {
   }) async {
     return processRunner.runCommand<String>(
       hostPlatform.sshCommand(
-        ipv6: ip.type == InternetAddressType.IPv6,
+        ipv6: ip.isIpv6,
         sshTarget: ip.sshTarget(username),
         command:
             'find / -type f -name "flutter" -path "*/flutter/bin/*" 2>/dev/null',
@@ -165,7 +226,7 @@ class RemoteControllerService {
 
     final output = await processRunner.runCommand(
       hostPlatform.sshCommand(
-        ipv6: ip.type == InternetAddressType.IPv6,
+        ipv6: ip.isIpv6,
         sshTarget: ip.sshTarget(username),
         command:
             'find / -type f -name "snapp_installer" -path "*/snapp_installer/bin/*" 2>/dev/null',
@@ -229,7 +290,7 @@ class RemoteControllerService {
   }) async {
     return processRunner.runCommand<String>(
       hostPlatform.sshCommand(
-        ipv6: ip.type == InternetAddressType.IPv6,
+        ipv6: ip.isIpv6,
         sshTarget: ip.sshTarget(username),
         command:
             'find / -type f -name "snapp_installer" -path "*/snapp_installer/bin/*" 2>/dev/null',
@@ -316,6 +377,7 @@ class RemoteControllerService {
   Future<bool> installFlutterOnRemote(
     String username,
     InternetAddress ip, {
+    String? version,
     bool addHostToKnownHosts = true,
   }) async {
     final snappInstallerPath = await findSnappInstallerPathInteractive(
@@ -324,13 +386,20 @@ class RemoteControllerService {
     );
 
     final RunResult result;
+
+    final versionArgs = version != null ? '-v $version -f' : '';
+
+    final installFlutterCommand = '$snappInstallerPath install -q $versionArgs';
+
+    logger.detail('Install Flutter Command: \n $installFlutterCommand');
+
     try {
       result = await processRunner.runWithOutput(
         hostPlatform.sshCommand(
           ipv6: ip.isIpv6,
           sshTarget: ip.sshTarget(username),
           lastCommand: true,
-          command: '$snappInstallerPath install -q',
+          command: installFlutterCommand,
           addHostToKnownHosts: addHostToKnownHosts,
         ),
         processManager: processManager,

@@ -2,22 +2,23 @@
 
 import 'dart:io' as io;
 
+import 'package:file/file.dart';
+import 'package:file/local.dart';
+import 'package:flutter_tools/src/artifacts.dart';
 import 'package:flutter_tools/src/base/logger.dart';
 import 'package:flutter_tools/src/base/platform.dart';
 import 'package:flutter_tools/src/base/process.dart';
 import 'package:flutter_tools/src/base/terminal.dart';
-import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
-import 'package:flutter_tools/src/artifacts.dart';
-import 'package:flutter_tools/src/build_info.dart';
-import 'package:flutter_tools/src/features.dart';
-import 'package:file/file.dart';
-import 'package:file/local.dart';
 import 'package:flutter_tools/src/base/user_messages.dart';
+import 'package:flutter_tools/src/build_info.dart';
 import 'package:flutter_tools/src/cache.dart';
+import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
+import 'package:flutter_tools/src/features.dart';
 import 'package:flutter_tools/src/globals.dart' as globals;
+import 'package:flutter_tools/src/version.dart';
 import 'package:package_config/package_config.dart';
-import 'package:process/process.dart';
 import 'package:path/path.dart' as path;
+import 'package:process/process.dart';
 
 /// singleton class to manage flutter sdk
 /// responsible for find the flutter path and initialize the flutter sdk
@@ -48,6 +49,11 @@ class FlutterSdkManager {
           mode: BuildMode.debug,
         ),
       );
+
+  FlutterVersion get flutterVersion =>
+      _provider(globals.flutterVersion.fetchTagsAndGetVersion(
+        clock: globals.systemClock,
+      ));
 
   bool get areCustomDevicesEnabled =>
       _provider(featureFlags.areCustomDevicesEnabled);
