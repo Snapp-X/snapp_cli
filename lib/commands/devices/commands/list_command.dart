@@ -32,7 +32,6 @@ class ListCommand extends BaseSnappCommand {
 
     logger.info(result!.stdout);
     logger.detail(result.stderr);
-    
 
     return result.exitCode;
   }

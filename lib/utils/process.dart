@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:flutter_tools/src/base/io.dart';
 
 import 'package:flutter_tools/src/base/process.dart';
-import 'package:interact_cli/interact_cli.dart';
 import 'package:process/process.dart';
 import 'package:snapp_cli/commands/base_command.dart';
 
@@ -20,7 +19,7 @@ extension ProcessUtilsExt on ProcessUtils {
     Duration? timeout = const Duration(seconds: 10),
     String label = 'commandRunner',
   }) async {
-    final spinnerState = spinner?.interact();
+    spinner?.start();
 
     try {
       final result = await run(
@@ -40,11 +39,11 @@ ${result.stderr.trim()}
             ''');
       }
 
-      spinnerState?.done();
+      spinner?.done();
 
       return parseResult?.call(result);
     } catch (e, s) {
-      spinnerState?.failed();
+      spinner?.failed();
 
       logger?.detail('$label Error: $e\n$s');
 

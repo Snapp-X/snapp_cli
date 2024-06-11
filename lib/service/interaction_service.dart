@@ -2,13 +2,12 @@
 
 import 'dart:io';
 
-import 'package:interact_cli/interact_cli.dart';
+import 'package:mason_logger/mason_logger.dart';
 import 'package:snapp_cli/commands/base_command.dart';
 import 'package:snapp_cli/utils/common.dart';
 import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
 import 'package:snapp_cli/utils/custom_device.dart';
-import 'package:tint/tint.dart';
 
 const interaction = InteractionService._();
 
@@ -20,71 +19,64 @@ class InteractionService {
     bool? defaultValue,
     bool waitForNewLine = true,
   }) {
-    return Confirm(
-      prompt: message ?? '',
-      defaultValue: defaultValue,
-      waitForNewLine: waitForNewLine,
-    ).interact();
-  }
-
-  Spinner spinner({
-    required String inProgressMessage,
-    required String doneMessage,
-    required String failedMessage,
-    String? doneIcon,
-    String? failedIcon,
-  }) {
-    return Spinner(
-      icon: doneIcon ?? logger.icons.success.padRight(2).green().bold(),
-      failedIcon: failedIcon ?? logger.icons.failure.padRight(2).red().bold(),
-      rightPrompt: (state) => switch (state) {
-        SpinnerStateType.inProgress => inProgressMessage,
-        SpinnerStateType.done => doneMessage,
-        SpinnerStateType.failed => failedMessage,
-      },
+    return logger.loggerInstance.confirm(
+      message,
+      defaultValue: defaultValue ?? false,
     );
   }
 
-  SpinnerState runSpinner({
+  Progress progress(String message) => logger.loggerInstance.progress(message);
+
+  Spinner spinner({
     required String inProgressMessage,
-    required String doneMessage,
-    required String failedMessage,
-    String? doneIcon,
-    String? failedIcon,
+    String doneMessage = 'Done!',
+    String failedMessage = 'Failed!',
+  }) =>
+      Spinner(
+        inProgressMessage: inProgressMessage,
+        doneMessage: doneMessage,
+        failedMessage: failedMessage,
+      );
+
+  String input(String? message, {Object? defaultValue}) {
+    return logger.loggerInstance.prompt(
+      message,
+      defaultValue: defaultValue,
+    );
+  }
+
+  String inputWithValidation(
+    String? message, {
+    required String? Function(String) validator,
+    Object? defaultValue,
   }) {
-    return spinner(
-      inProgressMessage: inProgressMessage,
-      doneMessage: doneMessage,
-      failedMessage: failedMessage,
-      doneIcon: doneIcon,
-      failedIcon: failedIcon,
-    ).interact();
+    while (true) {
+      final result = input(message, defaultValue: defaultValue);
+
+      final validatorError = validator(result);
+
+      if (validatorError == null) {
+        return result;
+      }
+
+      logger.err(validatorError);
+
+      logger.spaces();
+    }
   }
 
   String select(
     String? message, {
     required List<String> options,
-  }) {
-    final selection = Select(
-      prompt: message ?? '',
-      options: options,
-      initialIndex: 0,
-    ).interact();
-
-    return options[selection];
-  }
+  }) =>
+      logger.loggerInstance.chooseOne(message, choices: options);
 
   int selectIndex(
     String? message, {
     required List<String> options,
   }) {
-    final selection = Select(
-      prompt: message ?? '',
-      options: options,
-      initialIndex: 0,
-    ).interact();
-
-    return selection;
+    final selected = select(message, options: options);
+    return options.indexOf(selected);
   }
 
   (InternetAddress ip, String username) getDeviceInfoInteractively(
@@ -101,10 +93,10 @@ class InteractionService {
 
     logger.spaces();
 
-    final deviceTypeIndex = Select(
-      prompt: 'Device Type:',
+    final deviceTypeIndex = selectIndex(
+      'Device Type:',
       options: deviceOptions,
-    ).interact();
+    );
 
     logger.spaces();
 
@@ -164,10 +156,10 @@ ${errorDescription ?? 'Before you can select a device, you need to add one first
       for (var e in customDevicesConfig.devices) '${e.id} : ${e.label}': e
     };
 
-    final selectedTarget = Select(
-      prompt: title ?? 'Select a target device',
+    final selectedTarget = selectIndex(
+      title ?? 'Select a target device',
       options: devices.keys.toList(),
-    ).interact();
+    );
 
     final deviceKey = devices.keys.elementAt(selectedTarget);
 
@@ -187,15 +179,15 @@ ${errorDescription ?? 'Before you can select a device, you need to add one first
       logger.spaces();
     }
 
-    final String deviceIp = Input(
-      prompt: title ?? 'Device IP-address:',
+    final String deviceIp = inputWithValidation(
+      title ?? 'Device IP-address:',
       validator: (s) {
         if (s.isValidIpAddress) {
-          return true;
+          return null;
         }
-        throw ValidationError('Invalid IP-address. Please try again.');
+        return 'Invalid IP-address. Please try again.';
       },
-    ).interact();
+    );
 
     final ip = InternetAddress(deviceIp);
 
@@ -210,9 +202,7 @@ ${errorDescription ?? 'Before you can select a device, you need to add one first
       logger.spaces();
     }
 
-    final String username = Input(
-      prompt: 'Username:',
-    ).interact();
+    final String username = input('Username:');
 
     logger.spaces();
 
@@ -228,17 +218,17 @@ ${errorDescription ?? 'Before you can select a device, you need to add one first
           'Please enter the id you want to device to have. Must contain only alphanumeric or underscore characters. (example: pi)',
     );
 
-    final id = Input(
-      prompt: 'Device Id:',
+    final id = inputWithValidation(
+      'Device Id:',
       validator: (s) {
         if (!RegExp(r'^\w+$').hasMatch(s.trim())) {
-          throw ValidationError('Invalid input. Please try again.');
+          return 'Invalid input. Please try again.';
         } else if (customDevicesConfig.isDuplicatedDeviceId(s.trim())) {
-          throw ValidationError('Device with this id already exists.');
+          return 'Device with this id already exists.';
         }
-        return true;
+        return null;
       },
-    ).interact().trim();
+    ).trim();
 
     logger.spaces();
 
@@ -250,15 +240,15 @@ ${errorDescription ?? 'Before you can select a device, you need to add one first
       description ??
           'Please enter the label of the device, which is a slightly more verbose name for the device. (example: Raspberry Pi Model 4B)',
     );
-    final label = Input(
-      prompt: 'Device label:',
+    final label = inputWithValidation(
+      'Device label:',
       validator: (s) {
         if (s.trim().isNotEmpty) {
-          return true;
+          return null;
         }
-        throw ValidationError('Input is empty. Please try again.');
+        return 'Input is empty. Please try again.';
       },
-    ).interact();
+    );
 
     logger.spaces();
 
@@ -273,15 +263,15 @@ ${errorDescription ?? 'Before you can select a device, you need to add one first
 (example: /home/pi/sdk/flutter/bin/flutter)''',
     );
 
-    final manualFlutterPath = Input(
-      prompt: 'Flutter path on device:',
+    final manualFlutterPath = inputWithValidation(
+      'Flutter path on device:',
       validator: (s) {
         if (s.isValidPath) {
-          return true;
+          return null;
         }
-        throw ValidationError('Invalid Path to flutter. Please try again.');
+        return 'Invalid Path to flutter. Please try again.';
       },
-    ).interact();
+    );
 
     /// check if [manualFlutterPath] is a valid file path
     if (!manualFlutterPath.isValidPath) {
@@ -290,5 +280,35 @@ ${errorDescription ?? 'Before you can select a device, you need to add one first
     }
 
     return manualFlutterPath;
+  }
+}
+
+class Spinner {
+  Spinner({
+    required this.inProgressMessage,
+    this.doneMessage = 'Done!',
+    this.failedMessage = 'Failed!',
+  });
+
+  final String inProgressMessage;
+  final String doneMessage;
+  final String failedMessage;
+
+  Progress? progress;
+
+  void start() {
+    if (progress != null) {
+      throwToolExit('Spinner already started');
+    }
+
+    progress = interaction.progress(inProgressMessage);
+  }
+
+  void done() {
+    progress?.complete(doneMessage);
+  }
+
+  void failed() {
+    progress?.fail(failedMessage);
   }
 }

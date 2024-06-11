@@ -239,10 +239,8 @@ class SshService {
 
     logger.spaces();
 
-    final spinner = interaction.runSpinner(
-      inProgressMessage: 'Preparing SSH connection',
-      doneMessage: 'Preparing SSH connection completed',
-      failedMessage: 'Preparing SSH connection failed',
+    final progress = interaction.progress(
+      'Preparing SSH connection',
     );
 
     // create a directory in the user's home directory
@@ -252,7 +250,7 @@ class SshService {
 
     await addSshKeyToAgent(sshKeys.privateKey);
 
-    spinner.done();
+    progress.complete('Preparing SSH connection completed');
 
     await copySshKeyToRemote(
       sshKeys.publicKey,

@@ -1,3 +1,7 @@
+
+## 0.6.0 BETA
+* add compatibility with flutter 3.22 by @payam-zahedi
+
 ## 0.5.0 BETA
 * fix conflict version issue on remote and host machine by @payam-zahedi
 
