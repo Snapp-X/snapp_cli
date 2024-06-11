@@ -162,20 +162,18 @@ Stacktrace: $s
 
       if (!updateConfirmed) return;
 
-      final spinner = interaction.runSpinner(
-        inProgressMessage: 'Updating snapp_cli...',
-        doneMessage: 'Update process completed!',
-        failedMessage: 'snapp_cli update failed!',
+      final progress = interaction.progress(
+        'Updating snapp_cli...',
       );
 
       final result = await updateService.update();
 
       if (result.exitCode != 0) {
-        spinner.failed();
+        progress.fail('snapp_cli update failed!');
         throwToolExit('Something went wrong. \n ${result.stderr}');
       }
 
-      spinner.done();
+      progress.complete('Update process completed!');
 
       logger.spaces();
 

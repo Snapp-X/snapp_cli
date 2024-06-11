@@ -23,11 +23,10 @@ dependencies:
   tint: ^2.0.1
   process: ^5.0.2
   pub_semver: ^2.1.4
-  interact_cli: ^2.3.0
   http: ^0.13.6
 
 dev_dependencies:
-  lints: ^3.0.0
+  lints: ^4.0.0
 
 executables:
   snapp_cli: snapp
