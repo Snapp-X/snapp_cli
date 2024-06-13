@@ -1,6 +1,7 @@
 import 'package:snapp_cli/configs/embedder.dart';
 import 'package:snapp_cli/host_runner/host_runner_platform.dart';
 import 'package:snapp_cli/service/custom_device_builder/src/flutter.dart';
+import 'package:snapp_cli/service/setup_device/device_config_context.dart';
 import 'package:snapp_cli/service/setup_device/device_setup.dart';
 // ignore: implementation_imports
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
@@ -33,7 +34,7 @@ abstract class CustomDeviceBuilder {
   final HostRunnerPlatform hostPlatform;
 
   Future<CustomDeviceConfig> buildDevice(
-    final DeviceSetup deviceSetup,
+    final DeviceConfigContext context,
   );
 
   bool isContextValid(DeviceConfigContext context) {

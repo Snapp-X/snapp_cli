@@ -12,10 +12,8 @@ class FlutterCustomDeviceBuilder extends CustomDeviceBuilder {
 
   @override
   Future<CustomDeviceConfig> buildDevice(
-    final DeviceSetup deviceSetup,
+    final DeviceConfigContext context,
   ) async {
-    DeviceConfigContext context = await deviceSetup.setup();
-
     if (!isContextValid(context)) {
       logger.err('Device context: $context');
       throw Exception("Device setup did not produce a valid configuration.");
