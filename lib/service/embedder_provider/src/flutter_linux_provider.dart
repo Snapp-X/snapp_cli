@@ -2,18 +2,13 @@ import 'dart:io';
 
 import 'package:snapp_cli/flutter_sdk.dart';
 import 'package:snapp_cli/service/embedder_provider/embedder_provider.dart';
-import 'package:snapp_cli/service/remote_controller_service.dart';
 import 'package:snapp_cli/service/setup_device/chain_handler/device_setup_handler.dart';
 
 class FlutterLinuxEmbedderProvider extends EmbedderProvider {
   const FlutterLinuxEmbedderProvider({
     required super.context,
-    required this.flutterSdkManager,
-    required this.remoteControllerService,
+    required super.remoteControllerService,
   });
-
-  final FlutterSdkManager flutterSdkManager;
-  final RemoteControllerService remoteControllerService;
 
   @override
   Future<String> provideEmbedderPath() async {
@@ -26,7 +21,7 @@ class FlutterLinuxEmbedderProvider extends EmbedderProvider {
     final targetIp = context.targetIp!;
 
     final hostFlutterVersion =
-        flutterSdkManager.flutterVersion.frameworkVersion;
+        FlutterSdkManager().flutterVersion.frameworkVersion;
 
     final possibleFlutterPath =
         await remoteControllerService.findFlutterPath(username, targetIp);

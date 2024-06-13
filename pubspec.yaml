@@ -24,6 +24,7 @@ dependencies:
   process: ^5.0.2
   pub_semver: ^2.1.4
   http: ^0.13.6
+  recase: ^4.1.0
 
 dev_dependencies:
   lints: ^4.0.0
