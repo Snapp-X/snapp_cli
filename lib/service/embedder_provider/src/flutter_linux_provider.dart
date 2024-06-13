@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:snapp_cli/flutter_sdk.dart';
 import 'package:snapp_cli/service/embedder_provider/embedder_provider.dart';
-import 'package:snapp_cli/service/setup_device/chain_handler/device_setup_handler.dart';
+import 'package:snapp_cli/service/setup_device/device_setup.dart';
 
 class FlutterLinuxEmbedderProvider extends EmbedderProvider {
   const FlutterLinuxEmbedderProvider({

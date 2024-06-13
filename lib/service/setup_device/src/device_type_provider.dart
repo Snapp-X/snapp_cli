@@ -1,15 +1,15 @@
 import 'package:snapp_cli/configs/predefined_devices.dart';
-import 'package:snapp_cli/service/setup_device/chain_handler/device_setup_handler.dart';
+import 'package:snapp_cli/service/setup_device/device_setup.dart';
 // ignore: implementation_imports
 import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
 
-class DeviceTypeSelectionHandler extends DeviceSetupHandler {
-  DeviceTypeSelectionHandler({required this.customDevicesConfig});
+class DeviceTypeProvider extends DeviceSetupStep {
+  DeviceTypeProvider({required this.customDevicesConfig});
 
   final CustomDevicesConfig customDevicesConfig;
 
   @override
-  Future<DeviceSetupContext> execute(DeviceSetupContext context) async {
+  Future<DeviceConfigContext> execute(DeviceConfigContext context) async {
     final addCommandOptions = [
       'Express (recommended)',
       'Custom',
@@ -27,8 +27,8 @@ class DeviceTypeSelectionHandler extends DeviceSetupHandler {
     return _setupCustomDevice(context);
   }
 
-  Future<DeviceSetupContext> _setupPredefinedDevice(
-      DeviceSetupContext context) async {
+  Future<DeviceConfigContext> _setupPredefinedDevice(
+      DeviceConfigContext context) async {
     logger.spaces();
 
     final deviceKey = interaction.select(
@@ -57,8 +57,8 @@ class DeviceTypeSelectionHandler extends DeviceSetupHandler {
     );
   }
 
-  Future<DeviceSetupContext> _setupCustomDevice(
-      DeviceSetupContext context) async {
+  Future<DeviceConfigContext> _setupCustomDevice(
+      DeviceConfigContext context) async {
     final id = interaction.readDeviceId(customDevicesConfig);
     final label = interaction.readDeviceLabel();
 

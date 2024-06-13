@@ -2,15 +2,15 @@ import 'package:recase/recase.dart';
 import 'package:snapp_cli/configs/embedder.dart';
 import 'package:snapp_cli/service/embedder_provider/embedder_provider.dart';
 import 'package:snapp_cli/service/remote_controller_service.dart';
-import 'package:snapp_cli/service/setup_device/chain_handler/device_setup_handler.dart';
+import 'package:snapp_cli/service/setup_device/device_setup.dart';
 
-class AppExecuterHandler extends DeviceSetupHandler {
+class AppExecuterProvider extends DeviceSetupStep {
   final RemoteControllerService remoteControllerService;
 
-  AppExecuterHandler({required this.remoteControllerService});
+  AppExecuterProvider({required this.remoteControllerService});
 
   @override
-  Future<DeviceSetupContext> execute(DeviceSetupContext context) async {
+  Future<DeviceConfigContext> execute(DeviceConfigContext context) async {
     logger.spaces();
 
     logger.info(
@@ -22,9 +22,9 @@ Supported app executers:
 ''',
     );
 
-    FlutterEmbedder.values.forEach((embedder) {
+    for (final embedder in FlutterEmbedder.values) {
       logger.info(' - ${embedder.name.paramCase}');
-    });
+    }
 
     logger.spaces();
 

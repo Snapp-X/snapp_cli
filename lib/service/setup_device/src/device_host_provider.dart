@@ -1,8 +1,8 @@
-import 'package:snapp_cli/service/setup_device/chain_handler/device_setup_handler.dart';
+import 'package:snapp_cli/service/setup_device/device_setup.dart';
 
-class DeviceHostHandler extends DeviceSetupHandler {
+class DeviceHostProvider extends DeviceSetupStep {
   @override
-  Future<DeviceSetupContext> execute(DeviceSetupContext context) async {
+  Future<DeviceConfigContext> execute(DeviceConfigContext context) async {
     // get remote device ip and username from the user
     logger.spaces();
 

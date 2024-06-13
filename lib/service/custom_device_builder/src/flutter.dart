@@ -1,6 +1,6 @@
 import 'package:snapp_cli/host_runner/host_runner_platform.dart';
 import 'package:snapp_cli/service/custom_device_builder/custom_device_builder.dart';
-import 'package:snapp_cli/service/setup_device/chain_handler/device_setup_handler.dart';
+import 'package:snapp_cli/service/setup_device/device_setup.dart';
 // ignore: implementation_imports
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
 
@@ -12,14 +12,9 @@ class FlutterCustomDeviceBuilder extends CustomDeviceBuilder {
 
   @override
   Future<CustomDeviceConfig> buildDevice(
-    final List<DeviceSetupHandler> handlers,
+    final DeviceSetup deviceSetup,
   ) async {
-    DeviceSetupContext context = DeviceSetupContext.empty;
-
-    for (var handler in handlers) {
-      // TODO(payam): handle next should work
-      context = await handler.handle(context);
-    }
+    DeviceConfigContext context = await deviceSetup.setup();
 
     if (!isContextValid(context)) {
       logger.err('Device context: $context');

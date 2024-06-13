@@ -1,22 +1,24 @@
 import 'package:snapp_cli/configs/embedder.dart';
 import 'package:snapp_cli/service/embedder_provider/src/flutter_linux_provider.dart';
 import 'package:snapp_cli/service/remote_controller_service.dart';
-import 'package:snapp_cli/service/setup_device/chain_handler/device_setup_handler.dart';
+import 'package:snapp_cli/service/setup_device/device_setup.dart';
 
 /// EmbedderProvider is an abstract class that provides the embedder which is responsible to execute the flutter app
 ///
 /// The embedder can be the official Flutter Linux embedder
 /// or a custom embedders like Flutter-pi or ivi-homescreen
 abstract class EmbedderProvider {
-  const EmbedderProvider(
-      {required this.context, required this.remoteControllerService});
+  const EmbedderProvider({
+    required this.context,
+    required this.remoteControllerService,
+  });
 
-  final DeviceSetupContext context;
+  final DeviceConfigContext context;
   final RemoteControllerService remoteControllerService;
 
   factory EmbedderProvider.create(
     FlutterEmbedder embedder,
-    DeviceSetupContext context,
+    DeviceConfigContext context,
     RemoteControllerService remoteControllerService,
   ) {
     switch (embedder) {

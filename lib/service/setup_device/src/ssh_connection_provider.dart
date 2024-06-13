@@ -1,13 +1,13 @@
-import 'package:snapp_cli/service/setup_device/chain_handler/device_setup_handler.dart';
+import 'package:snapp_cli/service/setup_device/device_setup.dart';
 import 'package:snapp_cli/service/ssh_service.dart';
 
-class SshConnectionHandler extends DeviceSetupHandler {
+class SshConnectionProvider extends DeviceSetupStep {
   final SshService sshService;
 
-  SshConnectionHandler(this.sshService);
+  SshConnectionProvider(this.sshService);
 
   @override
-  Future<DeviceSetupContext> execute(DeviceSetupContext context) async {
+  Future<DeviceConfigContext> execute(DeviceConfigContext context) async {
     if (context.targetIp == null || context.username == null) {
       throw Exception('Missing target IP or username for SSH connection.');
     }

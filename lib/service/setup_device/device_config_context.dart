@@ -1,35 +1,11 @@
+
 import 'dart:io';
 
 import 'package:snapp_cli/configs/embedder.dart';
 import 'package:snapp_cli/utils/common.dart';
 
-export 'package:snapp_cli/service/logger_service.dart';
-export 'package:snapp_cli/commands/base_command.dart';
-
-export 'src/device_info_handler.dart';
-
-abstract class DeviceSetupHandler {
-  DeviceSetupHandler? nextHandler;
-
-  void setNext(DeviceSetupHandler handler) {
-    nextHandler = handler;
-  }
-
-  Future<DeviceSetupContext> execute(DeviceSetupContext context);
-
-  Future<DeviceSetupContext> handle(DeviceSetupContext context) async {
-    final DeviceSetupContext updatedContext = await execute(context);
-
-    if (nextHandler != null) {
-      return nextHandler!.handle(updatedContext);
-    }
-
-    return updatedContext;
-  }
-}
-
-class DeviceSetupContext {
-  const DeviceSetupContext({
+class DeviceConfigContext {
+  const DeviceConfigContext({
     this.id,
     this.label,
     this.targetIp,
@@ -39,7 +15,7 @@ class DeviceSetupContext {
     this.embedder,
   });
 
-  static const DeviceSetupContext empty = DeviceSetupContext();
+  static const DeviceConfigContext empty = DeviceConfigContext();
 
   final String? id;
   final String? label;
@@ -67,7 +43,7 @@ class DeviceSetupContext {
           ? '[${loopbackIp!.address}]'
           : loopbackIp!.address;
 
-  DeviceSetupContext copyWith({
+  DeviceConfigContext copyWith({
     String? id,
     String? label,
     InternetAddress? targetIp,
@@ -76,7 +52,7 @@ class DeviceSetupContext {
     String? appExecuterPath,
     FlutterEmbedder? embedder,
   }) {
-    return DeviceSetupContext(
+    return DeviceConfigContext(
       id: id ?? this.id,
       label: label ?? this.label,
       targetIp: targetIp ?? this.targetIp,
@@ -91,7 +67,7 @@ class DeviceSetupContext {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is DeviceSetupContext &&
+      other is DeviceConfigContext &&
           runtimeType == other.runtimeType &&
           id == other.id &&
           label == other.label &&
@@ -113,6 +89,6 @@ class DeviceSetupContext {
 
   @override
   String toString() {
-    return 'DeviceSetupContext{id: $id, label: $label, targetIp: $targetIp, username: $username, remoteHasSshConnection: $remoteHasSshConnection, appExecuter: $appExecuterPath, embedder: $embedder}';
+    return 'DeviceConfigContext{id: $id, label: $label, targetIp: $targetIp, username: $username, remoteHasSshConnection: $remoteHasSshConnection, appExecuter: $appExecuterPath, embedder: $embedder}';
   }
 }
