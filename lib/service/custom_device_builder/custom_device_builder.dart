@@ -1,6 +1,7 @@
 import 'package:snapp_cli/configs/embedder.dart';
 import 'package:snapp_cli/host_runner/host_runner_platform.dart';
 import 'package:snapp_cli/service/custom_device_builder/src/flutter.dart';
+import 'package:snapp_cli/service/custom_device_builder/src/flutter_pi.dart';
 import 'package:snapp_cli/service/setup_device/device_config_context.dart';
 import 'package:snapp_cli/service/setup_device/device_setup.dart';
 // ignore: implementation_imports
@@ -26,7 +27,10 @@ abstract class CustomDeviceBuilder {
         );
 
       case FlutterEmbedder.flutterPi:
-        throw UnsupportedError('Flutter Pi is not supported yet');
+        return FlutterPiCustomDeviceBuilder(
+          flutterSdkManager: flutterSdkManager,
+          hostPlatform: hostPlatform,
+        );
     }
   }
 
