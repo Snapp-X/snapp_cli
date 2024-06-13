@@ -45,6 +45,7 @@ Supported app executers:
 
     return context.copyWith(
       appExecuterPath: executablePath,
+      embedder: selectedEmbedder,
     );
   }
 }

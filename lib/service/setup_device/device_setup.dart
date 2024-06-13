@@ -32,10 +32,12 @@ class DeviceSetup {
   DeviceSetup({
     required List<DeviceSetupStep> steps,
   })  : assert(steps.isNotEmpty, 'steps list cannot be empty'),
-        _chain = steps.reduce((a, b) {
-          a.setNext(b);
-          return b;
-        });
+        _chain = steps.first {
+    // Iterate through the list and link each handler to the next one.
+    for (int i = 0; i < steps.length - 1; i++) {
+      steps[i].setNext(steps[i + 1]);
+    }
+  }
 
   final DeviceSetupStep _chain;
 
