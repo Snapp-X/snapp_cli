@@ -44,7 +44,7 @@ Supported app executers:
     final executablePath = await embedderProvider.provideEmbedderPath();
 
     return context.copyWith(
-      appExecuter: executablePath,
+      appExecuterPath: executablePath,
     );
   }
 }

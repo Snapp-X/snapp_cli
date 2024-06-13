@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:snapp_cli/configs/embedder.dart';
 import 'package:snapp_cli/utils/common.dart';
 
 export 'package:snapp_cli/service/logger_service.dart';
@@ -34,7 +35,8 @@ class DeviceSetupContext {
     this.targetIp,
     this.username,
     this.remoteHasSshConnection = false,
-    this.appExecuter,
+    this.appExecuterPath,
+    this.embedder,
   });
 
   static const DeviceSetupContext empty = DeviceSetupContext();
@@ -44,7 +46,8 @@ class DeviceSetupContext {
   final InternetAddress? targetIp;
   final String? username;
   final bool remoteHasSshConnection;
-  final String? appExecuter;
+  final String? appExecuterPath;
+  final FlutterEmbedder? embedder;
 
   bool? get ipv6 => targetIp?.isIpv6;
 
@@ -70,15 +73,18 @@ class DeviceSetupContext {
     InternetAddress? targetIp,
     String? username,
     bool? remoteHasSshConnection,
-    String? appExecuter,
+    String? appExecuterPath,
+    FlutterEmbedder? embedder,
   }) {
     return DeviceSetupContext(
       id: id ?? this.id,
       label: label ?? this.label,
+      targetIp: targetIp ?? this.targetIp,
       username: username ?? this.username,
       remoteHasSshConnection:
           remoteHasSshConnection ?? this.remoteHasSshConnection,
-      appExecuter: appExecuter ?? this.appExecuter,
+      appExecuterPath: appExecuterPath ?? this.appExecuterPath,
+      embedder: embedder ?? this.embedder,
     );
   }
 
@@ -92,7 +98,8 @@ class DeviceSetupContext {
           targetIp == other.targetIp &&
           username == other.username &&
           remoteHasSshConnection == other.remoteHasSshConnection &&
-          appExecuter == other.appExecuter;
+          appExecuterPath == other.appExecuterPath &&
+          embedder == other.embedder;
 
   @override
   int get hashCode =>
@@ -101,10 +108,11 @@ class DeviceSetupContext {
       targetIp.hashCode ^
       username.hashCode ^
       remoteHasSshConnection.hashCode ^
-      appExecuter.hashCode;
+      appExecuterPath.hashCode ^
+      embedder.hashCode;
 
   @override
   String toString() {
-    return 'DeviceSetupContext{id: $id, label: $label, targetIp: $targetIp, username: $username, remoteHasSshConnection: $remoteHasSshConnection, appExecuter: $appExecuter}';
+    return 'DeviceSetupContext{id: $id, label: $label, targetIp: $targetIp, username: $username, remoteHasSshConnection: $remoteHasSshConnection, appExecuter: $appExecuterPath, embedder: $embedder}';
   }
 }
