@@ -255,32 +255,41 @@ ${errorDescription ?? 'Before you can select a device, you need to add one first
     return label;
   }
 
-  Future<String> readFlutterManualPath({String? description}) async {
+  Future<String> readToolManualPath({
+    required String toolName,
+    String? examplePath,
+    String? description,
+  }) async {
     logger.info(
       description ??
-          '''You can use which command to find it in your remote machine: "which flutter" 
-*NOTE: if you added flutter to one of directories in \$PATH variables, you can just enter "flutter" here. 
-(example: /home/pi/sdk/flutter/bin/flutter)''',
+          '''You can use which command to find it in your remote machine: "which $toolName" 
+*NOTE: if you added $toolName to one of directories in \$PATH variables, you can just enter "$toolName" here. 
+${examplePath == null ? '' : '(example: $examplePath)'}''',
     );
 
-    final manualFlutterPath = inputWithValidation(
-      'Flutter path on device:',
+    final manualEnteredPath = inputWithValidation(
+      '$toolName path on device:',
       validator: (s) {
         if (s.isValidPath) {
           return null;
         }
-        return 'Invalid Path to flutter. Please try again.';
+        return 'Invalid Path to $toolName. Please try again.';
       },
     );
 
-    /// check if [manualFlutterPath] is a valid file path
-    if (!manualFlutterPath.isValidPath) {
+    /// check if [manualEnteredPath] is a valid file path
+    if (!manualEnteredPath.isValidPath) {
       throwToolExit(
-          'Invalid Path to flutter. Please make sure about flutter path on the remote machine and try again.');
+          'Invalid Path to $toolName. Please make sure about $toolName path on the remote machine and try again.');
     }
 
-    return manualFlutterPath;
+    return manualEnteredPath;
   }
+
+  Future<String> readFlutterManualPath() => readToolManualPath(
+        toolName: 'flutter',
+        examplePath: '/usr/local/bin/flutter',
+      );
 }
 
 class Spinner {

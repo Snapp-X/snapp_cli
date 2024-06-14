@@ -18,13 +18,8 @@ class AppExecuterProvider extends DeviceSetupStep {
 To execute the app on the remote device, we need to know the app executer. 
 The app executer is a tool that will be used to run the app on the remote device. 
 The app executer can be the official Flutter Linux embedder or a custom embedder like Flutter-pi or ivi-homescreen.
-Supported app executers:
 ''',
     );
-
-    for (final embedder in FlutterEmbedder.values) {
-      logger.info(' - ${embedder.name.paramCase}');
-    }
 
     logger.spaces();
 
