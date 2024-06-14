@@ -29,26 +29,29 @@ class RemoteControllerService {
   final ProcessManager processManager;
   final ProcessUtils processRunner;
 
-  /// finds flutter in the remote machine using ssh connection
-  /// returns the path of flutter if found it
-  /// otherwise returns null
-  Future<String?> findFlutterPath(
-    String username,
-    InternetAddress ip, {
+  Future<String?> findToolPath({
+    required String username,
+    required InternetAddress ip,
+    required String toolName,
+    String? toolPath,
+    List<String>? preferredPaths,
     bool addHostToKnownHosts = true,
   }) async {
     final spinner = interaction.spinner(
-      inProgressMessage: 'search for flutter path on remote device.',
-      doneMessage: 'search for flutter path completed',
-      failedMessage: 'search for flutter path failed',
+      inProgressMessage: 'search for $toolName path on remote device.',
+      doneMessage: 'search for $toolName path completed',
+      failedMessage: 'search for $toolName path failed',
     );
+
+    final searchCommand = toolPath != null
+        ? 'find / -type f -name "$toolName" -path "$toolPath" 2>/dev/null'
+        : 'find / -type f -name "$toolName" 2>/dev/null';
 
     final output = await processRunner.runCommand(
       hostPlatform.sshCommand(
         ipv6: ip.isIpv6,
         sshTarget: ip.sshTarget(username),
-        command:
-            'find / -type f -name "flutter" -path "*/flutter/bin/*" 2>/dev/null',
+        command: searchCommand,
         addHostToKnownHosts: addHostToKnownHosts,
       ),
       timeout: const Duration(seconds: 30),
@@ -66,7 +69,7 @@ class RemoteControllerService {
       },
       parseFail: (e, s) {
         logger.detail(
-          'Something went wrong while trying to find flutter. \n $e \n $s',
+          'Something went wrong while trying to find $toolName. \n $e \n $s',
         );
 
         logger.spaces();
@@ -74,11 +77,11 @@ class RemoteControllerService {
         return null;
       },
       spinner: spinner,
-      label: 'Find Flutter',
+      label: 'Find $toolName',
       logger: logger,
     );
 
-    logger.detail('Find Flutter output: $output');
+    logger.detail('Find $toolName output: $output');
 
     logger.spaces();
 
@@ -88,29 +91,62 @@ class RemoteControllerService {
     final isOutputMultipleLines = outputLinesLength > 1;
 
     if (!isOutputMultipleLines) {
-      logger.info('We found flutter in "$output" in the remote machine. ');
+      logger.info('We found $toolName in "$output" in the remote machine. ');
 
-      final flutterSdkPathConfirmation = interaction.confirm(
+      final toolPathConfirmation = interaction.confirm(
         'Do you want to use this path?',
         defaultValue: true, // this is optional
       );
 
-      return flutterSdkPathConfirmation ? output : null;
+      return toolPathConfirmation ? output : null;
     } else {
+      logger.info('We found multiple $toolName paths in the remote machine. ');
+
       final outputLines = output
           .split('\n')
           .map((e) => e.trim())
           .toList()
           .sublist(0, min(2, outputLinesLength));
 
-      logger.info('We found multiple flutter paths in the remote machine. ');
+      if (preferredPaths != null) {
+        final preferredPathsSet = preferredPaths.toSet();
+
+        final preferredPathsInOutput = outputLines
+            .where((element) => preferredPathsSet.contains(element))
+            .toList();
+
+        if (preferredPathsInOutput.isNotEmpty) {
+          if (preferredPathsInOutput.length == 1) {
+            return preferredPathsInOutput.first;
+          }
+
+          return interaction.select(
+            'Please select the path of $toolName you want to use.',
+            options: preferredPathsInOutput,
+          );
+        }
+      }
 
       return interaction.select(
-        'Please select the path of flutter you want to use.',
+        'Please select the path of $toolName you want to use.',
         options: outputLines,
       );
     }
   }
+
+  /// finds flutter in the remote machine using ssh connection
+  /// returns the path of flutter if found it
+  /// otherwise returns null
+  Future<String?> findFlutterPath(
+    String username,
+    InternetAddress ip,
+  ) =>
+      findToolPath(
+        username: username,
+        ip: ip,
+        toolName: 'flutter',
+        toolPath: '*/flutter/bin/*',
+      );
 
   Future<String?> findFlutterVersion(
     String username,
