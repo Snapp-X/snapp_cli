@@ -1,5 +1,4 @@
 import 'package:mason_logger/mason_logger.dart';
-import 'package:tint/tint.dart';
 
 /// Sets default logger mode
 final LoggerService logger = LoggerService._();
@@ -36,14 +35,8 @@ class LoggerService {
   void info(String message) => _logger.info(message);
   void err(String message) => _logger.err(message);
   void detail(String message) => _logger.detail(message);
-  void fail(String message) =>
-      info(icons.failure.red().bold() + message.bold());
-  void success(String message) =>
-      info(icons.success.green().bold() + message.bold());
-
-  String get stdout {
-    return logger.stdout;
-  }
+  void fail(String message) => err(icons.failure + message);
+  void success(String message) => _logger.success(icons.success + message);
 
   void get divider {
     _logger.info(
