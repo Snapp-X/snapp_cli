@@ -141,10 +141,10 @@ class RemoteControllerService {
       if (preferredPaths != null) {
         final preferredPathsSet = preferredPaths.toSet();
 
-        final preferredPathsInOutput = preferredPathsSet
+        final preferredPathsInOutput = outputLines
             .where(
-              (element) => outputLines.any(
-                (line) => line.contains(element),
+              (line) => preferredPathsSet.any(
+                (path) => line.contains(path),
               ),
             )
             .toList();
@@ -204,10 +204,10 @@ class RemoteControllerService {
         final preferredPathsSet = preferredPaths?.toSet();
 
         if (preferredPathsSet != null) {
-          final preferredPathsInOutput = preferredPathsSet
+          final preferredPathsInOutput = outputLines
               .where(
-                (element) => outputLines.any(
-                  (line) => line.contains(element),
+                (line) => preferredPathsSet.any(
+                  (path) => line.contains(path),
                 ),
               )
               .toList();
