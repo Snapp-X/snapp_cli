@@ -1,4 +1,3 @@
-
 import 'dart:io';
 
 import 'package:snapp_cli/configs/embedder.dart';
@@ -42,6 +41,16 @@ class DeviceConfigContext {
       : ipv6 == true
           ? '[${loopbackIp!.address}]'
           : loopbackIp!.address;
+
+  String? get sdkName => embedder?.sdkName;
+
+  String get formattedLabel {
+    if(label ==null || embedder == null) {
+      return '';
+    }
+
+    return '$label-[${embedder!.label}]';
+  } 
 
   DeviceConfigContext copyWith({
     String? id,

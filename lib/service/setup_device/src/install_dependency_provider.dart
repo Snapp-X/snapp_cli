@@ -26,8 +26,6 @@ Selected custom embedder: ${context.embedder?.name.paramCase}
 ''',
     );
 
-    logger.spaces();
-
     final dependencyInstaller = DependencyInstaller.create(
       context.embedder!,
       flutterSdkManager: flutterSdkManager,

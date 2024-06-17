@@ -38,8 +38,8 @@ class FlutterCustomDeviceBuilder extends CustomDeviceBuilder {
 
     return CustomDeviceConfig(
       id: context.id!,
-      label: context.label!,
-      sdkNameAndVersion: context.label!,
+      label: context.formattedLabel,
+      sdkNameAndVersion: context.sdkName!,
       enabled: true,
 
       // host-platform specific, filled out later
