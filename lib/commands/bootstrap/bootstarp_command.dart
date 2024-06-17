@@ -5,6 +5,8 @@ import 'dart:async';
 import 'package:snapp_cli/service/custom_device_builder/custom_device_builder.dart';
 import 'package:snapp_cli/service/remote_controller_service.dart';
 import 'package:snapp_cli/service/setup_device/device_setup.dart';
+import 'package:snapp_cli/service/setup_device/src/custom_embedder_provider.dart';
+import 'package:snapp_cli/service/setup_device/src/install_dependency_provider.dart';
 import 'package:snapp_cli/service/ssh_service.dart';
 
 /// Perform a comprehensive setup for a device.(add custom device,ssh connection, install flutter,...)
@@ -46,9 +48,31 @@ let's start! \n
 
     DeviceSetup deviceSetup = DeviceSetup(
       steps: [
+        /// Receives information about the target device like id, name and type.
+        /// Example: Raspberry Pi 4b
         DeviceTypeProvider(customDevicesConfig: customDevicesConfig),
+
+        /// Receives connection information about the target device like ip, port, username.
         DeviceHostProvider(),
+
+        /// Checks if we can have a passwordless ssh connection to the target device.
+        /// If not, it will help you to create one.
+        /// It will also check if the device is reachable.
         SshConnectionProvider(sshService),
+
+        /// Checks what kind of embedder user wants to use.
+        /// Example: Flutter, Flutter-pi ...
+        CustomEmbedderProvider(),
+
+        /// Installs dependencies required to run the app on the remote device.
+        /// Regarding to the embedder type
+        /// for example for Flutter-pi, it will install flutterpi_tool global package
+        InstallDependencyProvider(
+          remoteControllerService: remoteControllerService,
+          flutterSdkManager: flutterSdkManager,
+        ),
+
+        /// installs custom embedder chosen by the user.
         AppExecuterProvider(remoteControllerService: remoteControllerService),
       ],
     );
