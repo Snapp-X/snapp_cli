@@ -123,6 +123,44 @@ abstract class HostRunnerPlatform {
     required bool ipv6,
     required String targetDevice,
   });
+
+  /// This command is used to compress a folder
+  ///
+  /// since we can use tar command in powershell in windows 10 and above
+  /// we can use the same command for windows, linux and macos
+  List<String> compressCommand({
+    String compressedFileName = 'archive.tar.gz',
+    String source = '.',
+    bool lastCommand = false,
+    List<String> exclude = const [],
+  }) =>
+      [
+        'tar',
+        '-czvf',
+        compressedFileName,
+        if (exclude.isNotEmpty) ...exclude.map((e) => '--exclude=\'$e\''),
+        source,
+        lastCommand ? '' : ';',
+      ];
+
+  /// This command is used to compress the current project
+  List<String> compressCurrentProjectCommand({
+    required String compressedFileName,
+  }) =>
+      compressCommand(
+        compressedFileName: compressedFileName,
+        exclude: [
+          '.dart_tool',
+          '.idea',
+          'android',
+          'build',
+          'ios',
+          'macos',
+          'test',
+          'web',
+          'windows',
+        ],
+      );
 }
 
 class WindowsHostRunnerPlatform extends HostRunnerPlatform {
