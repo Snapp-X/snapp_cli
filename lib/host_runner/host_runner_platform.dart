@@ -161,6 +161,11 @@ abstract class HostRunnerPlatform {
           'windows',
         ],
       );
+
+  List<String> deleteFile({
+    required String target,
+    bool lastCommand = false,
+  });
 }
 
 class WindowsHostRunnerPlatform extends HostRunnerPlatform {
@@ -209,6 +214,17 @@ class WindowsHostRunnerPlatform extends HostRunnerPlatform {
       'ssh $targetDevice "cat >> .ssh/authorized_keys"'
     ]);
   }
+
+  @override
+  List<String> deleteFile({
+    required String target,
+    bool lastCommand = false,
+  }) =>
+      [
+        'del',
+        target,
+        lastCommand ? '' : ';',
+      ];
 }
 
 class UnixHostRunnerPlatform extends HostRunnerPlatform {
@@ -258,6 +274,14 @@ class UnixHostRunnerPlatform extends HostRunnerPlatform {
       targetDevice,
     ];
   }
+
+  @override
+  List<String> deleteFile({required String target, bool lastCommand = false}) =>
+      [
+        'rm',
+        target,
+        lastCommand ? '' : ';',
+      ];
 }
 
 extension StringListExtension on List<String> {
