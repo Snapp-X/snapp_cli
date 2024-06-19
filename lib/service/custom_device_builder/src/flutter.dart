@@ -36,6 +36,8 @@ class FlutterCustomDeviceBuilder extends CustomDeviceBuilder {
 
     final remoteAppExecuter = context.appExecuterPath!;
 
+    final appArchiveName = '\${appName}.tar.gz';
+
     return CustomDeviceConfig(
       id: context.id!,
       label: context.formattedLabel,
@@ -50,11 +52,15 @@ class FlutterCustomDeviceBuilder extends CustomDeviceBuilder {
       pingSuccessRegex: hostPlatform.pingSuccessRegex,
       postBuildCommand: const <String>[],
 
-      // just install to /tmp/${appName} by default
-      // returns the command runner for the current platform
-      // for example:
-      // on windows it returns "powershell -c"
-      // on linux and macOS it returns "bash -c"
+      /// installing process of the app on the remote machine
+      /// 
+      /// 1. create the necessary directories in the remote machine
+      /// 2. compress the current project on the host without unnecessary files
+      /// 3. copy the archive project file to the remote
+      /// 4. extract the project on the remote
+      /// 5. copy the build artifacts from host to the remote
+      /// 6. copy the icu data file from host to the remote
+      /// 7. remove the archive file on host after sending it to the remote
       installCommand: hostPlatform.commandRunner(
         <String>[
           // create the necessary directories in the remote machine
@@ -66,12 +72,29 @@ class FlutterCustomDeviceBuilder extends CustomDeviceBuilder {
               )
               .asString,
 
-          // copy the current project files from host to the remote
+          // compress the current project on the host
+          hostPlatform
+              .compressCurrentProjectCommand(
+                compressedFileName: appArchiveName,
+              )
+              .asString,
+
+          // copy the archive project file to the remote
           hostPlatform
               .scpCommand(
                 ipv6: ipv6,
-                source: '${hostPlatform.currentSourcePath}*',
+                source: appArchiveName,
                 dest: '$sshTarget:/tmp/\${appName}',
+              )
+              .asString,
+
+          // extract the project on the remote
+          hostPlatform
+              .sshCommand(
+                ipv6: ipv6,
+                sshTarget: sshTarget,
+                command:
+                    'tar -xvf /tmp/\${appName}/$appArchiveName -C /tmp/\${appName}',
               )
               .asString,
 
@@ -90,6 +113,13 @@ class FlutterCustomDeviceBuilder extends CustomDeviceBuilder {
                 ipv6: ipv6,
                 source: hostIcuDataPath,
                 dest: '$sshTarget:/tmp/\${appName}/$hostIcuDataClone',
+              )
+              .asString,
+
+          // remove the archive file on host after sending it to the remote
+          hostPlatform
+              .deleteFile(
+                target: appArchiveName,
                 lastCommand: true,
               )
               .asString,

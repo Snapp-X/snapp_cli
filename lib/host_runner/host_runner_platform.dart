@@ -123,6 +123,49 @@ abstract class HostRunnerPlatform {
     required bool ipv6,
     required String targetDevice,
   });
+
+  /// This command is used to compress a folder
+  ///
+  /// since we can use tar command in powershell in windows 10 and above
+  /// we can use the same command for windows, linux and macos
+  List<String> compressCommand({
+    String compressedFileName = 'archive.tar.gz',
+    String source = '.',
+    bool lastCommand = false,
+    List<String> exclude = const [],
+  }) =>
+      [
+        'tar',
+        '-czvf',
+        compressedFileName,
+        if (exclude.isNotEmpty) ...exclude.map((e) => '--exclude=\'$e\''),
+        source,
+        lastCommand ? '' : ';',
+      ];
+
+  /// This command is used to compress the current project
+  List<String> compressCurrentProjectCommand({
+    required String compressedFileName,
+  }) =>
+      compressCommand(
+        compressedFileName: compressedFileName,
+        exclude: [
+          '.dart_tool',
+          '.idea',
+          'android',
+          'build',
+          'ios',
+          'macos',
+          'test',
+          'web',
+          'windows',
+        ],
+      );
+
+  List<String> deleteFile({
+    required String target,
+    bool lastCommand = false,
+  });
 }
 
 class WindowsHostRunnerPlatform extends HostRunnerPlatform {
@@ -171,6 +214,17 @@ class WindowsHostRunnerPlatform extends HostRunnerPlatform {
       'ssh $targetDevice "cat >> .ssh/authorized_keys"'
     ]);
   }
+
+  @override
+  List<String> deleteFile({
+    required String target,
+    bool lastCommand = false,
+  }) =>
+      [
+        'del',
+        target,
+        lastCommand ? '' : ';',
+      ];
 }
 
 class UnixHostRunnerPlatform extends HostRunnerPlatform {
@@ -220,6 +274,14 @@ class UnixHostRunnerPlatform extends HostRunnerPlatform {
       targetDevice,
     ];
   }
+
+  @override
+  List<String> deleteFile({required String target, bool lastCommand = false}) =>
+      [
+        'rm',
+        target,
+        lastCommand ? '' : ';',
+      ];
 }
 
 extension StringListExtension on List<String> {
