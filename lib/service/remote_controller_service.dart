@@ -11,7 +11,7 @@ import 'package:snapp_cli/host_runner/host_runner_platform.dart';
 import 'package:snapp_cli/service/logger_service.dart';
 import 'package:snapp_cli/snapp_cli.dart';
 import 'package:snapp_cli/utils/common.dart';
-import 'package:snapp_cli/service/interaction_service.dart';
+import 'package:snapp_cli/service/interaction/interaction_service.dart';
 import 'package:snapp_cli/utils/process.dart';
 
 class RemoteControllerService {

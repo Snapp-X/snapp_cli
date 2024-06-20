@@ -9,7 +9,7 @@ import 'package:flutter_tools/src/base/process.dart';
 
 export 'package:flutter_tools/src/base/common.dart';
 export 'package:snapp_cli/service/logger_service.dart';
-export 'package:snapp_cli/service/interaction_service.dart';
+export 'package:snapp_cli/service/interaction/interaction_service.dart';
 
 abstract class BaseSnappCommand extends Command<int> {
   BaseSnappCommand({

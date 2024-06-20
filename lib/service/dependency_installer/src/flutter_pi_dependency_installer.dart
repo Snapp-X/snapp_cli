@@ -2,13 +2,13 @@ import 'package:snapp_cli/service/dependency_installer/dependency_installer.dart
 
 // ignore: implementation_imports
 import 'package:flutter_tools/src/base/process.dart';
-import 'package:snapp_cli/service/interaction_service.dart';
+import 'package:snapp_cli/service/interaction/interaction_service.dart';
 import 'package:snapp_cli/service/logger_service.dart';
 import 'package:snapp_cli/utils/process.dart';
 
 export 'package:flutter_tools/src/base/common.dart';
 export 'package:snapp_cli/service/logger_service.dart';
-export 'package:snapp_cli/service/interaction_service.dart';
+export 'package:snapp_cli/service/interaction/interaction_service.dart';
 
 class FlutterPiDependencyInstaller extends DependencyInstaller {
   const FlutterPiDependencyInstaller({
