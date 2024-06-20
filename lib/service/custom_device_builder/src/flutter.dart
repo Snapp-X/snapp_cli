@@ -53,7 +53,7 @@ class FlutterCustomDeviceBuilder extends CustomDeviceBuilder {
       postBuildCommand: const <String>[],
 
       /// installing process of the app on the remote machine
-      /// 
+      ///
       /// 1. create the necessary directories in the remote machine
       /// 2. compress the current project on the host without unnecessary files
       /// 3. copy the archive project file to the remote

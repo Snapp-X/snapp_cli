@@ -45,12 +45,12 @@ class DeviceConfigContext {
   String? get sdkName => embedder?.sdkName;
 
   String get formattedLabel {
-    if(label ==null || embedder == null) {
+    if (label == null || embedder == null) {
       return '';
     }
 
     return '$label-[${embedder!.label}]';
-  } 
+  }
 
   DeviceConfigContext copyWith({
     String? id,
