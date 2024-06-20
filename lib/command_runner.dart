@@ -61,7 +61,7 @@ class SnappCliCommandRunner extends CommandRunner<int> {
       logger.detail('Verbose mode enabled');
     }
 
-    logger.spacer;
+    logger.spaces(1);
 
     await _checkConfigs();
 

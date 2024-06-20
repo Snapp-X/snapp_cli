@@ -12,7 +12,7 @@ abstract class Actor {
     required LoggerService logger,
     mason_logger.Logger? mason,
   }) =>
-      MasonActor(logger: logger, mason: mason);
+      MasonActor(logger: logger, masonLogger: mason);
 
   final LoggerService logger;
 
@@ -108,8 +108,8 @@ class InteractCliActor extends Actor {
 class MasonActor extends Actor {
   MasonActor({
     required super.logger,
-    mason_logger.Logger? mason,
-  })  : this.mason = mason ?? mason_logger.Logger(),
+    mason_logger.Logger? masonLogger,
+  })  : mason = masonLogger ?? mason_logger.Logger(),
         super._();
 
   final mason_logger.Logger mason;
