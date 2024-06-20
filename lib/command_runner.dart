@@ -11,7 +11,7 @@ import 'package:snapp_cli/commands/bootstrap/bootstarp_command.dart';
 import 'package:snapp_cli/commands/ssh/ssh_command.dart';
 import 'package:snapp_cli/flutter_sdk.dart';
 import 'package:snapp_cli/service/logger_service.dart';
-import 'package:snapp_cli/service/interaction_service.dart';
+import 'package:snapp_cli/service/interaction/interaction_service.dart';
 import 'package:snapp_cli/utils/process.dart';
 import 'package:snapp_cli/service/update_service.dart';
 
@@ -61,7 +61,7 @@ class SnappCliCommandRunner extends CommandRunner<int> {
       logger.detail('Verbose mode enabled');
     }
 
-    logger.spacer;
+    logger.spaces(1);
 
     await _checkConfigs();
 

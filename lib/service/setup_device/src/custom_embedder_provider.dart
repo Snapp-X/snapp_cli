@@ -3,7 +3,6 @@ import 'package:snapp_cli/configs/embedder.dart';
 import 'package:snapp_cli/service/setup_device/device_setup.dart';
 
 class CustomEmbedderProvider extends DeviceSetupStep {
-
   CustomEmbedderProvider();
 
   @override

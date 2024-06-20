@@ -13,8 +13,6 @@ class LoggerService {
     Level? level,
   }) : _logger = Logger(level: level ?? Level.info);
 
-  void get spacer => _logger.info('');
-
   bool get isVerbose => _logger.level == Level.verbose;
 
   set level(Level newLevel) => _logger.level = newLevel;
@@ -25,7 +23,7 @@ class LoggerService {
 
   void spaces([int count = 1]) {
     for (var i = 0; i < count; i++) {
-      print('');
+      info('');
     }
   }
 

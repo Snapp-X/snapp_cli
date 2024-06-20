@@ -4,26 +4,27 @@ import 'dart:io';
 
 import 'package:mason_logger/mason_logger.dart';
 import 'package:snapp_cli/commands/base_command.dart';
+import 'package:snapp_cli/service/interaction/actor.dart';
 import 'package:snapp_cli/utils/common.dart';
 import 'package:flutter_tools/src/custom_devices/custom_devices_config.dart';
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
 import 'package:snapp_cli/utils/custom_device.dart';
 
-const interaction = InteractionService._();
+final interaction = InteractionService._();
 
 class InteractionService {
-  const InteractionService._();
+  InteractionService._();
+
+  final Actor actor = Actor.cli(logger: logger);
 
   bool confirm(
     String? message, {
     bool? defaultValue,
-    bool waitForNewLine = true,
-  }) {
-    return logger.loggerInstance.confirm(
-      message,
-      defaultValue: defaultValue ?? false,
-    );
-  }
+  }) =>
+      actor.confirm(
+        prompt: message ?? 'Are you sure?',
+        defaultValue: defaultValue,
+      );
 
   Progress progress(String message) => logger.loggerInstance.progress(message);
 
@@ -38,46 +39,39 @@ class InteractionService {
         failedMessage: failedMessage,
       );
 
-  String input(String? message, {Object? defaultValue}) {
-    return logger.loggerInstance.prompt(
-      message,
-      defaultValue: defaultValue,
-    );
-  }
+  String input(String? message, {Object? defaultValue}) => actor.input(
+        prompt: message ?? 'Input:',
+        defaultValue: defaultValue,
+      );
 
   String inputWithValidation(
     String? message, {
     required String? Function(String) validator,
     Object? defaultValue,
-  }) {
-    while (true) {
-      final result = input(message, defaultValue: defaultValue);
-
-      final validatorError = validator(result);
-
-      if (validatorError == null) {
-        return result;
-      }
-
-      logger.err(validatorError);
-
-      logger.spaces();
-    }
-  }
+  }) =>
+      actor.inputWithValidation(
+        prompt: message ?? 'Input:',
+        validator: validator,
+        defaultValue: defaultValue,
+      );
 
   String select(
     String? message, {
     required List<String> options,
   }) =>
-      logger.loggerInstance.chooseOne(message, choices: options);
+      actor.select(
+        message ?? 'Select an option:',
+        options: options,
+      );
 
   int selectIndex(
     String? message, {
     required List<String> options,
-  }) {
-    final selected = select(message, options: options);
-    return options.indexOf(selected);
-  }
+  }) =>
+      actor.selectIndex(
+        message ?? 'Select an option:',
+        options: options,
+      );
 
   (InternetAddress ip, String username) getDeviceInfoInteractively(
     CustomDevicesConfig customDevicesConfig,
