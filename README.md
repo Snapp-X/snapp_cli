@@ -1,4 +1,4 @@
-<p align="center">
+<!-- <p align="center">
     <a href="https://www.snappembedded.io/"><img src="https://img.shields.io/badge/made_by-snapp_embedded-blue" alt="Snapp Embedded"></a>
     <br>
     <a href="https://pub.dev/packages/snapp_cli"><img src="https://badgen.net/pub/flutter-platform/snapp_cli" alt="Platforms"></a>
@@ -14,24 +14,30 @@
     <a href="https://github.com/Snapp-Embedded/snapp_cli/graphs/contributors"><img src="https://badgen.net/github/contributors/Snapp-Embedded/snapp_cli" alt="Contributors"></a>
     <a href="https://github.com/Snapp-Embedded/snapp_cli/blob/main/LICENSE"><img src="https://badgen.net/github/license/Snapp-Embedded/snapp_cli" alt="License"></a>
     <br>       
-</p>
+</p> -->
+# Snapp CLI
+#### Power Up Your Raspberry Pi for Flutter
 
 
-## snapp\_cli
+## What is snapp_cli?
 
-`snapp_cli` is a powerful command-line interface tool designed to simplify the integration of embedded devices (like Raspberry Pi) with Flutter applications. Effortlessly manage your embedded devices, establish secure SSH connections, and streamline the development process by installing Flutter directly onto your custom devices from your PC.
+Imagine You have a **Raspberry Pi** sitting on your desk or tucked away in a drawer, collecting dust. You bought it with grand ideas of developing **Flutter** apps on it, but the thought of setting it up for development has always seemed too complicated. Now, picture a tool that makes this process simple and effortless – that’s **Snapp CLI**. 🚀
 
-## Features
-- **🛠️ Single Command Setup:** Prepare your custom device completely by adding it to Flutter, establishing SSH connection, installing Flutter, and running your app—all with a single command.
-- **📱 Device Management:** Add, list, and remove custom(**embedded**) devices effortlessly.
-- **🔒 Automatic SSH Connection:** Configure and establish SSH connections to devices with ease.
-- **🚀 Flutter Installation:** Install Flutter directly onto your custom devices from your PC.
-- **🔥 Run & Debug Flutter Apps:** Utilize hot reload, hot restart, and Dart DevTools for efficient app development.
-- **🎛️ User-Friendly Interface:** Intuitive CLI for seamless navigation and usage.
+**Snapp CLI** allows you to control everything from your laptop 💻. Here’s how it simplifies your development process:
+
+1. 🔗 **Effortless Connection:** Snapp CLI sets up a secure, passwordless SSH link from your laptop to your Raspberry Pi, so you can manage it without direct interaction.
+
+2. 🔧 **Automated Installation:** Snapp CLI automates the installation of Flutter and all necessary dependencies on your Raspberry Pi. You run Snapp CLI from your laptop, and it handles everything remotely. But that's not all – Snapp CLI also supports custom embedders like Flutter-pi.
+
+3. ⚙️ **Custom Device Configuration:** Snapp CLI configures your Raspberry Pi to appear as a custom device in your IDE. You can easily select it and run your Flutter apps, just like you would on a phone or emulator.
+
+4. 🛠️ **Seamless Remote Development:** Develop and debug your Flutter apps directly from your laptop. Snapp CLI enables hot reload, restart, and access to DevTools, so you can run and test apps on your Raspberry Pi with all the tools you need for smooth and efficient remote development.
+
+**In essence**, Snapp CLI transforms your idle Raspberry Pi into a powerful Flutter development platform, all managed from your laptop. Whether you're new to Flutter or an experienced developer, Snapp CLI makes remote development simple and effective.
 
 ## Installation
 
-Before using `snapp_cli`, ensure that you have Dart and Flutter installed. You can install the tool using the Dart package manager:
+Snapp CLI is a Dart-based command-line tool. If you already have Flutter installed on your laptop, getting Snapp CLI up and running is quick and easy. Just run the following command in your terminal:
 
 ``` bash
 dart pub global activate snapp_cli
