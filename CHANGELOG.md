@@ -1,3 +1,6 @@
+## 1.0.1
+* doc: update README.md by @payam-zahedi
+
 ## 1.0.0
 **Important**: We now Support flutter-pi.
 
