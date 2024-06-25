@@ -19,7 +19,7 @@
 Power Up Your Raspberry Pi for Flutter
 
 <p align="left">
-<img src="./assets/doc/header.png" width="100%" alt="Styles" />
+<img src="https://raw.githubusercontent.com/Snapp-Embedded/snapp_cli/main/assets/doc/header.png?raw=true" width="100%" alt="Styles" />
 </p>
 
 ## What is snapp_cli?
@@ -61,7 +61,7 @@ $ snapp_cli bootstrap
 ```
 
 <p align="left">
-<img src="./assets/doc/bootstrap.png" width="100%" alt="Styles" />
+<img src="https://raw.githubusercontent.com/Snapp-Embedded/snapp_cli/main/assets/doc/bootstrap.png?raw=true" width="100%" alt="Styles" />
 </p>
 
 The `bootstrap` command simplifies the entire setup process for your Raspberry Pi. It prompts for your Raspberry Pi's **IP address** and **username** to establish a **passwordless SSH connection**. You'll then choose a **Flutter Embedder** (**Flutter Desktop**, **Flutter Pi** or ...), and the command checks and installs it along with any necessary dependencies. Finally, it configures your Raspberry Pi as a **custom device** in the **Flutter SDK**, allowing you to select and run your Flutter apps on the Raspberry Pi directly from your laptop, enabling seamless remote debugging and development.
@@ -70,7 +70,7 @@ The `bootstrap` command simplifies the entire setup process for your Raspberry P
 Snapp CLI includes additional commands to help you manage your devices and SSH connections efficiently:
 
 <p align="left">
-<img src="./assets/doc/commands.png" width="100%" alt="Styles" />
+<img src="https://raw.githubusercontent.com/Snapp-Embedded/snapp_cli/main/assets/doc/commands.png?raw=true" width="100%" alt="Styles" />
 </p>
 
 The `devices` command helps you manage your custom devices in the Flutter SDK. With subcommands to add, delete, list, and update the IP addresses of your devices, you have full control over your development environment.
