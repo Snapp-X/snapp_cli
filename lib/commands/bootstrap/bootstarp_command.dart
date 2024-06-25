@@ -30,8 +30,6 @@ class BootstrapCommand extends BaseSnappCommand {
 
   @override
   Future<int> run() async {
-    logger.info('new version');
-
     logger.spaces();
 
     logger.info('''

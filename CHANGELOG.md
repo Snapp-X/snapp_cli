@@ -1,3 +1,9 @@
+## 1.0.0
+**Important**: We now Support flutter-pi.
+
+* feat: add support to use flutter-pi as custom embedder by @payam-zahedi
+* feat: speed up running flutter app on flutter linux embedder by @payam-zahedi
+* fix: interaction issue on select/choose item on cli by @payam-zahedi
 
 ## 0.6.0 BETA
 * add compatibility with flutter 3.22 by @payam-zahedi
