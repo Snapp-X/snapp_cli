@@ -27,3 +27,23 @@ class AppExecuterProvider extends DeviceSetupStep {
     );
   }
 }
+
+class ManualAppExecuterProvider extends DeviceSetupStep {
+  ManualAppExecuterProvider();
+
+  @override
+  Future<DeviceConfigContext> execute(DeviceConfigContext context) async {
+    logger.spaces();
+
+    final selectedEmbedder = context.embedder!;
+
+    final executablePath = await interaction.readToolManualPath(
+      toolName: selectedEmbedder.executableName,
+      examplePath: '/usr/local/bin/${selectedEmbedder.executableName}',
+    );
+
+    return context.copyWith(
+      appExecuterPath: executablePath,
+    );
+  }
+}
