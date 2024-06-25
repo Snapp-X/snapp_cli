@@ -15,9 +15,12 @@
     <a href="https://github.com/Snapp-Embedded/snapp_cli/blob/main/LICENSE"><img src="https://badgen.net/github/license/Snapp-Embedded/snapp_cli" alt="License"></a>
     <br>       
 </p> -->
-# Snapp CLI
-#### Power Up Your Raspberry Pi for Flutter
+# Snapp CLI <a href="https://pub.dev/packages/snapp_cli"><img src="https://img.shields.io/pub/v/snapp_cli?logo=dart&logoColor=white" alt="Pub Version"></a>
+Power Up Your Raspberry Pi for Flutter
 
+<p align="left">
+<img src="./assets/doc/header.png" width="100%" alt="Styles" />
+</p>
 
 ## What is snapp_cli?
 
@@ -46,50 +49,33 @@ dart pub global activate snapp_cli
 Make sure that system cache bin directory is added to your system's PATH to use snapp_cli globally. follow this link for more information: [Running a script from your PATH](https://dart.dev/tools/pub/cmd/pub-global#running-a-script-from-your-path "Running a script from your PATH")
 
 ## Usage
+Using Snapp CLI is straightforward. Once installed, you can use it to set up and manage your Raspberry Pi for Flutter development. Let's start with `bootstrap` command.
 
-#### Single Command Setup - **Bootstrap**
+### Bootstrap Command
+The most important command in Snapp CLI is the bootstrap command. This command is interactive and guides you through the entire setup process, making your remote device(Raspberry Pi) ready for Flutter development with minimal effort.
 
-Bootstrap command is a way to setup a device from scratch.
-It will add a new device to custom devices, create a ssh connection to the device,
-install flutter on the device and finally help you to run your app on the device.
+To use the bootstrap command, simply run:
 
 ```bash
 $ snapp_cli bootstrap
 ```
 
-#### Device Management
+<p align="left">
+<img src="./assets/doc/bootstrap.png" width="100%" alt="Styles" />
+</p>
 
-- **List Devices:** Display all connected/embedded devices.
-    ```bash
-    $ snapp_cli devices list
-    ```
-- **Add a Device:** Add a new device to the Flutter SDK.
-   ```bash
-   $ snapp_cli devices add 
-   ```
-- **Delete a Device:** Remove a device from the Flutter SDK.
-    ```bash
-    $ snapp_cli devices delete
-    ```
-- **Update Device IP:** Update the IP address of a device.
-    ```bash
-    $ snapp_cli devices update-ip
-    ```
-- **Install Flutter:** Install Flutter directly onto a device.
-    ```bash
-    $ snapp_cli devices install-flutter
-    ```
+The `bootstrap` command simplifies the entire setup process for your Raspberry Pi. It prompts for your Raspberry Pi's **IP address** and **username** to establish a **passwordless SSH connection**. You'll then choose a **Flutter Embedder** (**Flutter Desktop**, **Flutter Pi** or ...), and the command checks and installs it along with any necessary dependencies. Finally, it configures your Raspberry Pi as a **custom device** in the **Flutter SDK**, allowing you to select and run your Flutter apps on the Raspberry Pi directly from your laptop, enabling seamless remote debugging and development.
 
-#### SSH Connection
+### Other Commands
+Snapp CLI includes additional commands to help you manage your devices and SSH connections efficiently:
 
-- **Create SSH Connection:** Create a passwordless SSH connection to a device.
-    ```bash
-    $ snapp_cli ssh create-connection
-    ```
-- **Test SSH Connection:** Test a passwordless SSH connection to a device.
-    ```bash
-    $ snapp_cli ssh test-connection
-    ```
+<p align="left">
+<img src="./assets/doc/commands.png" width="100%" alt="Styles" />
+</p>
+
+The `devices` command helps you manage your custom devices in the Flutter SDK. With subcommands to add, delete, list, and update the IP addresses of your devices, you have full control over your development environment.
+
+The `ssh` command assists in establishing and managing secure, passwordless SSH connections to your remote devices. Subcommands are available to create and test SSH connections, making remote access and management straightforward.
 
 ------------------------------------
 
@@ -97,7 +83,7 @@ Each command has specific options and usage, which you can explore further by ru
 
 ## Troubleshooting
 
-### Running Commands in Verbose Mode
+#### Running Commands in Verbose Mode
 
 If you encounter any issues while using the `snapp_cli` tool, you can run the commands in verbose mode to obtain more detailed information about the error. To do this, simply add the `-v` flag to your command. For example:
 
@@ -106,7 +92,7 @@ If you encounter any issues while using the `snapp_cli` tool, you can run the co
 $ snapp_cli bootstrap -v
 ```
 
-### SSH Connection Issues
+#### SSH Connection Issues
 
 Sometimes, you may face difficulties establishing an SSH connection to a device due to various reasons, such as an incorrect IP address, username, password, or SSH key. To verify whether the SSH connection is functioning correctly, you can execute the `snapp_cli ssh test-connection` command. If the connection fails, attempt to establish a new connection using the `snapp_cli ssh create-connection` command.
 
@@ -115,7 +101,7 @@ If you still cannot establish an SSH connection, it may be necessary to review t
 However, be cautious: if you have any other SSH connections to your remote device or to other devices, using the following commands will remove them.
 
 
-#### Host Device - Your PC
+##### Host Device - Your PC
 * Clear the `.snapp_cli` directory: 
     ``` bash 
     rm -r ~/.snapp_cli
@@ -129,7 +115,7 @@ However, be cautious: if you have any other SSH connections to your remote devic
     ssh-add -D
     ```
 
-#### Remote Device - Raspberry Pi
+##### Remote Device - Raspberry Pi
 Connect to your remote device via a simple SSH connection:
 
 ``` bash 
@@ -142,11 +128,11 @@ After successfully connecting to your remote device, remove the `.ssh` folder th
 rm -r ~/.ssh
 ```
 
-### Notes:
+#### Notes:
 * Ensure you replace yourIpAddress with the actual IP address of your device.
 * Be explicit about replacing placeholders like username@ipAddress with the appropriate user and IP address for the Raspberry Pi.
 
-### Manually Editing `flutter_custom_devices.json`
+#### Manually Editing `flutter_custom_devices.json`
 
 In some cases, you may need to manually edit the `flutter_custom_devices.json` file, which stores the configurations for custom devices. Here are the steps to follow if you encounter this situation:
 
