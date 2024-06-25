@@ -6,12 +6,10 @@ issue_tracker: https://github.com/Snapp-Embedded/snapp_cli/issues
 topics:
   [
     raspberry-pi,
-    embedded-systems,
     flutter,
     dart-cli,
     remote-debugging,
     flutter-pi,
-    snapp-embedded,
   ]
 
 environment:
