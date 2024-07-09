@@ -28,6 +28,11 @@ abstract class DependencyInstaller {
           flutterSdkManager: flutterSdkManager,
           remoteControllerService: remoteControllerService,
         );
+      case FlutterEmbedder.iviHomescreen:
+        return FlutterPiDependencyInstaller(
+          flutterSdkManager: flutterSdkManager,
+          remoteControllerService: remoteControllerService,
+        );
     }
   }
 

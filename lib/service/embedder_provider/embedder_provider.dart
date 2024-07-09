@@ -1,6 +1,7 @@
 import 'package:snapp_cli/configs/embedder.dart';
 import 'package:snapp_cli/service/embedder_provider/src/flutter_linux_provider.dart';
 import 'package:snapp_cli/service/embedder_provider/src/flutter_pi_provider.dart';
+import 'package:snapp_cli/service/embedder_provider/src/homescreen_provider.dart';
 import 'package:snapp_cli/service/remote_controller_service.dart';
 import 'package:snapp_cli/service/setup_device/device_setup.dart';
 
@@ -30,6 +31,11 @@ abstract class EmbedderProvider {
         );
       case FlutterEmbedder.flutterPi:
         return FlutterPiEmbedderProvider(
+          context: context,
+          remoteControllerService: remoteControllerService,
+        );
+      case FlutterEmbedder.iviHomescreen:
+        return HomescreenEmbedderProvider(
           context: context,
           remoteControllerService: remoteControllerService,
         );

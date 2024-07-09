@@ -4,8 +4,9 @@ import 'package:snapp_cli/service/setup_device/device_setup.dart';
 // ignore: implementation_imports
 import 'package:flutter_tools/src/custom_devices/custom_device_config.dart';
 
-class FlutterPiCustomDeviceBuilder extends CustomDeviceBuilder {
-  const FlutterPiCustomDeviceBuilder({
+// TODO(payam): Support for json config file for ivi-homescreen
+class HomescreenCustomDeviceBuilder extends CustomDeviceBuilder {
+  const HomescreenCustomDeviceBuilder({
     required super.flutterSdkManager,
     required super.hostPlatform,
   });
@@ -27,7 +28,8 @@ class FlutterPiCustomDeviceBuilder extends CustomDeviceBuilder {
 
     final remoteAppExecuter = context.appExecuterPath!;
 
-    final executeAppCommand = '$remoteAppExecuter /tmp/\${appName}';
+    final executeAppCommand = '$remoteAppExecuter --b=/tmp/\${appName}';
+
     return CustomDeviceConfig(
       id: context.id!,
       label: context.formattedLabel,
@@ -43,33 +45,42 @@ class FlutterPiCustomDeviceBuilder extends CustomDeviceBuilder {
       postBuildCommand: const <String>[],
       installCommand: hostPlatform.commandRunner(
         <String>[
+          // Create the necessary directories in the remote machine
+          hostPlatform
+              .sshCommand(
+                ipv6: ipv6,
+                sshTarget: sshTarget,
+                command: 'mkdir -p /tmp/\${appName}/lib /tmp/\${appName}/data',
+              )
+              .asString,
+
           // Copy bundle folder to remote
           hostPlatform
               .scpCommand(
                 ipv6: ipv6,
                 source: r'${localPath}',
-                dest: '$sshTarget:/tmp/\${appName}',
+                dest: '$sshTarget:/tmp/\${appName}/data',
               )
               .asString,
 
           // Build using flutterpi_tool to be able to use libflutter_engine.so and icudtl.dat
           'flutterpi_tool build --arch=arm64  --debug ;',
 
-          // Copy libflutter_engine.so to remote
-          hostPlatform
-              .scpCommand(
-                ipv6: ipv6,
-                source: r'${localPath}/libflutter_engine.so',
-                dest: '$sshTarget:/tmp/\${appName}',
-              )
-              .asString,
-
           // Copy icudtl.dat to remote
           hostPlatform
               .scpCommand(
                 ipv6: ipv6,
                 source: r'${localPath}/icudtl.dat',
-                dest: '$sshTarget:/tmp/\${appName}',
+                dest: '$sshTarget:/tmp/\${appName}/data',
+              )
+              .asString,
+
+          // Copy libflutter_engine.so to remote
+          hostPlatform
+              .scpCommand(
+                ipv6: ipv6,
+                source: r'${localPath}/libflutter_engine.so',
+                dest: '$sshTarget:/tmp/\${appName}/lib',
                 lastCommand: true,
               )
               .asString,
@@ -79,6 +90,7 @@ class FlutterPiCustomDeviceBuilder extends CustomDeviceBuilder {
       uninstallCommand: hostPlatform.sshCommand(
         ipv6: ipv6,
         sshTarget: sshTarget,
+        // TODO(payam): take care of removing folder after killing the process
         command:
             'PID=\$(ps aux | grep \'$executeAppCommand\' | grep -v grep | awk \'{print \$2}\'); [ -n "\$PID" ] && kill \$PID && echo "Process $remoteAppExecuter /tmp/\${appName} (PID: \$PID) has been killed." || echo "Process not found.";',
         lastCommand: true,
@@ -88,7 +100,7 @@ class FlutterPiCustomDeviceBuilder extends CustomDeviceBuilder {
         ipv6: ipv6,
         sshTarget: sshTarget,
         lastCommand: true,
-        command: '$executeAppCommand &',
+        command: "WAYLAND_DISPLAY=\"wayland-1\" $executeAppCommand &",
       ),
       forwardPortCommand: <String>[
         'ssh',

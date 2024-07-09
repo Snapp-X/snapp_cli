@@ -4,7 +4,9 @@ enum FlutterEmbedder {
   flutter('Flutter Linux', 'Flutter Linux Official', 'flutter'),
 
   /// Flutter-pi embedder: [https://github.com/ardera/flutter-pi]
-  flutterPi('Flutter-pi', 'Flutter-pi Embedder', 'flutter-pi');
+  flutterPi('Flutter-pi', 'Flutter-pi Embedder', 'flutter-pi'),
+
+  iviHomescreen('ivi-homescreen', 'Toyota ivi-homescreen', 'homescreen');
 
   const FlutterEmbedder(
     this.label,
