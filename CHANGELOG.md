@@ -1,3 +1,6 @@
+## 1.0.2
+* doc: update Organization in github by @payam-zahedi
+
 ## 1.0.1
 * doc: update README.md by @payam-zahedi
 
