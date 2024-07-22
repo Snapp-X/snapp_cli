@@ -353,7 +353,7 @@ class RemoteControllerService {
 
   /// install snapp_installer in the remote machine using ssh connection
   ///
-  /// we will use snapp_installer[https://github.com/Snapp-Embedded/snapp_installer] to install flutter in the remote machine
+  /// we will use snapp_installer[https://github.com/Snapp-X/snapp_installer] to install flutter in the remote machine
   /// with this method you can first install snapp_installer
   ///
   /// returns true if snapp_installer installed successfully
@@ -371,7 +371,7 @@ class RemoteControllerService {
           sshTarget: ip.sshTarget(username),
           lastCommand: true,
           command:
-              'bash <(curl -fSL https://raw.githubusercontent.com/Snapp-Embedded/snapp_installer/main/installer.sh)',
+              'bash <(curl -fSL https://raw.githubusercontent.com/Snapp-X/snapp_installer/main/installer.sh)',
           addHostToKnownHosts: addHostToKnownHosts,
         ),
         processManager: processManager,
@@ -399,7 +399,7 @@ class RemoteControllerService {
   /// in
   /// install flutter in the remote machine using ssh connection
   ///
-  /// we will use snapp_installer[https://github.com/Snapp-Embedded/snapp_installer] to install flutter in the remote machine
+  /// we will use snapp_installer[https://github.com/Snapp-X/snapp_installer] to install flutter in the remote machine
   ///
   /// returns true if snapp_installer installed successfully
   /// otherwise returns false

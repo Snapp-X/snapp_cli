@@ -1,25 +1,8 @@
-<!-- <p align="center">
-    <a href="https://www.snappembedded.io/"><img src="https://img.shields.io/badge/made_by-snapp_embedded-blue" alt="Snapp Embedded"></a>
-    <br>
-    <a href="https://pub.dev/packages/snapp_cli"><img src="https://badgen.net/pub/flutter-platform/snapp_cli" alt="Platforms"></a>
-    <br>
-    <a href="https://pub.dev/packages/snapp_cli"><img src="https://img.shields.io/pub/v/snapp_cli?logo=dart&logoColor=white" alt="Pub Version"></a>
-    <a href="https://pub.dev/packages/snapp_cli"><img src="https://badgen.net/pub/points/snapp_cli" alt="Pub points"></a>
-    <a href="https://pub.dev/packages/snapp_cli"><img src="https://badgen.net/pub/likes/snapp_cli" alt="Pub Likes"></a>
-    <a href="https://pub.dev/packages/snapp_cli"><img src="https://badgen.net/pub/popularity/snapp_cli" alt="Pub popularity"></a>
-    <br>    
-    <a href="https://github.com/Snapp-Embedded/snapp_cli/pulls"><img src="https://img.shields.io/github/issues-pr/Snapp-Embedded/snapp_cli" alt="Repo PRs"></a>
-    <a href="https://github.com/Snapp-Embedded/snapp_cli/issues?q=is%3Aissue+is%3Aopen"><img src="https://img.shields.io/github/issues/Snapp-Embedded/snapp_cli" alt="Repo issues"></a>
-    <a href="https://github.com/Snapp-Embedded/snapp_cli"><img src="https://img.shields.io/github/stars/Snapp-Embedded/snapp_cli?style=social" alt="Repo stars"></a>
-    <a href="https://github.com/Snapp-Embedded/snapp_cli/graphs/contributors"><img src="https://badgen.net/github/contributors/Snapp-Embedded/snapp_cli" alt="Contributors"></a>
-    <a href="https://github.com/Snapp-Embedded/snapp_cli/blob/main/LICENSE"><img src="https://badgen.net/github/license/Snapp-Embedded/snapp_cli" alt="License"></a>
-    <br>       
-</p> -->
 # snapp_cli <a href="https://pub.dev/packages/snapp_cli"><img src="https://img.shields.io/pub/v/snapp_cli?logo=dart&logoColor=white" alt="Pub Version"></a>
 Power Up Your Raspberry Pi for Flutter
 
 <p align="left">
-<img src="https://raw.githubusercontent.com/Snapp-Embedded/snapp_cli/main/assets/doc/header.png?raw=true" width="100%" alt="Styles" />
+<img src="https://raw.githubusercontent.com/Snapp-X/snapp_cli/main/assets/doc/header.png?raw=true" width="100%" alt="Styles" />
 </p>
 
 ## What is snapp_cli?
@@ -61,7 +44,7 @@ $ snapp_cli bootstrap
 ```
 
 <p align="left">
-<img src="https://raw.githubusercontent.com/Snapp-Embedded/snapp_cli/main/assets/doc/bootstrap.png?raw=true" width="100%" alt="Styles" />
+<img src="https://raw.githubusercontent.com/Snapp-X/snapp_cli/main/assets/doc/bootstrap.png?raw=true" width="100%" alt="Styles" />
 </p>
 
 The `bootstrap` command simplifies the entire setup process for your Raspberry Pi. It prompts for your Raspberry Pi's **IP address** and **username** to establish a **passwordless SSH connection**. You'll then choose a **Flutter Embedder** (**Flutter Desktop**, **Flutter Pi** or ...), and the command checks and installs it along with any necessary dependencies. Finally, it configures your Raspberry Pi as a **custom device** in the **Flutter SDK**, allowing you to select and run your Flutter apps on the Raspberry Pi directly from your laptop, enabling seamless remote debugging and development.
@@ -70,7 +53,7 @@ The `bootstrap` command simplifies the entire setup process for your Raspberry P
 snapp_cli includes additional commands to help you manage your devices and SSH connections efficiently:
 
 <p align="left">
-<img src="https://raw.githubusercontent.com/Snapp-Embedded/snapp_cli/main/assets/doc/commands.png?raw=true" width="100%" alt="Styles" />
+<img src="https://raw.githubusercontent.com/Snapp-X/snapp_cli/main/assets/doc/commands.png?raw=true" width="100%" alt="Styles" />
 </p>
 
 The `devices` command helps you manage your custom devices in the Flutter SDK. With subcommands to add, delete, list, and update the IP addresses of your devices, you have full control over your development environment.
@@ -154,7 +137,7 @@ Keep in mind that manually editing the `flutter_custom_devices.json` file should
 
 ## Contributing
 
-If you encounter any issues with this package or have suggestions for improvements, please [open an issue](https://github.com/Snapp-Embedded/snapp_cli/issues). You are welcome to contribute to the development of this project by forking the repository and submitting pull requests.
+If you encounter any issues with this package or have suggestions for improvements, please [open an issue](https://github.com/Snapp-X/snapp_cli/issues). You are welcome to contribute to the development of this project by forking the repository and submitting pull requests.
 
 ## License
 
