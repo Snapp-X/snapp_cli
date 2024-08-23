@@ -25,7 +25,8 @@ dependencies:
   file: ^7.0.0
   async: ^2.11.0
   collection: ^1.19.0
-  dartssh2: ^2.8.2
+  # TODO: Remove this dependency once the following issue is resolved by dartssh2.
+  dartssh2_plus: ^3.0.0
   yaml: ^3.1.2
   mason_logger: ^0.2.15
   process: ^5.0.2
