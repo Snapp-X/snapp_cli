@@ -67,18 +67,18 @@ class FlutterLinuxEmbedderProvider extends EmbedderProvider {
     final provideFlutterPathOption = interaction.selectIndex(
       'Please select one of the options:',
       options: [
-        'Enter Flutter path manually',
         'Install Flutter on the remote machine',
+        'Enter Flutter path manually',
       ],
     );
 
     logger.spaces();
 
     if (provideFlutterPathOption == 0) {
-      return interaction.readFlutterManualPath();
+      return _installFlutterOnRemote(username, targetIp, hostFlutterVersion);
     }
 
-    return _installFlutterOnRemote(username, targetIp, hostFlutterVersion);
+    return interaction.readFlutterManualPath();
   }
 
   Future<String> _fixConflictVersions(

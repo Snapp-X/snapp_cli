@@ -52,21 +52,21 @@ Now you have two options:
     final provideFlutterPiPathOption = interaction.selectIndex(
       'Please select one of the options:',
       options: [
-        'Enter flutter-pi path manually',
         'Install flutter-pi on the remote machine',
+        'Enter flutter-pi path manually',
       ],
     );
 
     logger.spaces();
 
     if (provideFlutterPiPathOption == 0) {
-      return interaction.readToolManualPath(
-        toolName: 'flutter-pi',
-        examplePath: '/usr/local/bin/flutter-pi',
-      );
+      return _installFlutterPiOnRemote(username, targetIp);
     }
 
-    return _installFlutterPiOnRemote(username, targetIp);
+    return interaction.readToolManualPath(
+      toolName: 'flutter-pi',
+      examplePath: '/usr/local/bin/flutter-pi',
+    );
   }
 
   Future<String> _installFlutterPiOnRemote(
