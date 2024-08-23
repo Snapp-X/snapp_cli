@@ -1,5 +1,5 @@
 name: snapp_cli
-description: Dart CLI for Remote Flutter Development. Easily set up and remotely debug Flutter apps on Raspberry Pi and other devices. Snapp CLI automates configuration, supporting custom embedders like Flutter-pi.
+description: Easily set up and remotely debug Flutter apps on Raspberry Pi and other devices using Dart CLI. Supports custom embedders like Flutter-pi with automated configuration.
 version: 1.0.2
 repository: https://github.com/Snapp-X/snapp_cli
 issue_tracker: https://github.com/Snapp-X/snapp_cli/issues
