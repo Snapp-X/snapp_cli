@@ -1,3 +1,7 @@
+## 1.1.0
+* fix: fix compatibility with flutter version 3.24.0 by @payam-zahedi
+* refactor: update order of installation steps by @payam-zahedi
+
 ## 1.0.2
 * doc: update Organization in github by @payam-zahedi
 
