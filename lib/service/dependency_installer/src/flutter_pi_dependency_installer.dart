@@ -24,6 +24,7 @@ class FlutterPiDependencyInstaller extends DependencyInstaller {
   @override
   Future<bool> installDependenciesOnRemote() async => true;
 
+  // TODO(payam): add try-catch block to catch exceptions
   Future<bool> _installFlutterPiTool() async {
     final processRunner = ProcessUtils(
       processManager: flutterSdkManager.processManager,
@@ -42,7 +43,11 @@ class FlutterPiDependencyInstaller extends DependencyInstaller {
 
     logger.spaces();
 
-    logger.info(result!.stdout);
+    if (result == null) {
+      return false;
+    }
+
+    logger.info(result.stdout);
     logger.detail(result.stderr);
 
     return result.exitCode == 0;
