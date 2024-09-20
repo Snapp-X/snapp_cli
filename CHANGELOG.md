@@ -1,3 +1,6 @@
+## 1.1.1
+* fix: fix issue with installing flutterpi_tool by @payam-zahedi
+
 ## 1.1.0
 * fix: fix compatibility with flutter version 3.24.0 by @payam-zahedi
 * refactor: update order of installation steps by @payam-zahedi

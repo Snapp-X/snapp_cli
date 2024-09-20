@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:dartssh2_plus/dartssh2.dart';
+import 'package:dartssh2/dartssh2.dart';
 import 'package:flutter_tools/src/base/common.dart';
 import 'package:flutter_tools/src/base/process.dart';
 import 'package:snapp_cli/host_runner/host_runner_platform.dart';
