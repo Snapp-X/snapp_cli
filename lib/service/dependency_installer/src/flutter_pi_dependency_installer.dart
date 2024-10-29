@@ -40,8 +40,8 @@ class FlutterPiDependencyInstaller extends DependencyInstaller {
       ['dart', 'pub', 'global', 'activate', 'flutterpi_tool'],
       parseResult: (result) => result,
       timeout: isFlutterPiToolsAlreadyInstalled
-          ? const Duration(seconds: 10)
-          : const Duration(seconds: 15),
+          ? const Duration(seconds: 15)
+          : const Duration(seconds: 20),
       logger: logger,
       spinner: interaction.spinner(
         inProgressMessage: 'Installing flutterpi_tool...',
