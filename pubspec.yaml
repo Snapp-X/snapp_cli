@@ -27,15 +27,15 @@ dependencies:
   collection: ^1.19.0
   dartssh2: ^2.10.0
   yaml: ^3.1.2
-  mason_logger: ^0.2.15
+  mason_logger: ^0.3.3
   process: ^5.0.2
   pub_semver: ^2.1.4
-  http: ^0.13.6
+  http: ^1.2.2
   recase: ^4.1.0
   interact_cli: ^2.4.0
 
 dev_dependencies:
-  lints: ^4.0.0
+  lints: ^5.1.1
 
 executables:
   snapp_cli: snapp
