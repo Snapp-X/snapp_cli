@@ -1,3 +1,7 @@
+## 1.2.0
+* fix: compatibility with flutter 3.27.0 by @payam-zahedi
+* fix: update packages by @niklasbartsch 
+
 ## 1.1.1
 * fix: fix issue with installing flutterpi_tool by @payam-zahedi
 
